@@ -1,20 +1,3 @@
-/* Custom Fonts */
-@font-face {
-  font-family: 'Hafiz Osman';
-  src: local('Hafiz Osman'), url('HafizOsman.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Ahmed Husrev';
-  src: local('Ahmed Husrev'), url('AhmedHusrev.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
 /* Basic Reset */
 * {
   margin: 0;
@@ -46,7 +29,7 @@ body {
 #surahSelect, #juzSelect, #pageSelect {
   padding: 8px;
   border-radius: 4px;
-  font-size: 1rem;
+  font-size: .7rem;
   margin: 0 2px;
 }
 
@@ -61,7 +44,7 @@ body {
   padding: 6px 12px;
   border-radius: 4px;
   border: none;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   cursor: pointer;
   background-color: #34495e;
   color: white;
@@ -69,7 +52,7 @@ body {
 
 /* Main Container */
 .container {
-  max-width: 800px;
+  max-width: 900px;
   margin: 2rem auto;
   padding: 0 20px;
 }
@@ -87,6 +70,7 @@ body {
 }
 
 .quran-content {
+  line-height: 2.5;
 }
 
 .verse-number {
@@ -102,6 +86,11 @@ body {
   margin: 0 8px;
   font-family: sans-serif;
   vertical-align: middle;
+}
+
+.surah-header {
+  font-size: 1.0rem;
+  color: #2c3e50;
 }
 
 /* Pagination Controls */
@@ -128,7 +117,8 @@ body {
 }
 
 #pageInfo {
-  font-weight: bold;
+  /*font-weight: bold;*/
+  font-size: 0.7rem;
 }
 
 
@@ -175,20 +165,38 @@ body {
 
 /* --- Waqf & Sajdah Signs --- */
 .waqf-sign {
-  color: #D9534F; /* A soft red, common in Turkish prints */
   font-size: 0.6em;
   font-weight: bold;
   position: relative;
   top: -2.0em; /* Raise it above the line */
   padding: 0 2px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.show-abbreviations .waqf-sign {
+  opacity: 1;
+}
+
+/* Specific colors for each waqf type */
+.waqf-lazim {
+  color: #D9534F; /* Red - Mandatory Stop */
+}
+
+.waqf-jaiz {
+  color: #D9534F; /* Red - Permissible Stop */
 }
 
 .waqf-continue {
-  color: #27ae60; /* Green - Better to continue */
+  color: #27ae60; /* Green - Better to Continue */
 }
 
-.waqf-stop {
-  color: #D9534F; /* Red - Better to stop */
+.waqf-awla {
+  color: #D9534F; /* Red - Better to Stop */
+}
+
+.waqf-muanaqah {
+  color: #D9534F; /* Red - Stop at one spot */
 }
 
 .sajdah-sign {
@@ -203,58 +211,83 @@ body {
 }
 
 [class^="tajweed-"]::after {
-  content: '';
-  display: none; /* Hidden by default */
   position: absolute;
-  top: 2.6em; /* Position below the letter */
+  top: 5.0em; /* Position below the letter, accounting for descenders */
   left: 50%;
   transform: translateX(-50%);
   font-size: 9px;
   font-family: sans-serif;
   font-weight: normal;
-  color: #555;
-  opacity: 0.8;
-  pointer-events: none;
-}
-
-.show-abbreviations [class^="tajweed-"]::after { display: block; }
-.show-abbreviations .tajweed-ghunna::after { content: "Gh"; }
-.show-abbreviations .tajweed-madd::after { content: "M"; }
-.show-abbreviations .tajweed-madd-liin::after { content: "ML"; }
-.show-abbreviations .tajweed-madd-silah::after { content: "MS"; }
-.show-abbreviations .tajweed-madd-asli::after { content: "MA"; }
-.show-abbreviations .tajweed-qalqalah::after { content: "Q"; }
-.show-abbreviations .tajweed-iqlab::after { content: "Iq"; }
-.show-abbreviations .tajweed-idgham-bi-ghunna::after { content: "IdG"; }
-.show-abbreviations .tajweed-idgham-bila-ghunna::after { content: "IdB"; }
-.show-abbreviations .tajweed-ikhfa::after { content: "Ik"; }
-
-/* --- Tajweed Abbreviations in Text --- */
-[class^="tajweed-"] {
-  position: relative;
-}
-
-[class^="tajweed-"]::after {
-  position: absolute;
-  top: 6.0em; /* Position below the letter, accounting for descenders */
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 9px;
-  font-family: sans-serif;
-  font-weight: normal;
-  opacity: 0.7;
+  opacity: 0;
+  transition: opacity 0.3s ease;
   pointer-events: none;
   line-height: 1;
   white-space: nowrap;
 }
 
-.tajweed-ghunna::after { content: "Gh"; }
-.tajweed-madd::after { content: "M"; }
-.tajweed-madd-liin::after { content: "ML"; }
-.tajweed-madd-silah::after { content: "MS"; }
-.tajweed-madd-asli::after { content: "MA"; }
-.tajweed-qalqalah::after { content: "Q"; }
-.tajweed-iqlab::after { content: "Iq"; }
-.tajweed-idgham-bi-ghunna::after { content: "IdG"; }
-.tajweed-idgham-bila-ghunna::after { content: "IdB"; }
-.tajweed-ikhfa::after { content: "Ik"; }
+/* Show abbreviations when toggle is on */
+.show-abbreviations [class^="tajweed-"]::after {
+  opacity: 0.7;
+}
+
+/* Abbreviation content and colors matching their rules */
+/* Using CSS variables for dynamic content */
+:root {
+  --abbr-ghunna: "Gh";
+  --abbr-madd: "M";
+  --abbr-madd-liin: "ML";
+  --abbr-madd-silah: "MS";
+  --abbr-madd-asli: "MA";
+  --abbr-qalqalah: "Q";
+  --abbr-iqlab: "Iq";
+  --abbr-idgham-ghunna: "IdG";
+  --abbr-idgham-bila: "IdB";
+  --abbr-ikhfa: "Ik";
+}
+
+.tajweed-ghunna::after {
+  content: var(--abbr-ghunna);
+  color: #16a085;
+}
+.tajweed-madd::after {
+  content: var(--abbr-madd);
+  color: #c0392b;
+}
+.tajweed-madd-liin::after {
+  content: var(--abbr-madd-liin);
+  color: #F39C12;
+}
+.tajweed-madd-silah::after {
+  content: var(--abbr-madd-silah);
+  color: #9932CC;
+}
+.tajweed-madd-asli::after {
+  content: var(--abbr-madd-asli);
+  color: #e74c3c;
+}
+.tajweed-qalqalah::after {
+  content: var(--abbr-qalqalah);
+  color: #2980b9;
+}
+.tajweed-iqlab::after {
+  content: var(--abbr-iqlab);
+  color: #8e44ad;
+}
+.tajweed-idgham-bi-ghunna::after {
+  content: var(--abbr-idgham-ghunna);
+  color: #00BFFF;
+}
+.tajweed-idgham-bila-ghunna::after {
+  content: var(--abbr-idgham-bila);
+  color: #5DADE2;
+}
+.tajweed-ikhfa::after {
+  content: var(--abbr-ikhfa);
+  color: #d35400;
+}
+
+#abbrLabel {
+  margin-Left : 5px;
+  cursor: pointer;
+  font-size: .8rem;
+}
