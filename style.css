@@ -1,0 +1,260 @@
+/* Custom Fonts */
+@font-face {
+  font-family: 'Hafiz Osman';
+  src: local('Hafiz Osman'), url('HafizOsman.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Ahmed Husrev';
+  src: local('Ahmed Husrev'), url('AhmedHusrev.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Basic Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #b4b4b9;
+  color: #333;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Flexbox Navbar */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 5%;
+  background-color: #2c3e50;
+  color: white;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+#surahSelect, #juzSelect, #pageSelect {
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 1rem;
+  margin: 0 2px;
+}
+
+/* Settings Controls */
+.settings-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.settings-container button, .settings-container select {
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  background-color: #34495e;
+  color: white;
+}
+
+/* Main Container */
+.container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 20px;
+}
+
+/* Quran Text Styling */
+.quran-text {
+  background: white;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  direction: rtl; /* Right-to-left for Arabic */
+  text-align: justify; /* Justify for continuous flow */
+  min-height: 400px; /* Ensure a consistent height */
+  border: 4px double #34495e; /* Classic double border for a framed look */
+}
+
+.quran-content {
+}
+
+.verse-number {
+  display: inline-block;
+  font-size: 16px;
+  color: #2c3e50;
+  border: 1px solid #2c3e50;
+  border-radius: 50%;
+  min-width: 30px;
+  height: 30px;
+  text-align: center;
+  line-height: 28px;
+  margin: 0 8px;
+  font-family: sans-serif;
+  vertical-align: middle;
+}
+
+/* Pagination Controls */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+}
+
+.pagination button {
+  padding: 10px 20px;
+  border: none;
+  background-color: #3498db;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.pagination button:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+}
+
+#pageInfo {
+  font-weight: bold;
+}
+
+
+/* --- Tajweed Rule Colors --- */
+.tajweed-ghunna {
+  color: #16a085; /* Green - Nasalization */
+}
+
+.tajweed-madd {
+  color: #c0392b; /* Red - Major Elongation */
+}
+
+.tajweed-madd-asli {
+  color: #e74c3c; /* Lighter Red - Natural Elongation */
+}
+
+.tajweed-madd-liin {
+  color: #F39C12; /* Orange - Soft Elongation */
+}
+
+.tajweed-madd-silah {
+  color: #9932CC; /* DarkOrchid - Connecting Elongation */
+}
+
+.tajweed-qalqalah {
+  color: #2980b9; /* Blue - Echoing */
+}
+
+.tajweed-ikhfa {
+  color: #d35400; /* Orange - Hiding */
+}
+
+.tajweed-idgham-bi-ghunna {
+  color: #00BFFF; /* DeepSkyBlue - Merging with nasalization */
+}
+
+.tajweed-idgham-bila-ghunna {
+  color: #5DADE2; /* Lighter Blue - Merging without nasalization */
+}
+
+.tajweed-iqlab {
+  color: #8e44ad; /* Purple - Conversion */
+}
+
+/* --- Waqf & Sajdah Signs --- */
+.waqf-sign {
+  color: #D9534F; /* A soft red, common in Turkish prints */
+  font-size: 0.6em;
+  font-weight: bold;
+  position: relative;
+  top: -2.0em; /* Raise it above the line */
+  padding: 0 2px;
+}
+
+.waqf-continue {
+  color: #27ae60; /* Green - Better to continue */
+}
+
+.waqf-stop {
+  color: #D9534F; /* Red - Better to stop */
+}
+
+.sajdah-sign {
+  color: #D9534F; /* Same red for consistency */
+  font-weight: bold;
+  vertical-align: middle;
+}
+
+/* --- Tajweed Abbreviations in Text (Toggled by JS) --- */
+[class^="tajweed-"] {
+  position: relative;
+}
+
+[class^="tajweed-"]::after {
+  content: '';
+  display: none; /* Hidden by default */
+  position: absolute;
+  top: 2.6em; /* Position below the letter */
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-family: sans-serif;
+  font-weight: normal;
+  color: #555;
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.show-abbreviations [class^="tajweed-"]::after { display: block; }
+.show-abbreviations .tajweed-ghunna::after { content: "Gh"; }
+.show-abbreviations .tajweed-madd::after { content: "M"; }
+.show-abbreviations .tajweed-madd-liin::after { content: "ML"; }
+.show-abbreviations .tajweed-madd-silah::after { content: "MS"; }
+.show-abbreviations .tajweed-madd-asli::after { content: "MA"; }
+.show-abbreviations .tajweed-qalqalah::after { content: "Q"; }
+.show-abbreviations .tajweed-iqlab::after { content: "Iq"; }
+.show-abbreviations .tajweed-idgham-bi-ghunna::after { content: "IdG"; }
+.show-abbreviations .tajweed-idgham-bila-ghunna::after { content: "IdB"; }
+.show-abbreviations .tajweed-ikhfa::after { content: "Ik"; }
+
+/* --- Tajweed Abbreviations in Text --- */
+[class^="tajweed-"] {
+  position: relative;
+}
+
+[class^="tajweed-"]::after {
+  position: absolute;
+  top: 6.0em; /* Position below the letter, accounting for descenders */
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-family: sans-serif;
+  font-weight: normal;
+  opacity: 0.7;
+  pointer-events: none;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.tajweed-ghunna::after { content: "Gh"; }
+.tajweed-madd::after { content: "M"; }
+.tajweed-madd-liin::after { content: "ML"; }
+.tajweed-madd-silah::after { content: "MS"; }
+.tajweed-madd-asli::after { content: "MA"; }
+.tajweed-qalqalah::after { content: "Q"; }
+.tajweed-iqlab::after { content: "Iq"; }
+.tajweed-idgham-bi-ghunna::after { content: "IdG"; }
+.tajweed-idgham-bila-ghunna::after { content: "IdB"; }
+.tajweed-ikhfa::after { content: "Ik"; }
