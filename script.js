@@ -154,6 +154,35 @@ document.addEventListener('DOMContentLoaded', () => {
     updateUIText();
   };
 
+  // --- Swipe Gestures for Mobile ---
+  let touchStartX = 0;
+  let touchEndX = 0;
+
+  display.addEventListener('touchstart', function(event) {
+      touchStartX = event.changedTouches[0].screenX;
+  }, false);
+
+  display.addEventListener('touchend', function(event) {
+      touchEndX = event.changedTouches[0].screenX;
+      handleSwipe();
+  }, false);
+
+  function handleSwipe() {
+      const swipeThreshold = 50; // Minimum distance for a swipe
+      if (touchEndX < touchStartX - swipeThreshold) {
+          // Swiped left (next page)
+          if (settings.currentPage < totalMushafPages) {
+            loadMushafPage(settings.currentPage + 1);
+          }
+      }
+      if (touchEndX > touchStartX + swipeThreshold) {
+          // Swiped right (previous page)
+          if (settings.currentPage > 1) {
+            loadMushafPage(settings.currentPage - 1);
+          }
+      }
+  }
+
   // --- Quran Data & Logic ---
   let quranData = {};
   // Fallback Surah Names if translations are missing
@@ -420,7 +449,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (currentSurahStartAya === 1 && s > 1) {
         // Use translated name if available, otherwise fallback to default
         const surahName = (t && t.surahNames && t.surahNames[s]) ? t.surahNames[s] : defaultSurahNames[s];
-        fullTextHTML += `<div class="surah-header">(${s}) ${surahName}</div>`;
+        fullTextHTML += `<div class="surah-header"><h3>${s}. ${surahName}</h3></div>`;
       }
 
       for (let a = currentSurahStartAya; a <= currentSurahEndAya; a++) {
