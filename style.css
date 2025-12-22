@@ -91,6 +91,7 @@ body {
 .surah-header {
   font-size: 1.0rem;
   color: #2c3e50;
+  font-style: italic;
 }
 
 /* Pagination Controls */
@@ -125,10 +126,6 @@ body {
 /* --- Tajweed Rule Colors --- */
 .tajweed-ghunna {
   color: #16a085; /* Green - Nasalization */
-}
-
-.tajweed-madd-lazim {
-  color: #8B008B; /* Dark Magenta - Necessary Elongation */
 }
 
 .tajweed-madd-muttasil {
@@ -248,7 +245,6 @@ body {
 /* Using CSS variables for dynamic content */
 :root {
   --abbr-ghunna: "Gh";
-  --abbr-madd-lazim: "Lz";
   --abbr-madd-muttasil: "MM";
   --abbr-madd-munfasil: "Mn";
   --abbr-madd-arid: "A";
@@ -266,10 +262,7 @@ body {
   content: var(--abbr-ghunna);
   color: #16a085;
 }
-.tajweed-madd-lazim::after {
-  content: var(--abbr-madd-lazim);
-  color: #8B008B;
-}
+
 .tajweed-madd-muttasil::after {
   content: var(--abbr-madd-muttasil);
   color: #A64AC9;

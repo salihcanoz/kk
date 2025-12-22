@@ -10,7 +10,6 @@ const translations = {
     legendTitle: 'Tajweed Legend',
     pauseMarksTitle: 'Pause & Prostration Marks',
     ghunna: 'Ghunna: Nasalization',
-    maddLazim: 'Madd Lazim: Necessary Elongation (6)',
     maddMuttasil: 'Madd Muttasil: Connected Elongation',
     maddMunfasil: 'Madd Munfasil: Separated Elongation',
     maddArid: "Madd 'Arid: Temporary Elongation",
@@ -22,7 +21,7 @@ const translations = {
     idghamGhunna: 'Idgham bi Ghunna',
     idghamBila: 'Idgham bila Ghunna',
     ikhfa: 'Ikhfa: Hiding',
-    qasr: 'Qasr: Shortening (Silent)',
+
     sajdah: 'Sajdah: Prostration',
     lazim: 'Lazim: Mandatory Stop',
     jaiz: 'Ja\'iz: Permissible Stop',
@@ -35,8 +34,8 @@ const translations = {
     waqfAwlaTitle: 'Waqf Awla (Stopping is Better)',
     muanaqahTitle: 'Mu\'anaqah (Stop at one of two places)',
     sajdahTitle: 'Sajdah (Prostration)',
-    prevPage: '« Previous',
-    nextPage: 'Next »',
+    prevPage: 'Previous »',
+    nextPage: '« Next',
     surah: 'Surah',
     surahNames: {
         "1": "Al-Fatiha", "2": "Al-Baqarah", "3": "Al-Imran", "4": "An-Nisa", "5": "Al-Ma'idah",
@@ -65,7 +64,6 @@ const translations = {
     },
     // Abbreviations
     abbrGhunna: 'Gh',
-    abbrMaddLazim: 'Lz',
     abbrMaddMuttasil: 'MM',
     abbrMaddMunfasil: 'Mn',
     abbrMaddArid: 'A',
@@ -76,8 +74,7 @@ const translations = {
     abbrIqlab: 'Iq',
     abbrIdghamGhunna: 'IdG',
     abbrIdghamBila: 'IdB',
-    abbrIkhfa: 'Ik',
-    abbrQasr: 'Qa'
+    abbrIkhfa: 'Ik'
   },
   nl: {
     decreaseFont: 'Lettergrootte verkleinen',
@@ -89,7 +86,6 @@ const translations = {
     legendTitle: 'Tajweed Legenda',
     pauseMarksTitle: 'Pauze & Prostratietekens',
     ghunna: 'Ghunna: Nasalisatie',
-    maddLazim: 'Madd Lazim: Noodzakelijke verlenging (6)',
     maddMuttasil: 'Madd Muttasil: Verbonden verlenging',
     maddMunfasil: 'Madd Munfasil: Gescheiden verlenging',
     maddArid: "Madd 'Arid: Tijdelijke verlenging",
@@ -102,7 +98,7 @@ const translations = {
     idghamGhunna: 'Idgham bi Ghunna',
     idghamBila: 'Idgham bila Ghunna',
     ikhfa: 'Ikhfa: Verbergen',
-    qasr: 'Qasr: Verkorting (Stil)',
+
     sajdah: 'Sajdah: Prostration',
     lazim: 'Lazim: Verplichte stop',
     jaiz: 'Ja\'iz: Toegestane stop',
@@ -115,8 +111,8 @@ const translations = {
     waqfAwlaTitle: 'Waqf Awla (Stoppen is beter)',
     muanaqahTitle: 'Mu\'anaqah (Stop op een van twee plaatsen)',
     sajdahTitle: 'Sajdah (Prostratie)',
-    prevPage: '« Vorige',
-    nextPage: 'Volgende »',
+    prevPage: 'Vorige  »',
+    nextPage: '« Volgende',
     surah: 'Soera',
     surahNames: {
         "1": "De Opening", "2": "De Koe", "3": "De Familie van Imran", "4": "De Vrouwen", "5": "De Tafel",
@@ -145,7 +141,6 @@ const translations = {
     },
     // Abbreviations
     abbrGhunna: 'Gh',
-    abbrMaddLazim: 'Lz',
     abbrMaddMuttasil: 'MM',
     abbrMaddMunfasil: 'Mn',
     abbrMaddArid: 'A',
@@ -157,7 +152,7 @@ const translations = {
     abbrIdghamGhunna: 'IdG',
     abbrIdghamBila: 'IdB',
     abbrIkhfa: 'Ik',
-    abbrQasr: 'Qa'
+
   },
   tr: {
     decreaseFont: 'Yazı Boyutunu Küçült',
@@ -169,7 +164,6 @@ const translations = {
     legendTitle: 'Tecvid Açıklaması',
     pauseMarksTitle: 'Duraklama & Secde İşaretleri',
     ghunna: 'Gunne: Genizden okuma',
-    maddLazim: 'Medd-i Lâzım: Gerekli Med (6)',
     maddMuttasil: 'Medd-i Muttasıl: Bitişik Med',
     maddMunfasil: 'Medd-i Munfasıl: Ayrı Med',
     maddArid: "Medd-i 'Ârız: Geçici Med",
@@ -182,7 +176,7 @@ const translations = {
     idghamGhunna: 'İdgam bi Gunne',
     idghamBila: 'İdgam bila Gunne',
     ikhfa: 'İhfa: Gizleme',
-    qasr: 'Kasr: Uzatmama (Sessiz)',
+
     sajdah: 'Secde: Tilavet secdesi',
     lazim: 'Lazım: Zorunlu durak',
     jaiz: 'Caiz: İzinli durak',
@@ -195,8 +189,8 @@ const translations = {
     waqfAwlaTitle: 'Vakf Evla (Durmak daha iyidir)',
     muanaqahTitle: 'Muanaka (İki yerden birinde dur)',
     sajdahTitle: 'Secde (Secde yeri)',
-    prevPage: '« Önceki',
-    nextPage: 'Sonraki »',
+    prevPage: 'Önceki »',
+    nextPage: '« Sonraki',
     surah: 'Sure',
     surahNames: {
         "1": "Fâtiha", "2": "Bakara", "3": "Âl-i İmrân", "4": "Nisâ", "5": "Mâide",
@@ -237,6 +231,6 @@ const translations = {
     abbrIdghamGhunna: 'İmG',
     abbrIdghamBila: 'İbG',
     abbrIkhfa: 'İh',
-    abbrQasr: 'Ks'
+
   }
 };

@@ -170,13 +170,13 @@ document.addEventListener('DOMContentLoaded', () => {
   function handleSwipe() {
       const swipeThreshold = 50; // Minimum distance for a swipe
       if (touchEndX < touchStartX - swipeThreshold) {
-          // Swiped left (next page)
+          // Swiped left (RTL: Next Page)
           if (settings.currentPage < totalMushafPages) {
             loadMushafPage(settings.currentPage + 1);
           }
       }
       if (touchEndX > touchStartX + swipeThreshold) {
-          // Swiped right (previous page)
+          // Swiped right (RTL: Previous Page)
           if (settings.currentPage > 1) {
             loadMushafPage(settings.currentPage - 1);
           }
@@ -186,12 +186,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Keyboard Navigation ---
   document.addEventListener('keydown', (event) => {
     if (event.key === 'ArrowLeft') {
-      // Left arrow key: Next page
+      // Left arrow key (RTL: Next Page)
       if (settings.currentPage < totalMushafPages) {
         loadMushafPage(settings.currentPage + 1);
       }
     } else if (event.key === 'ArrowRight') {
-      // Right arrow key: Previous page
+      // Right arrow key (RTL: Previous Page)
       if (settings.currentPage > 1) {
         loadMushafPage(settings.currentPage - 1);
       }
@@ -226,6 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     "106": "قريش", "107": "الماعون", "108": "الكوثر", "109": "الكافرون", "110": "النصر",
     "111": "المسد", "112": "الإخلاص", "113": "الفلق", "114": "الناس"
   };
+
   const totalMushafPages = 604;
 
   // Create legend element
@@ -242,7 +243,8 @@ document.addEventListener('DOMContentLoaded', () => {
     parseJSON(quranRawData);
     populateSurahDropdown();
     updateUIText();
-  } else {
+  }
+  else {
     console.error("Error: quranRawData is not defined.");
     display.innerHTML = `<p style="text-align:center; color: red;">Error loading Quran data. Please ensure q.js is loaded and defines 'quranRawData'.</p>`;
   }
@@ -253,7 +255,8 @@ document.addEventListener('DOMContentLoaded', () => {
     display.style.fontSize = settings.fontSize + 'px';
     if (settings.showAbbreviations) {
       display.classList.add('show-abbreviations');
-    } else {
+    }
+    else {
       display.classList.remove('show-abbreviations');
     }
 
@@ -262,8 +265,8 @@ document.addEventListener('DOMContentLoaded', () => {
         decreaseFontBtn.title = t.decreaseFont;
         increaseFontBtn.title = t.increaseFont;
         abbrLabel.textContent = t.rulesLabel;
-        prevBtn.textContent = t.prevPage;
-        nextBtn.textContent = t.nextPage;
+        prevBtn.textContent = t.nextPage;
+        nextBtn.textContent = t.prevPage;
     }
 
     populateSurahDropdown();
@@ -276,7 +279,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Update CSS variables for abbreviations
     if (t) {
         document.documentElement.style.setProperty('--abbr-ghunna', `"${t.abbrGhunna || 'Gh'}"`);
-        document.documentElement.style.setProperty('--abbr-madd-lazim', `"${t.abbrMaddLazim || 'Lz'}"`);
         document.documentElement.style.setProperty('--abbr-madd-muttasil', `"${t.abbrMaddMuttasil || 'MM'}"`);
         document.documentElement.style.setProperty('--abbr-madd-munfasil', `"${t.abbrMaddMunfasil || 'Mn'}"`);
         document.documentElement.style.setProperty('--abbr-madd-arid', `"${t.abbrMaddArid || 'A'}"`);
@@ -288,7 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.documentElement.style.setProperty('--abbr-idgham-ghunna', `"${t.abbrIdghamGhunna || 'IdG'}"`);
         document.documentElement.style.setProperty('--abbr-idgham-bila', `"${t.abbrIdghamBila || 'IdB'}"`);
         document.documentElement.style.setProperty('--abbr-ikhfa', `"${t.abbrIkhfa || 'Ik'}"`);
-        document.documentElement.style.setProperty('--abbr-qasr', `"${t.abbrQasr || 'Qa'}"`);
+
     }
   }
 
@@ -349,12 +351,6 @@ document.addEventListener('DOMContentLoaded', () => {
   function applyTajweed(text) {
     let html = text;
 
-    // --- Rule Order:
-    // 1. Complex cross-word rules (Nun Sakin/Tanwin)
-    // 2. Specific contextual rules (Qasr, Madd types in order of precedence)
-    // 3. General single-letter rules (Madd Asli, Ghunna, Qalqalah)
-    // 4. Presentational signs (Waqf)
-
     // 1. Nun Sakin & Tanwin Rules
     // Idgham with Ghunna (Colors the merged letter, removes shaddah)
     html = html.replace(/(نْ|[\u0621-\u064A][ًٌٍ])([\sۘۚۖۗۛ]*)([ينمو])(ّ)?([ًٌٍَُِّْ]*)/g, '$1$2<span class="tajweed-idgham-bi-ghunna">$3$5</span>');
@@ -365,17 +361,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Ikhfa (Colors the nun/tanwin)
     html = html.replace(/(نْ|[\u0621-\u064A][ًٌٍ])(?=[\sۘۚۖۗۛ]*[تثجدذزسشصضطظفقك])/g, '<span class="tajweed-ikhfa">$1</span>');
 
-    // 2. Specific Contextual Rules
-    // Qasr (shortening)
-    html = html.replace(/([اوي][\u06DF\u06E0])/g, '<span class="tajweed-qasr">$1</span>');
-    html = html.replace(/((?:[\u0623\u0625\u0627]|سَ[\u0623\u0625\u0627])\u064F)(و[\u0652\u06DF\u06E0]?)(?=(?:ل[\u064E\u0640\u0670\u0627]*[\u0626\u064A\u0654]|ل[\u064F]?و|ل[\u0650]?ي|ل[\u064E\u0640\u0670\u0627]*[اٰ]?ت|ر[\u0650]?ي))/g, '$1<span class="tajweed-qasr">$2</span>');
-
     // Madd 'Arid li-s-Sukun (must be before other madds)
     html = html.replace(/(?<!>)(ا|(?<=ُ)و|(?<=ِ)ي)(?=[\u0621-\u064A][\u064B-\u0652]*$)/g, '<span class="tajweed-madd-arid">$1</span>');
-
-    // Madd Lazim (followed by shaddah)
-    html = html.replace(/(?<!>)(ا|(?<=ُ)و|(?<=ِ)ي)(?=[\u0621-\u064A][\u064B-\u0652]*ّ)/g, '<span class="tajweed-madd-lazim">$1</span>');
-    html = html.replace(/(~)/g, '<span class="tajweed-madd-lazim">$1</span>'); // Tilde is always Madd Lazim
 
     // Madd Rules (Long)
     // Muttasil (Connected)
@@ -499,7 +486,7 @@ document.addEventListener('DOMContentLoaded', () => {
       let currentSurahStartAya = (s === startSurah) ? startAya : 1;
       let currentSurahEndAya = (s === endSurah) ? endAya : maxAyaInSurah;
 
-      if (currentSurahStartAya === 1 && s > 1 && s !== 9) {
+      if (currentSurahStartAya === 1 && s !== 9) {
         const surahName = (t && t.surahNames && t.surahNames[s]) ? t.surahNames[s] : defaultSurahNames[s];
         fullTextHTML += `<div class="surah-header">(${s}) ${surahName}</div>`;
       }
@@ -511,16 +498,9 @@ document.addEventListener('DOMContentLoaded', () => {
           const BASMALAH = "بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ";
 
           if (a === 1 && text.startsWith(BASMALAH)) {
-            if (s === 1) { // Al-Fatiha, Basmalah is part of the verse
-              const textWithDiacritics = fixDiacritics(text);
-              const coloredText = applyTajweed(textWithDiacritics);
-              fullTextHTML += `${coloredText} <span class="verse-number">${verse.aya}</span> `;
-              continue;
-            } else { // Other surahs, Basmalah is separate
               const coloredBasmalah = applyTajweed(fixDiacritics(BASMALAH));
               fullTextHTML += `<div class="basmalah" style="text-align: center; margin-bottom: 10px; width: 100%;">${coloredBasmalah}</div>`;
               text = text.substring(BASMALAH.length).trim();
-            }
           }
 
           const textWithDiacritics = fixDiacritics(text);
@@ -540,8 +520,8 @@ document.addEventListener('DOMContentLoaded', () => {
     settings.currentPage = page;
     const juz = getJuzNumber(settings.currentPage);
     pageInfo.textContent = `${t ? t.page : 'Page'} ${settings.currentPage} | ${t ? t.juz : 'Juz'} ${juz}`;
-    prevBtn.disabled = settings.currentPage === 1;
-    nextBtn.disabled = settings.currentPage === totalMushafPages;
+    nextBtn.disabled = settings.currentPage === 1;
+    prevBtn.disabled = settings.currentPage === totalMushafPages;
 
     surahSelect.value = startSurah;
     juzSelect.value = juz;
@@ -549,7 +529,7 @@ document.addEventListener('DOMContentLoaded', () => {
     saveSettings();
   }
 
-  function findFirstPageOfSurah(surahId) {
+function findFirstPageOfSurah(surahId) {
     for (let i = 0; i < pages.length; i++) {
       const pageData = pages[i];
       if (pageData.surah_begin === surahId) {
@@ -564,12 +544,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const maddMuttasilText = (t.maddMuttasil) ? t.maddMuttasil : 'Madd Muttasil (Connected)';
     const maddMunfasilText = (t.maddMunfasil) ? t.maddMunfasil : 'Madd Munfasil (Separated)';
     const maddAridText = (t.maddArid) ? t.maddArid : "Madd 'Arid (Temporary)";
-    const maddLazimText = (t.maddLazim) ? t.maddLazim : "Madd Lazim (Necessary)";
     legend.innerHTML = `
-        <h5 style="margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">${t.legendTitle}</h5>
+        <h6 style="margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">${t.legendTitle}</h6>
         <ul style="list-style: none; padding: 0; margin: 0; font-size: 11px; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px;">
             <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #FF70A6; margin-right: 5px;">■</span> <div>${t.ghunna}</div></li>
-            <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #8B008B; margin-right: 5px;">■</span> <div>${maddLazimText}</div></li>
             <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #A64AC9; margin-right: 5px;">■</span> <div>${maddMuttasilText}</div></li>
             <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #E91E63; margin-right: 5px;">■</span> <div>${maddMunfasilText}</div></li>
             <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #1ABC9C; margin-right: 5px;">■</span> <div>${maddAridText}</div></li>
@@ -581,12 +559,11 @@ document.addEventListener('DOMContentLoaded', () => {
             <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #00BFFF; margin-right: 5px;">■</span> <div>${t.idghamGhunna}</div></li>
             <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #5DADE2; margin-right: 5px;">■</span> <div>${t.idghamBila}</div></li>
             <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #20B2AA; margin-right: 5px;">■</span> <div>${t.ikhfa}</div></li>
-            <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #6A5ACD; margin-right: 5px;">■</span> <div>${t.qasr}</div></li>
+
         </ul>
-        <h5 style="margin-top: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">${t.pauseMarksTitle}</h5>
+        <h6 style="margin-top: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">${t.pauseMarksTitle}</h6>
         <ul style="list-style: none; padding: 0; margin: 0; font-size: 11px; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px;">
             <li style="display: flex; align-items: flex-start;"><span style="color: #D9534F; font-weight: bold; margin-right: 5px;">۩</span> <div>${t.sajdah}</div></li>
-            <li style="display: flex; align-items: flex-start;"><span style="color: #D9534F; font-weight: bold; margin-right: 5px;">م</span> <div>${t.lazim}</div></li>
             <li style="display: flex; align-items: flex-start;"><span style="color: #D9534F; font-weight: bold; margin-right: 5px;">ج</span> <div>${t.jaiz}</div></li>
             <li style="display: flex; align-items: flex-start;"><span style="color: #27ae60; font-weight: bold; margin-right: 5px;">صلى</span> <div>${t.waslAwla}</div></li>
             <li style="display: flex; align-items: flex-start;"><span style="color: #D9534F; font-weight: bold; margin-right: 5px;">قلى</span> <div>${t.waqfAwla}</div></li>
@@ -613,14 +590,14 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   prevBtn.addEventListener('click', () => {
-    if (settings.currentPage > 1) {
-      loadMushafPage(settings.currentPage - 1);
+    if (settings.currentPage < totalMushafPages) {
+      loadMushafPage(settings.currentPage + 1);
     }
   });
 
   nextBtn.addEventListener('click', () => {
-    if (settings.currentPage < totalMushafPages) {
-      loadMushafPage(settings.currentPage + 1);
+    if (settings.currentPage > 1) {
+      loadMushafPage(settings.currentPage - 1);
     }
   });
 });
