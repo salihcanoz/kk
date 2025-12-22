@@ -10,9 +10,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Settings ---
   const defaultSettings = {
     language: navigator.language ? navigator.language.substring(0, 2) : 'en',
-    currentPage: 1,
-    fontFamily: "'Scheherazade New', serif",
-    fontSize: 28,
+    currentPage: 1, // Start from page 1
+    fontFamily: "'Amiri', serif",
+    fontSize: 36,
     showAbbreviations: false
   };
 
@@ -71,8 +71,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Font Type Dropdown
   const fontSelect = document.createElement('select');
   const fonts = [
-    { name: 'Scheherazade', value: "'Scheherazade New', serif" },
     { name: 'Amiri', value: "'Amiri', serif" },
+    { name: 'Scheherazade', value: "'Scheherazade New', serif" },
     { name: 'Noto Naskh', value: "'Noto Naskh Arabic', serif" },
     { name: 'Lateef', value: "'Lateef', serif" }
   ];
@@ -183,6 +183,21 @@ document.addEventListener('DOMContentLoaded', () => {
       }
   }
 
+  // --- Keyboard Navigation ---
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowLeft') {
+      // Left arrow key: Next page
+      if (settings.currentPage < totalMushafPages) {
+        loadMushafPage(settings.currentPage + 1);
+      }
+    } else if (event.key === 'ArrowRight') {
+      // Right arrow key: Previous page
+      if (settings.currentPage > 1) {
+        loadMushafPage(settings.currentPage - 1);
+      }
+    }
+  });
+
   // --- Quran Data & Logic ---
   let quranData = {};
   // Fallback Surah Names if translations are missing
@@ -261,7 +276,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Update CSS variables for abbreviations
     if (t) {
         document.documentElement.style.setProperty('--abbr-ghunna', `"${t.abbrGhunna || 'Gh'}"`);
-        document.documentElement.style.setProperty('--abbr-madd', `"${t.abbrMadd || 'M'}"`);
+        document.documentElement.style.setProperty('--abbr-madd-lazim', `"${t.abbrMaddLazim || 'Lz'}"`);
+        document.documentElement.style.setProperty('--abbr-madd-muttasil', `"${t.abbrMaddMuttasil || 'MM'}"`);
+        document.documentElement.style.setProperty('--abbr-madd-munfasil', `"${t.abbrMaddMunfasil || 'Mn'}"`);
+        document.documentElement.style.setProperty('--abbr-madd-arid', `"${t.abbrMaddArid || 'A'}"`);
         document.documentElement.style.setProperty('--abbr-madd-liin', `"${t.abbrMaddLiin || 'ML'}"`);
         document.documentElement.style.setProperty('--abbr-madd-silah', `"${t.abbrMaddSilah || 'MS'}"`);
         document.documentElement.style.setProperty('--abbr-madd-asli', `"${t.abbrMaddAsli || 'MA'}"`);
@@ -270,6 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.documentElement.style.setProperty('--abbr-idgham-ghunna', `"${t.abbrIdghamGhunna || 'IdG'}"`);
         document.documentElement.style.setProperty('--abbr-idgham-bila', `"${t.abbrIdghamBila || 'IdB'}"`);
         document.documentElement.style.setProperty('--abbr-ikhfa', `"${t.abbrIkhfa || 'Ik'}"`);
+        document.documentElement.style.setProperty('--abbr-qasr', `"${t.abbrQasr || 'Qa'}"`);
     }
   }
 
@@ -330,7 +349,67 @@ document.addEventListener('DOMContentLoaded', () => {
   function applyTajweed(text) {
     let html = text;
 
-    // --- Waqf & Sajdah Signs (Turkish Style) ---
+    // --- Rule Order:
+    // 1. Complex cross-word rules (Nun Sakin/Tanwin)
+    // 2. Specific contextual rules (Qasr, Madd types in order of precedence)
+    // 3. General single-letter rules (Madd Asli, Ghunna, Qalqalah)
+    // 4. Presentational signs (Waqf)
+
+    // 1. Nun Sakin & Tanwin Rules
+    // Idgham with Ghunna (Colors the merged letter, removes shaddah)
+    html = html.replace(/(نْ|[\u0621-\u064A][ًٌٍ])([\sۘۚۖۗۛ]*)([ينمو])(ّ)?([ًٌٍَُِّْ]*)/g, '$1$2<span class="tajweed-idgham-bi-ghunna">$3$5</span>');
+    // Idgham without Ghunna (Colors the merged letter, removes shaddah)
+    html = html.replace(/(نْ|[\u0621-\u064A][ًٌٍ])([\sۘۚۖۗۛ]*)([لر])(ّ)?([ًٌٍَُِّْ]*)/g, '$1$2<span class="tajweed-idgham-bila">$3$5</span>');
+    // Iqlab (Colors the nun/tanwin)
+    html = html.replace(/(نْ|[\u0621-\u064A][ًٌٍ])(?=[\sۘۚۖۗۛ]*ب)/g, '<span class="tajweed-iqlab">$1</span>');
+    // Ikhfa (Colors the nun/tanwin)
+    html = html.replace(/(نْ|[\u0621-\u064A][ًٌٍ])(?=[\sۘۚۖۗۛ]*[تثجدذزسشصضطظفقك])/g, '<span class="tajweed-ikhfa">$1</span>');
+
+    // 2. Specific Contextual Rules
+    // Qasr (shortening)
+    html = html.replace(/([اوي][\u06DF\u06E0])/g, '<span class="tajweed-qasr">$1</span>');
+    html = html.replace(/((?:[\u0623\u0625\u0627]|سَ[\u0623\u0625\u0627])\u064F)(و[\u0652\u06DF\u06E0]?)(?=(?:ل[\u064E\u0640\u0670\u0627]*[\u0626\u064A\u0654]|ل[\u064F]?و|ل[\u0650]?ي|ل[\u064E\u0640\u0670\u0627]*[اٰ]?ت|ر[\u0650]?ي))/g, '$1<span class="tajweed-qasr">$2</span>');
+
+    // Madd 'Arid li-s-Sukun (must be before other madds)
+    html = html.replace(/(?<!>)(ا|(?<=ُ)و|(?<=ِ)ي)(?=[\u0621-\u064A][\u064B-\u0652]*$)/g, '<span class="tajweed-madd-arid">$1</span>');
+
+    // Madd Lazim (followed by shaddah)
+    html = html.replace(/(?<!>)(ا|(?<=ُ)و|(?<=ِ)ي)(?=[\u0621-\u064A][\u064B-\u0652]*ّ)/g, '<span class="tajweed-madd-lazim">$1</span>');
+    html = html.replace(/(~)/g, '<span class="tajweed-madd-lazim">$1</span>'); // Tilde is always Madd Lazim
+
+    // Madd Rules (Long)
+    // Muttasil (Connected)
+    html = html.replace(/(?<!>)(?<=َ)(ا)(?=[ءئؤأإآ])/g, '<span class="tajweed-madd-muttasil">$1</span>');
+    html = html.replace(/(?<!>)(?<=ُ)(و)(?=[ءئؤأإآ])/g, '<span class="tajweed-madd-muttasil">$1</span>');
+    html = html.replace(/(?<!>)(?<=ِ)(ي)(?=[ءئؤأإآ])/g, '<span class="tajweed-madd-muttasil">$1</span>');
+    // Munfasil (Separated)
+    html = html.replace(/(?<!>)(?<=َ)([اى])(\s+[أإآء])/g, '<span class="tajweed-madd-munfasil">$1</span>$2');
+    html = html.replace(/(?<!>)(?<=ُ)(و)(ا?\s+[أإآء])/g, '<span class="tajweed-madd-munfasil">$1</span>$2');
+    html = html.replace(/(?<!>)(?<=ِ)(ي)(\s+[أإآء])/g, '<span class="tajweed-madd-munfasil">$1</span>$2');
+    // Madd Liin (only at end of verse)
+    html = html.replace(/(?<!>)(?<=َ)([وي]ْ)(?=[\u0621-\u064A][\u064B-\u0652]*$)/g, '<span class="tajweed-madd-liin">$1</span>');
+    // Madd Silah
+    html = html.replace(/(فِيهِ)(\s+مُهَانًا)/g, '<span class="tajweed-madd-silah">$1</span>$2');
+    html = html.replace(/(?<=[\u064E\u064F\u0650])(ه[\u064F\u0650])(?=\s+[أإآء])/g, '<span class="tajweed-madd-munfasil">$1</span>'); // Silah Kubra is like Munfasil
+    html = html.replace(/(?<=[\u064E\u064F\u0650])(ه[\u064F\u0650])(?=\s+[^\u0627\u0671\u0652أإآء])/g, '<span class="tajweed-madd-silah">$1</span>');
+    // Dagger Alif Madds
+    html = html.replace(/(?<!>)(ّ?ٰ)(?=[ءئؤأإآ])/g, '<span class="tajweed-madd-muttasil">$1</span>');
+    html = html.replace(/(?<!>)(ّ?ٰ)(?=\s+[ءئؤأإآ])/g, '<span class="tajweed-madd-munfasil">$1</span>');
+
+    // 3. General Single-Letter Rules
+    // Madd Asli
+    html = html.replace(/(?<!>)(?<=َ)ا(?!ل[ّْ]|[\u06DF\u06E0])/g, '<span class="tajweed-madd-asli">ا</span>');
+    html = html.replace(/(?<!>)(?<=ُ)و(?![ًٌٍَُِّْٰ])/g, '<span class="tajweed-madd-asli">و</span>');
+    html = html.replace(/(?<!>)(?<=ِ)ي(?![ًٌٍَُِّْٰ])/g, '<span class="tajweed-madd-asli">ي</span>');
+    html = html.replace(/(?<!>)(ّ?ٰ)/g, '<span class="tajweed-madd-asli">$1</span>'); // Dagger alif as madd asli
+
+    // Ghunna on noon/meem mushaddad
+    html = html.replace(/([نم]ّ)/g, '<span class="tajweed-ghunna">$1</span>');
+    // Qalqalah
+    html = html.replace(/([قطبجد]ْ)/g, '<span class="tajweed-qalqalah">$1</span>');
+
+    // 4. Presentational Signs
+    // Waqf & Sajdah Signs
     html = html.replace(/(۩)/g, `<span class="sajdah-sign" title="${t ? t.sajdahTitle : 'Sajdah'}">$1</span>`);
     html = html.replace(/(ۘ)/g, `<span class="waqf-sign waqf-lazim" title="${t ? t.waqfLazim : 'Lazim'}">م</span>`);
     html = html.replace(/(ۚ)/g, `<span class="waqf-sign waqf-jaiz" title="${t ? t.waqfJaiz : 'Jaiz'}">ج</span>`);
@@ -338,41 +417,21 @@ document.addEventListener('DOMContentLoaded', () => {
     html = html.replace(/(ۗ)/g, `<span class="waqf-sign waqf-awla" title="${t ? t.waqfAwlaTitle : 'Stop'}">قلى</span>`);
     html = html.replace(/(ۛ)/g, `<span class="waqf-sign waqf-muanaqah" title="${t ? t.muanaqahTitle : 'Muanaqah'}">∴</span>`);
 
-    // --- Madd Rules (Long - 4/5 counts) ---
-    html = html.replace(/(?<=َ)(ا)(?=[ءئؤأإآ])/g, '<span class="tajweed-madd">$1</span>');
-    html = html.replace(/(?<=ُ)(و)(?=[ءئؤأإآ])/g, '<span class="tajweed-madd">$1</span>');
-    html = html.replace(/(?<=ِ)(ي)(?=[ءئؤأإآ])/g, '<span class="tajweed-madd">$1</span>');
-
-    html = html.replace(/(?<=َ)([اى])(\s+[أإآء])/g, '<span class="tajweed-madd">$1</span>$2');
-    html = html.replace(/(?<=ُ)(و)(ا?\s+[أإآء])/g, '<span class="tajweed-madd">$1</span>$2');
-    html = html.replace(/(?<=ِ)(ي)(\s+[أإآء])/g, '<span class="tajweed-madd">$1</span>$2');
-
-    html = html.replace(/(?<=َ)([وي]ْ)/g, '<span class="tajweed-madd-liin">$1</span>');
-
-    html = html.replace(/(فِيهِ)(\s+مُهَانًا)/g, '<span class="tajweed-madd-silah">$1</span>$2');
-    html = html.replace(/(?<=[\u064E\u064F\u0650])(ه[\u064F\u0650])(?=\s+[أإآء])/g, '<span class="tajweed-madd">$1</span>');
-    html = html.replace(/(?<=[\u064E\u064F\u0650])(ه[\u064F\u0650])(?=\s+[^\u0627\u0671\u0652أإآء])/g, '<span class="tajweed-madd-silah">$1</span>');
-
-    html = html.replace(/(?<=َ)ا/g, '<span class="tajweed-madd-asli">ا</span>');
-    html = html.replace(/(?<=ُ)و/g, '<span class="tajweed-madd-asli">و</span>');
-    html = html.replace(/(?<=ِ)ي/g, '<span class="tajweed-madd-asli">ي</span>');
-
-    html = html.replace(/([ٰ~])/g, '<span class="tajweed-madd">$1</span>');
-    html = html.replace(/([قطبجد]ْ)/g, '<span class="tajweed-qalqalah">$1</span>');
-    html = html.replace(/([نًٌٍ]ْ?(?:[اى])?\s*ب)/g, '<span class="tajweed-iqlab">$1</span>');
-    html = html.replace(/([نًٌٍ]ْ?(?:[اى])?\s*[ينمو])(ّ)?/g, '<span class="tajweed-idgham-bi-ghunna">$1</span>');
-    html = html.replace(/([نًٌٍ]ْ?(?:[اى])?\s*[لر])(ّ)?/g, '<span class="tajweed-idgham-bila-ghunna">$1</span>');
-    html = html.replace(/([نًٌٍ]ْ?(?:[اى])?)(\s*[تثجدذزسشصضطظفقك])/g, '<span class="tajweed-ikhfa">$1</span>$2');
-    html = html.replace(/([نم]ّ)/g, '<span class="tajweed-ghunna">$1</span>');
     return html;
   }
 
   function fixDiacritics(text) {
     let fixedText = text;
+    // Remove leading shaddah if present (general cleanup)
     fixedText = fixedText.replace(/^([^\s])ّ/, '$1');
-    fixedText = fixedText.replace(/اللَّه/g, 'اللّٰه');
-    fixedText = fixedText.replace(/لِلَّهِ/g, 'لِلّٰهِ');
+    // Replace specific Allah forms for consistency
+    fixedText = fixedText.replace(/اللَّه/g, 'اللّٰه');
+    fixedText = fixedText.replace(/لِلَّهِ/g, 'لِلّٰهِ');
+    // Add alif to Al- prefix if missing (general cleanup)
     fixedText = fixedText.replace(/^ال/, 'اَل');
+
+    // Reorder shadda and kasra to encourage kasra to render below the letter.
+    fixedText = fixedText.replace(/(ّ)(ِ)/g, '$2$1');
 
     const waslReplacements = {
       'اهْدِنَا': 'اِهْدِنَا', 'اسْتَغْفِرْ': 'اِسْتَغْفِرْ', 'اضْرِب': 'اِضْرِب',
@@ -397,11 +456,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    const idghamLetters = 'بتثجحخدذرزسشصضطظفقكلمنوهيعغ';
-    const idghamRegex = new RegExp(`([${idghamLetters}])(\\s+)(\\1)ّ`, 'g');
-    fixedText = fixedText.replace(idghamRegex, '$1ْ$2$3');
-    fixedText = fixedText.replace(/ن(?![ًٌٍَُِّْٰ])/g, 'نْ');
-
     return fixedText;
   }
 
@@ -414,24 +468,23 @@ document.addEventListener('DOMContentLoaded', () => {
   function loadMushafPage(page) {
     display.innerHTML = '';
 
-    if (typeof quranPageData === 'undefined') {
+    if (typeof pages === 'undefined') {
       display.innerHTML = '<p style="text-align:center; color: red;">Error: Page data not loaded. Ensure page-data.js is included.</p>';
       return;
     }
 
     const pageIndex = page - 1;
 
-    if (pageIndex < 0 || pageIndex >= quranPageData.length) {
+    if (pageIndex < 0 || pageIndex >= pages.length) {
       display.innerHTML = '<p style="text-align:center;">Page not found.</p>';
       return;
     }
 
-    const pageVersesRanges = quranPageData[pageIndex];
-    const [start, end] = pageVersesRanges;
-    const startSurah = start[0];
-    const startAya = start[1];
-    const endSurah = end[0];
-    const endAya = end[1];
+    const pageVersesRanges = pages[pageIndex];
+    const startSurah = pageVersesRanges.surah_begin;
+    const startAya = pageVersesRanges.ayah_begin;
+    const endSurah = pageVersesRanges.surah_end;
+    const endAya = pageVersesRanges.ayah_end;
 
     const contentDiv = document.createElement('div');
     contentDiv.className = 'quran-content';
@@ -446,10 +499,9 @@ document.addEventListener('DOMContentLoaded', () => {
       let currentSurahStartAya = (s === startSurah) ? startAya : 1;
       let currentSurahEndAya = (s === endSurah) ? endAya : maxAyaInSurah;
 
-      if (currentSurahStartAya === 1 && s > 1) {
-        // Use translated name if available, otherwise fallback to default
+      if (currentSurahStartAya === 1 && s > 1 && s !== 9) {
         const surahName = (t && t.surahNames && t.surahNames[s]) ? t.surahNames[s] : defaultSurahNames[s];
-        fullTextHTML += `<div class="surah-header"><h3>${s}. ${surahName}</h3></div>`;
+        fullTextHTML += `<div class="surah-header">(${s}) ${surahName}</div>`;
       }
 
       for (let a = currentSurahStartAya; a <= currentSurahEndAya; a++) {
@@ -459,14 +511,16 @@ document.addEventListener('DOMContentLoaded', () => {
           const BASMALAH = "بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ";
 
           if (a === 1 && text.startsWith(BASMALAH)) {
-            if (s === 1) {
+            if (s === 1) { // Al-Fatiha, Basmalah is part of the verse
               const textWithDiacritics = fixDiacritics(text);
               const coloredText = applyTajweed(textWithDiacritics);
-              fullTextHTML += `<div class="basmalah" style="text-align: center; margin-bottom: 10px; width: 100%;">${coloredText} <span class="verse-number">${verse.aya}</span></div>`;
+              fullTextHTML += `${coloredText} <span class="verse-number">${verse.aya}</span> `;
               continue;
+            } else { // Other surahs, Basmalah is separate
+              const coloredBasmalah = applyTajweed(fixDiacritics(BASMALAH));
+              fullTextHTML += `<div class="basmalah" style="text-align: center; margin-bottom: 10px; width: 100%;">${coloredBasmalah}</div>`;
+              text = text.substring(BASMALAH.length).trim();
             }
-            fullTextHTML += `<div class="basmalah" style="text-align: center; margin-bottom: 10px; width: 100%;">${BASMALAH}</div>`;
-            text = text.substring(BASMALAH.length).trim();
           }
 
           const textWithDiacritics = fixDiacritics(text);
@@ -485,7 +539,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     settings.currentPage = page;
     const juz = getJuzNumber(settings.currentPage);
-    pageInfo.textContent = `${t ? t.page : 'Page'} ${settings.currentPage} ${t ? t.of : 'of'} ${totalMushafPages} | ${t ? t.juz : 'Juz'} ${juz}`;
+    pageInfo.textContent = `${t ? t.page : 'Page'} ${settings.currentPage} | ${t ? t.juz : 'Juz'} ${juz}`;
     prevBtn.disabled = settings.currentPage === 1;
     nextBtn.disabled = settings.currentPage === totalMushafPages;
 
@@ -496,11 +550,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function findFirstPageOfSurah(surahId) {
-    for (let i = 0; i < quranPageData.length; i++) {
-      const [start, end] = quranPageData[i];
-      const startSurah = start[0];
-      if (surahId === startSurah) {
-        return i + 1;
+    for (let i = 0; i < pages.length; i++) {
+      const pageData = pages[i];
+      if (pageData.surah_begin === surahId) {
+        return pageData.page;
       }
     }
     return 1;
@@ -508,11 +561,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateLegend() {
     if (!t) return;
+    const maddMuttasilText = (t.maddMuttasil) ? t.maddMuttasil : 'Madd Muttasil (Connected)';
+    const maddMunfasilText = (t.maddMunfasil) ? t.maddMunfasil : 'Madd Munfasil (Separated)';
+    const maddAridText = (t.maddArid) ? t.maddArid : "Madd 'Arid (Temporary)";
+    const maddLazimText = (t.maddLazim) ? t.maddLazim : "Madd Lazim (Necessary)";
     legend.innerHTML = `
         <h5 style="margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">${t.legendTitle}</h5>
         <ul style="list-style: none; padding: 0; margin: 0; font-size: 11px; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px;">
             <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #FF70A6; margin-right: 5px;">■</span> <div>${t.ghunna}</div></li>
-            <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #A64AC9; margin-right: 5px;">■</span> <div>${t.maddLong}</div></li>
+            <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #8B008B; margin-right: 5px;">■</span> <div>${maddLazimText}</div></li>
+            <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #A64AC9; margin-right: 5px;">■</span> <div>${maddMuttasilText}</div></li>
+            <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #E91E63; margin-right: 5px;">■</span> <div>${maddMunfasilText}</div></li>
+            <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #1ABC9C; margin-right: 5px;">■</span> <div>${maddAridText}</div></li>
             <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #F39C12; margin-right: 5px;">■</span> <div>${t.maddLiin}</div></li>
             <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #9932CC; margin-right: 5px;">■</span> <div>${t.maddSilah}</div></li>
             <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #7F00FF; margin-right: 5px;">■</span> <div>${t.maddAsli}</div></li>
@@ -521,6 +581,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #00BFFF; margin-right: 5px;">■</span> <div>${t.idghamGhunna}</div></li>
             <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #5DADE2; margin-right: 5px;">■</span> <div>${t.idghamBila}</div></li>
             <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #20B2AA; margin-right: 5px;">■</span> <div>${t.ikhfa}</div></li>
+            <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #6A5ACD; margin-right: 5px;">■</span> <div>${t.qasr}</div></li>
         </ul>
         <h5 style="margin-top: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">${t.pauseMarksTitle}</h5>
         <ul style="list-style: none; padding: 0; margin: 0; font-size: 11px; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px;">

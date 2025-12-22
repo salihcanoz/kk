@@ -52,7 +52,7 @@ body {
 
 /* Main Container */
 .container {
-  max-width: 900px;
+  max-width: 800px;
   margin: 2rem auto;
   padding: 0 20px;
 }
@@ -127,8 +127,20 @@ body {
   color: #16a085; /* Green - Nasalization */
 }
 
-.tajweed-madd {
-  color: #c0392b; /* Red - Major Elongation */
+.tajweed-madd-lazim {
+  color: #8B008B; /* Dark Magenta - Necessary Elongation */
+}
+
+.tajweed-madd-muttasil {
+  color: #A64AC9; /* Purple - Connected Elongation */
+}
+
+.tajweed-madd-munfasil {
+  color: #E91E63; /* Pink - Separated Elongation */
+}
+
+.tajweed-madd-arid {
+  color: #1ABC9C; /* Teal - Temporary Elongation */
 }
 
 .tajweed-madd-asli {
@@ -165,13 +177,15 @@ body {
 
 /* --- Waqf & Sajdah Signs --- */
 .waqf-sign {
-  font-size: 0.6em;
-  font-weight: bold;
+  font-size: 0.4em;
+  top: -2em;
   position: relative;
-  top: -2.0em; /* Raise it above the line */
-  padding: 0 2px;
+  padding: 2px;
   opacity: 0;
   transition: opacity 0.3s ease;
+  border-radius: 5px;
+  border: 1px solid;
+  margin-left: 10px;
 }
 
 .show-abbreviations .waqf-sign {
@@ -212,7 +226,7 @@ body {
 
 [class^="tajweed-"]::after {
   position: absolute;
-  top: 5.0em; /* Position below the letter, accounting for descenders */
+  bottom: -5px; /* Position below the letter, accounting for descenders */
   left: 50%;
   transform: translateX(-50%);
   font-size: 9px;
@@ -234,7 +248,10 @@ body {
 /* Using CSS variables for dynamic content */
 :root {
   --abbr-ghunna: "Gh";
-  --abbr-madd: "M";
+  --abbr-madd-lazim: "Lz";
+  --abbr-madd-muttasil: "MM";
+  --abbr-madd-munfasil: "Mn";
+  --abbr-madd-arid: "A";
   --abbr-madd-liin: "ML";
   --abbr-madd-silah: "MS";
   --abbr-madd-asli: "MA";
@@ -249,9 +266,21 @@ body {
   content: var(--abbr-ghunna);
   color: #16a085;
 }
-.tajweed-madd::after {
-  content: var(--abbr-madd);
-  color: #c0392b;
+.tajweed-madd-lazim::after {
+  content: var(--abbr-madd-lazim);
+  color: #8B008B;
+}
+.tajweed-madd-muttasil::after {
+  content: var(--abbr-madd-muttasil);
+  color: #A64AC9;
+}
+.tajweed-madd-munfasil::after {
+  content: var(--abbr-madd-munfasil);
+  color: #E91E63;
+}
+.tajweed-madd-arid::after {
+  content: var(--abbr-madd-arid);
+  color: #1ABC9C;
 }
 .tajweed-madd-liin::after {
   content: var(--abbr-madd-liin);
