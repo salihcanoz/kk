@@ -148,8 +148,9 @@ body {
   color: #F39C12; /* Orange - Soft Elongation */
 }
 
-.tajweed-madd-silah {
-  color: #9932CC; /* DarkOrchid - Connecting Elongation */
+
+.tajweed-madd-lazim {
+  color: #c0392b;
 }
 
 .tajweed-qalqalah {
@@ -250,6 +251,7 @@ body {
   --abbr-madd-arid: "A";
   --abbr-madd-liin: "ML";
   --abbr-madd-silah: "MS";
+  --abbr-madd-lazim: "Lz";
   --abbr-madd-asli: "MA";
   --abbr-qalqalah: "Q";
   --abbr-iqlab: "Iq";
@@ -282,6 +284,11 @@ body {
 .tajweed-madd-silah::after {
   content: var(--abbr-madd-silah);
   color: #9932CC;
+}
+
+.tajweed-madd-lazim::after {
+  content: var(--abbr-madd-lazim);
+  color: #c0392b;
 }
 .tajweed-madd-asli::after {
   content: var(--abbr-madd-asli);

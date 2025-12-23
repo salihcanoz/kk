@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showAbbreviations: false
   };
 
-  let settings = { ...defaultSettings };
+  let settings = {...defaultSettings};
 
   function saveSettings() {
     localStorage.setItem('quranReaderSettings', JSON.stringify(settings));
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function loadSettings() {
     const savedSettings = localStorage.getItem('quranReaderSettings');
     if (savedSettings) {
-      settings = { ...settings, ...JSON.parse(savedSettings) };
+      settings = {...settings, ...JSON.parse(savedSettings)};
     }
   }
 
@@ -34,7 +34,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Use the translations object from tr.js if available, otherwise fallback or define here.
   // Assuming tr.js defines a global 'translations' object.
   let t = (typeof translations !== 'undefined' && translations[settings.language]) ? translations[settings.language] : (typeof translations !== 'undefined' ? translations.en : {});
-  console.log('Current language:', settings.language);
 
   // Load fonts from Google Fonts
   const fontLink = document.createElement('link');
@@ -49,9 +48,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Language Dropdown
   const langSelect = document.createElement('select');
   const languages = [
-    { code: 'tr', name: '\u{1F1F9}\u{1F1F7} Türkçe' },
-    { code: 'nl', name: '\u{1F1F3}\u{1F1F1} Nederlands' },
-    { code: 'en', name: '\u{1F1EC}\u{1F1E7} English' }
+    {code: 'tr', name: '\u{1F1F9}\u{1F1F7} Türkçe'},
+    {code: 'nl', name: '\u{1F1F3}\u{1F1F1} Nederlands'},
+    {code: 'en', name: '\u{1F1EC}\u{1F1E7} English'}
   ];
   languages.forEach(lang => {
     const option = document.createElement('option');
@@ -71,10 +70,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // Font Type Dropdown
   const fontSelect = document.createElement('select');
   const fonts = [
-    { name: 'Amiri', value: "'Amiri', serif" },
-    { name: 'Scheherazade', value: "'Scheherazade New', serif" },
-    { name: 'Noto Naskh', value: "'Noto Naskh Arabic', serif" },
-    { name: 'Lateef', value: "'Lateef', serif" }
+    {name: 'Amiri', value: "'Amiri', serif"},
+    {name: 'Scheherazade', value: "'Scheherazade New', serif"},
+    {name: 'Noto Naskh', value: "'Noto Naskh Arabic', serif"},
+    {name: 'Lateef', value: "'Lateef', serif"}
   ];
   fonts.forEach(font => {
     const option = document.createElement('option');
@@ -138,8 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
     settings.showAbbreviations = e.target.checked;
     if (settings.showAbbreviations) {
       display.classList.add('show-abbreviations');
-    }
-    else {
+    } else {
       display.classList.remove('show-abbreviations');
     }
     saveSettings();
@@ -148,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
   langSelect.onchange = () => {
     settings.language = langSelect.value;
     if (typeof translations !== 'undefined') {
-        t = translations[settings.language];
+      t = translations[settings.language];
     }
     saveSettings();
     updateUIText();
@@ -158,29 +156,29 @@ document.addEventListener('DOMContentLoaded', () => {
   let touchStartX = 0;
   let touchEndX = 0;
 
-  display.addEventListener('touchstart', function(event) {
-      touchStartX = event.changedTouches[0].screenX;
+  display.addEventListener('touchstart', function (event) {
+    touchStartX = event.changedTouches[0].screenX;
   }, false);
 
-  display.addEventListener('touchend', function(event) {
-      touchEndX = event.changedTouches[0].screenX;
-      handleSwipe();
+  display.addEventListener('touchend', function (event) {
+    touchEndX = event.changedTouches[0].screenX;
+    handleSwipe();
   }, false);
 
   function handleSwipe() {
-      const swipeThreshold = 50; // Minimum distance for a swipe
-      if (touchEndX < touchStartX - swipeThreshold) {
-          // Swiped left (RTL: Next Page)
-          if (settings.currentPage < totalMushafPages) {
-            loadMushafPage(settings.currentPage + 1);
-          }
+    const swipeThreshold = 50; // Minimum distance for a swipe
+    if (touchEndX < touchStartX - swipeThreshold) {
+      // Swiped left (RTL: Next Page)
+      if (settings.currentPage < totalMushafPages) {
+        loadMushafPage(settings.currentPage + 1);
       }
-      if (touchEndX > touchStartX + swipeThreshold) {
-          // Swiped right (RTL: Previous Page)
-          if (settings.currentPage > 1) {
-            loadMushafPage(settings.currentPage - 1);
-          }
+    }
+    if (touchEndX > touchStartX + swipeThreshold) {
+      // Swiped right (RTL: Previous Page)
+      if (settings.currentPage > 1) {
+        loadMushafPage(settings.currentPage - 1);
       }
+    }
   }
 
   // --- Keyboard Navigation ---
@@ -243,8 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
     parseJSON(quranRawData);
     populateSurahDropdown();
     updateUIText();
-  }
-  else {
+  } else {
     console.error("Error: quranRawData is not defined.");
     display.innerHTML = `<p style="text-align:center; color: red;">Error loading Quran data. Please ensure q.js is loaded and defines 'quranRawData'.</p>`;
   }
@@ -255,18 +252,17 @@ document.addEventListener('DOMContentLoaded', () => {
     display.style.fontSize = settings.fontSize + 'px';
     if (settings.showAbbreviations) {
       display.classList.add('show-abbreviations');
-    }
-    else {
+    } else {
       display.classList.remove('show-abbreviations');
     }
 
     // Update translatable text
     if (t) {
-        decreaseFontBtn.title = t.decreaseFont;
-        increaseFontBtn.title = t.increaseFont;
-        abbrLabel.textContent = t.rulesLabel;
-        prevBtn.textContent = t.nextPage;
-        nextBtn.textContent = t.prevPage;
+      decreaseFontBtn.title = t.decreaseFont;
+      increaseFontBtn.title = t.increaseFont;
+      abbrLabel.textContent = t.rulesLabel;
+      prevBtn.textContent = t.nextPage;
+      nextBtn.textContent = t.prevPage;
     }
 
     populateSurahDropdown();
@@ -278,18 +274,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Update CSS variables for abbreviations
     if (t) {
-        document.documentElement.style.setProperty('--abbr-ghunna', `"${t.abbrGhunna || 'Gh'}"`);
-        document.documentElement.style.setProperty('--abbr-madd-muttasil', `"${t.abbrMaddMuttasil || 'MM'}"`);
-        document.documentElement.style.setProperty('--abbr-madd-munfasil', `"${t.abbrMaddMunfasil || 'Mn'}"`);
-        document.documentElement.style.setProperty('--abbr-madd-arid', `"${t.abbrMaddArid || 'A'}"`);
-        document.documentElement.style.setProperty('--abbr-madd-liin', `"${t.abbrMaddLiin || 'ML'}"`);
-        document.documentElement.style.setProperty('--abbr-madd-silah', `"${t.abbrMaddSilah || 'MS'}"`);
-        document.documentElement.style.setProperty('--abbr-madd-asli', `"${t.abbrMaddAsli || 'MA'}"`);
-        document.documentElement.style.setProperty('--abbr-qalqalah', `"${t.abbrQalqalah || 'Q'}"`);
-        document.documentElement.style.setProperty('--abbr-iqlab', `"${t.abbrIqlab || 'Iq'}"`);
-        document.documentElement.style.setProperty('--abbr-idgham-ghunna', `"${t.abbrIdghamGhunna || 'IdG'}"`);
-        document.documentElement.style.setProperty('--abbr-idgham-bila', `"${t.abbrIdghamBila || 'IdB'}"`);
-        document.documentElement.style.setProperty('--abbr-ikhfa', `"${t.abbrIkhfa || 'Ik'}"`);
+      document.documentElement.style.setProperty('--abbr-ghunna', `"${t.abbrGhunna || 'Gh'}"`);
+      document.documentElement.style.setProperty('--abbr-madd-muttasil', `"${t.abbrMaddMuttasil || 'MM'}"`);
+      document.documentElement.style.setProperty('--abbr-madd-munfasil', `"${t.abbrMaddMunfasil || 'Mn'}"`);
+      document.documentElement.style.setProperty('--abbr-madd-arid', `"${t.abbrMaddArid || 'A'}"`);
+      document.documentElement.style.setProperty('--abbr-madd-liin', `"${t.abbrMaddLiin || 'ML'}"`);
+      document.documentElement.style.setProperty('--abbr-madd-silah', `"${t.abbrMaddSilah || 'MS'}"`);
+      document.documentElement.style.setProperty('--abbr-madd-lazim', `"${t.abbrMaddLazim || 'Lz'}"`);
+      document.documentElement.style.setProperty('--abbr-madd-asli', `"${t.abbrMaddAsli || 'MA'}"`);
+      document.documentElement.style.setProperty('--abbr-qalqalah', `"${t.abbrQalqalah || 'Q'}"`);
+      document.documentElement.style.setProperty('--abbr-iqlab', `"${t.abbrIqlab || 'Iq'}"`);
+      document.documentElement.style.setProperty('--abbr-idgham-ghunna', `"${t.abbrIdghamGhunna || 'IdG'}"`);
+      document.documentElement.style.setProperty('--abbr-idgham-bila', `"${t.abbrIdghamBila || 'IdB'}"`);
+      document.documentElement.style.setProperty('--abbr-ikhfa', `"${t.abbrIkhfa || 'Ik'}"`);
 
     }
   }
@@ -305,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!quranData[surah]) {
           quranData[surah] = {};
         }
-        quranData[surah][aya] = { aya: parseInt(aya), text: text };
+        quranData[surah][aya] = {aya: parseInt(aya), text: text};
       }
     });
   }
@@ -346,104 +343,6 @@ document.addEventListener('DOMContentLoaded', () => {
       pageSelect.appendChild(option);
     }
     pageSelect.value = currentPage;
-  }
-
-  function applyTajweed(text) {
-    let html = text;
-
-    // 1. Nun Sakin & Tanwin Rules
-    // Idgham with Ghunna (Colors the merged letter, removes shaddah)
-    html = html.replace(/(نْ|[\u0621-\u064A][ًٌٍ])([\sۘۚۖۗۛ]*)([ينمو])(ّ)?([ًٌٍَُِّْ]*)/g, '$1$2<span class="tajweed-idgham-bi-ghunna">$3$5</span>');
-    // Idgham without Ghunna (Colors the merged letter, removes shaddah)
-    html = html.replace(/(نْ|[\u0621-\u064A][ًٌٍ])([\sۘۚۖۗۛ]*)([لر])(ّ)?([ًٌٍَُِّْ]*)/g, '$1$2<span class="tajweed-idgham-bila">$3$5</span>');
-    // Iqlab (Colors the nun/tanwin)
-    html = html.replace(/(نْ|[\u0621-\u064A][ًٌٍ])(?=[\sۘۚۖۗۛ]*ب)/g, '<span class="tajweed-iqlab">$1</span>');
-    // Ikhfa (Colors the nun/tanwin)
-    html = html.replace(/(نْ|[\u0621-\u064A][ًٌٍ])(?=[\sۘۚۖۗۛ]*[تثجدذزسشصضطظفقك])/g, '<span class="tajweed-ikhfa">$1</span>');
-
-    // Madd 'Arid li-s-Sukun (must be before other madds)
-    html = html.replace(/(?<!>)(ا|(?<=ُ)و|(?<=ِ)ي)(?=[\u0621-\u064A][\u064B-\u0652]*$)/g, '<span class="tajweed-madd-arid">$1</span>');
-
-    // Madd Rules (Long)
-    // Muttasil (Connected)
-    html = html.replace(/(?<!>)(?<=َ)(ا)(?=[ءئؤأإآ])/g, '<span class="tajweed-madd-muttasil">$1</span>');
-    html = html.replace(/(?<!>)(?<=ُ)(و)(?=[ءئؤأإآ])/g, '<span class="tajweed-madd-muttasil">$1</span>');
-    html = html.replace(/(?<!>)(?<=ِ)(ي)(?=[ءئؤأإآ])/g, '<span class="tajweed-madd-muttasil">$1</span>');
-    // Munfasil (Separated)
-    html = html.replace(/(?<!>)(?<=َ)([اى])(\s+[أإآء])/g, '<span class="tajweed-madd-munfasil">$1</span>$2');
-    html = html.replace(/(?<!>)(?<=ُ)(و)(ا?\s+[أإآء])/g, '<span class="tajweed-madd-munfasil">$1</span>$2');
-    html = html.replace(/(?<!>)(?<=ِ)(ي)(\s+[أإآء])/g, '<span class="tajweed-madd-munfasil">$1</span>$2');
-    // Madd Liin (only at end of verse)
-    html = html.replace(/(?<!>)(?<=َ)([وي]ْ)(?=[\u0621-\u064A][\u064B-\u0652]*$)/g, '<span class="tajweed-madd-liin">$1</span>');
-    // Madd Silah
-    html = html.replace(/(فِيهِ)(\s+مُهَانًا)/g, '<span class="tajweed-madd-silah">$1</span>$2');
-    html = html.replace(/(?<=[\u064E\u064F\u0650])(ه[\u064F\u0650])(?=\s+[أإآء])/g, '<span class="tajweed-madd-munfasil">$1</span>'); // Silah Kubra is like Munfasil
-    html = html.replace(/(?<=[\u064E\u064F\u0650])(ه[\u064F\u0650])(?=\s+[^\u0627\u0671\u0652أإآء])/g, '<span class="tajweed-madd-silah">$1</span>');
-    // Dagger Alif Madds
-    html = html.replace(/(?<!>)(ّ?ٰ)(?=[ءئؤأإآ])/g, '<span class="tajweed-madd-muttasil">$1</span>');
-    html = html.replace(/(?<!>)(ّ?ٰ)(?=\s+[ءئؤأإآ])/g, '<span class="tajweed-madd-munfasil">$1</span>');
-
-    // 3. General Single-Letter Rules
-    // Madd Asli
-    html = html.replace(/(?<!>)(?<=َ)ا(?!ل[ّْ]|[\u06DF\u06E0])/g, '<span class="tajweed-madd-asli">ا</span>');
-    html = html.replace(/(?<!>)(?<=ُ)و(?![ًٌٍَُِّْٰ])/g, '<span class="tajweed-madd-asli">و</span>');
-    html = html.replace(/(?<!>)(?<=ِ)ي(?![ًٌٍَُِّْٰ])/g, '<span class="tajweed-madd-asli">ي</span>');
-    html = html.replace(/(?<!>)(ّ?ٰ)/g, '<span class="tajweed-madd-asli">$1</span>'); // Dagger alif as madd asli
-
-    // Ghunna on noon/meem mushaddad
-    html = html.replace(/([نم]ّ)/g, '<span class="tajweed-ghunna">$1</span>');
-    // Qalqalah
-    html = html.replace(/([قطبجد]ْ)/g, '<span class="tajweed-qalqalah">$1</span>');
-
-    // 4. Presentational Signs
-    // Waqf & Sajdah Signs
-    html = html.replace(/(۩)/g, `<span class="sajdah-sign" title="${t ? t.sajdahTitle : 'Sajdah'}">$1</span>`);
-    html = html.replace(/(ۘ)/g, `<span class="waqf-sign waqf-lazim" title="${t ? t.waqfLazim : 'Lazim'}">م</span>`);
-    html = html.replace(/(ۚ)/g, `<span class="waqf-sign waqf-jaiz" title="${t ? t.waqfJaiz : 'Jaiz'}">ج</span>`);
-    html = html.replace(/(ۖ)/g, `<span class="waqf-sign waqf-continue" title="${t ? t.alWaslAwla : 'Continue'}">صلى</span>`);
-    html = html.replace(/(ۗ)/g, `<span class="waqf-sign waqf-awla" title="${t ? t.waqfAwlaTitle : 'Stop'}">قلى</span>`);
-    html = html.replace(/(ۛ)/g, `<span class="waqf-sign waqf-muanaqah" title="${t ? t.muanaqahTitle : 'Muanaqah'}">∴</span>`);
-
-    return html;
-  }
-
-  function fixDiacritics(text) {
-    let fixedText = text;
-    // Remove leading shaddah if present (general cleanup)
-    fixedText = fixedText.replace(/^([^\s])ّ/, '$1');
-    // Replace specific Allah forms for consistency
-    fixedText = fixedText.replace(/اللَّه/g, 'اللّٰه');
-    fixedText = fixedText.replace(/لِلَّهِ/g, 'لِلّٰهِ');
-    // Add alif to Al- prefix if missing (general cleanup)
-    fixedText = fixedText.replace(/^ال/, 'اَل');
-
-    // Reorder shadda and kasra to encourage kasra to render below the letter.
-    fixedText = fixedText.replace(/(ّ)(ِ)/g, '$2$1');
-
-    const waslReplacements = {
-      'اهْدِنَا': 'اِهْدِنَا', 'اسْتَغْفِرْ': 'اِسْتَغْفِرْ', 'اضْرِب': 'اِضْرِب',
-      'اقْرَأْ': 'اِقْرَأْ', 'ارْجِعُوا': 'اِرْجِعُوا', 'اكْشِفْ': 'اِكْشِفْ',
-      'اسْم': 'اِسْم', 'ابْن': 'اِبْن', 'ابْنَة': 'اِبْنَة',
-      'امْرَأَة': 'اِمْرَأَة', 'اثْنَيْنِ': 'اِثْنَيْنِ', 'اثْنَتَيْنِ': 'اِثْنَتَيْنِ',
-      'اسْتَكْبَرَ': 'اِسْتَكْبَرَ', 'اسْتَطَاعُوا': 'اِسْتَطَاعُوا', 'اسْتَجَابُوا': 'اِسْتَجَابُوا',
-      'اطْمَأَنَّ': 'اِطْمَأَنَّ', 'اهْبِطُوا': 'اِهْبِطُوا', 'اتَّقُوا': 'اِتَّقُوا',
-      'اصْبِرُوا': 'اِصْبِرُوا', 'اسْتَعِينُوا': 'اِسْتَعِينُوا', 'انطَلَقُوا': 'اِنطَلَقُوا',
-      'انتَصِرْ': 'اِنتَصِرْ', 'اتَّبِعْ': 'اِتَّبِعْ', 'افْتَرَاهُ': 'اِفْتَرَاهُ',
-      'ادْخُلُوا': 'اُدْخُلُوا', 'اخْرُجُوا': 'اُخْرُجُوا', 'انظُرُوا': 'اُنظُرُوا',
-      'انظُرْ': 'اُنظُرْ', 'انْظُرْ': 'اُنْظُرْ',
-      'ارْكُضْ': 'اُرْكُضْ', 'ادْعُ': 'اُدْعُ', 'اعْبُدُوا': 'اُعْبُدُوا',
-      'اذْكُرُوا': 'اُذْكُرُوا', 'اقْتُلُوا': 'اُقْتُلُوا', 'انصُرْنَا': 'اُنصُرْنَا'
-    };
-
-    for (const [word, replacement] of Object.entries(waslReplacements)) {
-      const regex = new RegExp('^' + word);
-      if (regex.test(fixedText)) {
-        fixedText = fixedText.replace(regex, replacement);
-        break;
-      }
-    }
-
-    return fixedText;
   }
 
   function getJuzNumber(page) {
@@ -496,16 +395,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (verse) {
           let text = verse.text;
           const BASMALAH = "بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ";
-
           if (a === 1 && text.startsWith(BASMALAH)) {
-              const coloredBasmalah = applyTajweed(fixDiacritics(BASMALAH));
-              fullTextHTML += `<div class="basmalah" style="text-align: center; margin-bottom: 10px; width: 100%;">${coloredBasmalah}</div>`;
-              text = text.substring(BASMALAH.length).trim();
+            const coloredBasmalah = applyTajweed(BASMALAH);
+            fullTextHTML += `<div class="basmalah" style="text-align: center; margin-bottom: 10px; width: 100%;">${coloredBasmalah}</div>`;
+            text = text.substring(BASMALAH.length).trim();
+          } else {
+            text = applyTajweed(text);
           }
 
-          const textWithDiacritics = fixDiacritics(text);
-          const coloredText = applyTajweed(textWithDiacritics);
-          fullTextHTML += `${coloredText} <span class="verse-number">${verse.aya}</span> `;
+          fullTextHTML += `${text} <span class="verse-number">${verse.aya}</span> `;
         }
       }
     }
@@ -529,7 +427,94 @@ document.addEventListener('DOMContentLoaded', () => {
     saveSettings();
   }
 
-function findFirstPageOfSurah(surahId) {
+  function applyTajweed(text) {
+    //const ignoreVowels = (str) => str.split('').join('[\\u064B-\\u065F]*');
+    let fixedText = vowelizeStartingAlif(text)
+      // --- 1. Dagger Alif Fixes (Alif Khanjariyah) ---
+      .replace(/اللَّه/g, "اللّٰه")
+      .replace(/لِلَّه/g, "لِلّٰه")
+      .replace(/إِسْمَاعِيل/g, "إِسْمٰعِيْل")
+      .replace(/إِسْحَاق/g, "إِسْحٰق")
+      .replace(/السَّمَاوَات/g, "السَّمٰوٰت")
+
+      // --- 2. Madd Lazim Fixes (6 Counts) ---
+      // Rule: Madd Letter + Shaddah
+      .replace(/الضَّالِّين/g, "الضَّآلِّين")  // Al-Fatiha
+      .replace(/الْحَاقَّة/g, "الْحَآقَّة")    // Al-Haqqah
+      .replace(/الطَّامَّة/g, "الطَّآمَّة")    // At-Nazi'at
+      .replace(/الصَّاخَّة/g, "الصَّآخَّة")    // Abasa
+      .replace(/تَأْمُرُونِّي/g, "تَأْمُرُوٓنِّي") // Az-Zumar
+      .replace(/دَابَّة/g, "دَآبَّة")         // Various
+
+      // show sukuun
+      .replace(/ن(?=[بتحخدذرزسشصضطظعغفقكلمهوي])/g, "نْ")
+      // hide idgam shaddah
+      .replace(/(\s[\u0600-\u06FF])\u0651/g, "$1")
+
+    fixedText = applyGenericMadd(fixedText);
+
+    return fixedText;
+
+  }
+
+  function vowelizeStartingAlif(word) {
+    // 1. Rule for "Al-" (Definite Article): Always Fatha
+    if (word.startsWith("ال")) {
+      return word.replace(/^ا/, "ا\u064E");
+    }
+
+    // 2. Rule for Verbs (check the 3rd letter's vowel)
+    // We strip the first two letters to find the 3rd letter's diacritic
+    const thirdLetterVowel = word.match(/^..[\u064E\u064F\u0650]/);
+
+    if (thirdLetterVowel) {
+      const vowel = thirdLetterVowel[0].slice(-1);
+
+      // If 3rd letter has Dammah -> Start with Dammah
+      if (vowel === "\u064F") {
+        return word.replace(/^ا/, "ا\u064F");
+      }
+      // If 3rd letter has Fatha or Kasra -> Start with Kasra
+      else {
+        return word.replace(/^ا/, "ا\u0650");
+      }
+    }
+
+    // Default to Kasra (most common for verbs like Ihdina)
+    return word.replace(/^ا/, "ا\u0650");
+  }
+
+  function applyGenericMadd(text) {
+    // 1. Madd Lazim (6 counts) - e.g., the Alif in Ad-Dallin
+    const maddLazim = /((?:\u0622|[\u0627\u0648\u064A]\u0653)[\u064B-\u065F]*[\u0600-\u06FF][\u064B-\u065F]*\u0651)/g;
+
+    // 2. Madd Muttasil & Munfasil (4-5 counts)
+    const maddMuttasil = /([\u0627\u0648\u064A]\u0653[ءأإ])/g;
+    const maddMunfasil = /([\u0627\u0648\u064A]\u0653(?=\s[ءأإ]))/g;
+
+    // 3. Madd Arid (2, 4, 6 counts) - Peninsula letter before verse end
+    // Checks for Verse Span OR the end of the text line
+    const maddArid = /([\u0627\u0648\u064A])(?=[\u0600-\u06FF](?:\u0651|[\u064B-\u065F]|\s)*(?:<span class="verse-number">|$))/g;
+
+    // Apply specific long madds first to protect them from being overwritten
+    text = text
+      .replace(maddLazim, '<span class="tajweed-madd-lazim">$1</span>')
+      .replace(maddMuttasil, '<span class="tajweed-madd-muttasil">$1</span>')
+      .replace(maddMunfasil, '<span class="tajweed-madd-munfasil">$1</span>')
+      .replace(maddArid, '<span class="tajweed-madd-arid">$1</span>');
+
+    // 4. Madd Asli (Natural 2-count) - Green
+    // Using clean hex: \u064E (Fatha), \u064F (Damma), \u0650 (Kasra)
+    text = text
+      .replace(/\u064E\u0627/g, '\u064E<span class="tajweed-madd-asli">\u0627</span>')
+      .replace(/\u064F\u0648/g, '\u064F<span class="tajweed-madd-asli">\u0648</span>')
+      .replace(/\u0650\u064A/g, '\u0650<span class="tajweed-madd-asli">\u064A</span>')
+      .replace(/(\u0670)/g, '<span class="tajweed-madd-asli">$1</span>');
+
+    return text;
+  }
+
+  function findFirstPageOfSurah(surahId) {
     for (let i = 0; i < pages.length; i++) {
       const pageData = pages[i];
       if (pageData.surah_begin === surahId) {
