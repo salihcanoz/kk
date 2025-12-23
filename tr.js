@@ -10,9 +10,9 @@ const translations = {
     legendTitle: 'Tajweed Legend',
     pauseMarksTitle: 'Pause & Prostration Marks',
     ghunna: 'Ghunna: Nasalization',
-    maddMuttasil: 'Madd Muttasil: Connected Elongation',
-    maddMunfasil: 'Madd Munfasil: Separated Elongation',
-    maddArid: "Madd 'Arid: Temporary Elongation",
+    maddMuttasil: 'Madd Muttasil (Connected)',
+    maddMunfasil: 'Madd Munfasil (Separated)',
+    maddArid: "Madd 'Arid (Temporary)",
     maddLiin: 'Madd Liin: Soft Elongation',
     maddSilah: 'Madd Silah: Connecting Elongation',
     maddLazim: 'Madd Lazim: ',
@@ -22,7 +22,6 @@ const translations = {
     idghamGhunna: 'Idgham bi Ghunna',
     idghamBila: 'Idgham bila Ghunna',
     ikhfa: 'Ikhfa: Hiding',
-
     sajdah: 'Sajdah: Prostration',
     lazim: 'Lazim: Mandatory Stop',
     jaiz: 'Ja\'iz: Permissible Stop',
@@ -69,7 +68,7 @@ const translations = {
     abbrMaddMunfasil: 'Mn',
     abbrMaddArid: 'A',
     abbrMaddLiin: 'ML',
-    abbrMaddSilah: 'MS',
+    abbrMaddSilah: 'S',
     abbrMaddLazim: 'Lz',
     abbrMaddAsli: 'MA',
     abbrQalqalah: 'Q',
@@ -148,7 +147,7 @@ const translations = {
     abbrMaddMunfasil: 'Mn',
     abbrMaddArid: 'A',
     abbrMaddLiin: 'ML',
-    abbrMaddSilah: 'MS',
+    abbrMaddSilah: 'S',
     abbrMaddLazim: 'Lz',
     abbrMaddAsli: 'MA',
     abbrQalqalah: 'Q',
@@ -156,7 +155,6 @@ const translations = {
     abbrIdghamGhunna: 'IdG',
     abbrIdghamBila: 'IdB',
     abbrIkhfa: 'Ik',
-
   },
   tr: {
     decreaseFont: 'Yazı Boyutunu Küçült',
@@ -181,7 +179,6 @@ const translations = {
     idghamGhunna: 'İdgam bi Gunne',
     idghamBila: 'İdgam bila Gunne',
     ikhfa: 'İhfa: Gizleme',
-
     sajdah: 'Secde: Tilavet secdesi',
     lazim: 'Lazım: Zorunlu durak',
     jaiz: 'Caiz: İzinli durak',
@@ -229,14 +226,12 @@ const translations = {
     abbrMaddMunfasil: 'Mn',
     abbrMaddArid: 'A',
     abbrMaddLiin: 'ML',
-    abbrMaddSilah: 'MS',
-    abbrMaddLazim: 'Lz',
+    abbrMaddSilah: 'S',
     abbrMaddAsli: 'MT',
     abbrQalqalah: 'Kl',
     abbrIqlab: 'İk',
     abbrIdghamGhunna: 'İmG',
     abbrIdghamBila: 'İbG',
     abbrIkhfa: 'İh',
-
   }
 };

@@ -52,7 +52,7 @@ body {
 
 /* Main Container */
 .container {
-  max-width: 800px;
+  max-width: 1000px;
   margin: 2rem auto;
   padding: 0 20px;
 }
@@ -128,6 +128,14 @@ body {
   color: #16a085; /* Green - Nasalization */
 }
 
+.tajweed-ghunna-ikhfa-shafawi {
+  color: #16a085; /* Green - Nasalization */
+}
+
+.tajweed-ghunna-idgam-mithlayn {
+  color: #16a085; /* Green - Nasalization */
+}
+
 .tajweed-madd-muttasil {
   color: #A64AC9; /* Purple - Connected Elongation */
 }
@@ -147,7 +155,6 @@ body {
 .tajweed-madd-liin {
   color: #F39C12; /* Orange - Soft Elongation */
 }
-
 
 .tajweed-madd-lazim {
   color: #c0392b;
@@ -173,20 +180,39 @@ body {
   color: #8e44ad; /* Purple - Conversion */
 }
 
-/* --- Waqf & Sajdah Signs --- */
-.waqf-sign {
-  font-size: 0.4em;
-  top: -2em;
-  position: relative;
-  padding: 2px;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  border-radius: 5px;
-  border: 1px solid;
-  margin-left: 10px;
+.tajweed-qasr {
+  color: #b4b4b9;
 }
 
-.show-abbreviations .waqf-sign {
+.tajweed-silah {
+  color: #7ea24b;
+}
+
+.tajweed-madd-silah {
+  color: #9932CC;
+}
+
+.tajweed-ikhfa-shafawi {
+  color: #e67e22; /* Orange */
+}
+
+/* --- Waqf & Sajdah Signs --- */
+.waqf-sign {
+  font-size: 0.75em;
+  position: relative;
+  font-family: 'Amiri', 'Traditional Arabic', serif;
+}
+
+/* Specific colors based on your legend */
+.waqf-lazim, .waqf-awla, .waqf-jaiz, .waqf-muanaqah {
+  color: red; /* Stopping signs in Red */
+}
+
+.waqf-continue {
+  color: green; /* Sila (Better to continue) in Green */
+}
+
+.show-abbreviations {
   opacity: 1;
 }
 
@@ -250,7 +276,7 @@ body {
   --abbr-madd-munfasil: "Mn";
   --abbr-madd-arid: "A";
   --abbr-madd-liin: "ML";
-  --abbr-madd-silah: "MS";
+  --abbr-madd-silah: "S";
   --abbr-madd-lazim: "Lz";
   --abbr-madd-asli: "MA";
   --abbr-qalqalah: "Q";
@@ -258,10 +284,21 @@ body {
   --abbr-idgham-ghunna: "IdG";
   --abbr-idgham-bila: "IdB";
   --abbr-ikhfa: "Ik";
+  --abbr-qasr: "Qsr";
 }
 
 .tajweed-ghunna::after {
   content: var(--abbr-ghunna);
+  color: #16a085;
+}
+
+.tajweed-ghunna-ikhfa-shafawi::after {
+  content: attr(data-label);
+  color: #16a085;
+}
+
+.tajweed-ghunna-idgam-mithlayn::after {
+  content: attr(data-label);
   color: #16a085;
 }
 
@@ -315,8 +352,36 @@ body {
   color: #d35400;
 }
 
+.tajweed-qasr::after {
+  content: var(--abbr-qasr);
+  color: inherit;
+}
+
+.tajweed-silah::after {
+  content: attr(data-label);
+}
+
+
+
+.tajweed-ikhfa-shafawi::after {
+  content: attr(data-label);
+  color: orange;
+}
+
 #abbrLabel {
   margin-Left : 5px;
   cursor: pointer;
   font-size: .8rem;
+}
+
+.silent-letter {
+  color: #b4b4b9;
+}
+
+#tajweed-legend {
+  margin-top: 20px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
 }
