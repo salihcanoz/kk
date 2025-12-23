@@ -171,15 +171,15 @@ document.addEventListener('DOMContentLoaded', () => {
   function handleSwipe() {
     const swipeThreshold = 50; // Minimum distance for a swipe
     if (touchEndX < touchStartX - swipeThreshold) {
-      // Swiped left (RTL: Next Page)
-      if (settings.currentPage < totalMushafPages - 1) {
-        loadMushafPage(settings.currentPage + 1);
+      // Swiped left (RTL: Previous Page)
+      if (settings.currentPage > 0) {
+        loadMushafPage(settings.currentPage - 1);
       }
     }
     if (touchEndX > touchStartX + swipeThreshold) {
-      // Swiped right (RTL: Previous Page)
-      if (settings.currentPage > 0) {
-        loadMushafPage(settings.currentPage - 1);
+      // Swiped right (RTL: Next Page)
+      if (settings.currentPage < totalMushafPages - 1) {
+        loadMushafPage(settings.currentPage + 1);
       }
     }
   }
