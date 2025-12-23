@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Settings ---
   const defaultSettings = {
     language: navigator.language ? navigator.language.substring(0, 2) : 'en',
-    currentPage: 1, // Start from page 1
+    currentPage: 0, // Start from page 0
     fontFamily: "'Amiri', serif",
     fontSize: 36,
     showAbbreviations: false
@@ -172,13 +172,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const swipeThreshold = 50; // Minimum distance for a swipe
     if (touchEndX < touchStartX - swipeThreshold) {
       // Swiped left (RTL: Next Page)
-      if (settings.currentPage < totalMushafPages) {
+      if (settings.currentPage < totalMushafPages - 1) {
         loadMushafPage(settings.currentPage + 1);
       }
     }
     if (touchEndX > touchStartX + swipeThreshold) {
       // Swiped right (RTL: Previous Page)
-      if (settings.currentPage > 1) {
+      if (settings.currentPage > 0) {
         loadMushafPage(settings.currentPage - 1);
       }
     }
@@ -188,13 +188,13 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('keydown', (event) => {
     if (event.key === 'ArrowLeft') {
       // Left arrow key (RTL: Next Page)
-      if (settings.currentPage < totalMushafPages) {
+      if (settings.currentPage < totalMushafPages - 1) {
         loadMushafPage(settings.currentPage + 1);
       }
     }
     else if (event.key === 'ArrowRight') {
       // Right arrow key (RTL: Previous Page)
-      if (settings.currentPage > 1) {
+      if (settings.currentPage > 0) {
         loadMushafPage(settings.currentPage - 1);
       }
     }
@@ -341,7 +341,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function populatePageDropdown() {
     const currentPage = pageSelect.value;
     pageSelect.innerHTML = '';
-    for (let i = 1; i <= totalMushafPages; i++) {
+    for (let i = 0; i < totalMushafPages; i++) {
       const option = document.createElement('option');
       option.value = i;
       option.textContent = `${t ? t.page : 'Page'} ${i}`;
@@ -351,9 +351,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function getJuzNumber(page) {
-    if (page <= 21) return 1;
-    if (page > 601) return 30;
-    return Math.floor((page - 2) / 20) + 1;
+    if (page <= 20) return 1;
+    if (page > 600) return 30;
+    return Math.floor((page - 1) / 20) + 1;
   }
 
   function loadMushafPage(page) {
@@ -364,7 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const pageIndex = page - 1;
+    const pageIndex = page;
 
     if (pageIndex < 0 || pageIndex >= pages.length) {
       display.innerHTML = '<p style="text-align:center;">Page not found.</p>';
@@ -424,8 +424,8 @@ document.addEventListener('DOMContentLoaded', () => {
     settings.currentPage = page;
     const juz = getJuzNumber(settings.currentPage);
     pageInfo.textContent = `${t ? t.page : 'Page'} ${settings.currentPage} | ${t ? t.juz : 'Juz'} ${juz}`;
-    nextBtn.disabled = settings.currentPage === 1;
-    prevBtn.disabled = settings.currentPage === totalMushafPages;
+    nextBtn.disabled = settings.currentPage === 0;
+    prevBtn.disabled = settings.currentPage === totalMushafPages - 1;
 
     surahSelect.value = startSurah;
     juzSelect.value = juz;
@@ -645,44 +645,44 @@ document.addEventListener('DOMContentLoaded', () => {
     for (let i = 0; i < pages.length; i++) {
       const pageData = pages[i];
       if (pageData.surah_begin === surahId) {
-        return pageData.page;
+        return i;
       }
     }
-    return 1;
+    return 0;
   }
 
   function updateLegend() {
     if (!t) return;
     legend.innerHTML = `
         <h6 style="margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">${t.legendTitle}</h6>
-        <ul style="list-style: none; padding: 0; margin: 0; font-size: 11px; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px;">
-            <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #16a085; margin-right: 5px;">■</span> <div>${t.ghunna}</div></li>
-            <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #A64AC9; margin-right: 5px;">■</span> <div>${t.maddMuttasil}</div></li>
-            <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #E91E63; margin-right: 5px;">■</span> <div>${t.maddMunfasil}</div></li>
-            <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #1ABC9C; margin-right: 5px;">■</span> <div>${t.maddArid}</div></li>
-            <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #F39C12; margin-right: 5px;">■</span> <div>${t.maddLiin}</div></li>
-            <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #9932CC; margin-right: 5px;">■</span> <div>${t.maddSilah}</div></li>
-            <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #e74c3c; margin-right: 5px;">■</span> <div>${t.maddAsli}</div></li>
-            <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #2980b9; margin-right: 5px;">■</span> <div>${t.qalqalah}</div></li>
-            <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #8e44ad; margin-right: 5px;">■</span> <div>${t.iqlab}</div></li>
-            <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #00BFFF; margin-right: 5px;">■</span> <div>${t.idghamGhunna}</div></li>
-            <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #5DADE2; margin-right: 5px;">■</span> <div>${t.idghamBila}</div></li>
-            <li style="display: flex; align-items: flex-start;"><span class="tajweed" style="font-weight: bold; color: #d35400; margin-right: 5px;">■</span> <div>${t.ikhfa}</div></li>
+        <ul style="list-style: none; padding: 0; margin: 0; font-size: .9rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px;">
+            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #16a085; margin-right: 5px;">■</span> <div>${t.ghunna}</div></li>
+            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #A64AC9; margin-right: 5px;">■</span> <div>${t.maddMuttasil}</div></li>
+            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #E91E63; margin-right: 5px;">■</span> <div>${t.maddMunfasil}</div></li>
+            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #1ABC9C; margin-right: 5px;">■</span> <div>${t.maddArid}</div></li>
+            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #F39C12; margin-right: 5px;">■</span> <div>${t.maddLiin}</div></li>
+            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #9932CC; margin-right: 5px;">■</span> <div>${t.maddSilah}</div></li>
+            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #e74c3c; margin-right: 5px;">■</span> <div>${t.maddAsli}</div></li>
+            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #2980b9; margin-right: 5px;">■</span> <div>${t.qalqalah}</div></li>
+            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #8e44ad; margin-right: 5px;">■</span> <div>${t.iqlab}</div></li>
+            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #00BFFF; margin-right: 5px;">■</span> <div>${t.idghamGhunna}</div></li>
+            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #5DADE2; margin-right: 5px;">■</span> <div>${t.idghamBila}</div></li>
+            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #d35400; margin-right: 5px;">■</span> <div>${t.ikhfa}</div></li>
         </ul>
         <h6 style="margin-top: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">${t.pauseMarksTitle}</h6>
-        <ul style="list-style: none; padding: 0; margin: 0; font-size: 11px; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px;">
-            <li style="display: flex; align-items: flex-start;"><span style="color: #D9534F; font-weight: bold; margin-right: 5px;">۩</span> <div>${t.sajdah}</div></li>
-            <li style="display: flex; align-items: flex-start;"><span style="color: #D9534F; font-weight: bold; margin-right: 5px;">ج</span> <div>${t.jaiz}</div></li>
-            <li style="display: flex; align-items: flex-start;"><span style="color: #27ae60; font-weight: bold; margin-right: 5px;">صلى</span> <div>${t.waslAwla}</div></li>
-            <li style="display: flex; align-items: flex-start;"><span style="color: #D9534F; font-weight: bold; margin-right: 5px;">قلى</span> <div>${t.waqfAwla}</div></li>
-            <li style="display: flex; align-items: flex-start;"><span style="color: #D9534F; font-weight: bold; margin-right: 5px;">∴</span> <div>${t.muanaqah}</div></li>
+        <ul style="list-style: none; padding: 0; margin: 0; font-size: .8rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px;">
+            <li style="display: flex; "><span style="color: #D9534F; margin-right: 5px;">۩</span> <div>${t.sajdah}</div></li>
+            <li style="display: flex; "><span style="color: #D9534F; margin-right: 5px;">ج</span> <div>${t.jaiz}</div></li>
+            <li style="display: flex; "><span style="color: #27ae60; margin-right: 5px;">صلى</span> <div>${t.waslAwla}</div></li>
+            <li style="display: flex; "><span style="color: #D9534F; margin-right: 5px;">قلى</span> <div>${t.waqfAwla}</div></li>
+            <li style="display: flex; "><span style="color: #D9534F; margin-right: 5px;">∴</span> <div>${t.muanaqah}</div></li>
         </ul>
     `;
   }
 
   juzSelect.addEventListener('change', (e) => {
     const selectedJuz = parseInt(e.target.value);
-    const page = (selectedJuz === 1) ? 1 : (selectedJuz - 1) * 20 + 2;
+    const page = (selectedJuz === 1) ? 0 : (selectedJuz - 1) * 20 + 1;
     loadMushafPage(page);
   });
 
@@ -698,13 +698,13 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   prevBtn.addEventListener('click', () => {
-    if (settings.currentPage < totalMushafPages) {
+    if (settings.currentPage < totalMushafPages - 1) {
       loadMushafPage(settings.currentPage + 1);
     }
   });
 
   nextBtn.addEventListener('click', () => {
-    if (settings.currentPage > 1) {
+    if (settings.currentPage > 0) {
       loadMushafPage(settings.currentPage - 1);
     }
   });
