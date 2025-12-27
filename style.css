@@ -71,6 +71,26 @@ body {
 
 .quran-content {
   line-height: 2.5;
+  /* Standard standard ligatures + contextual alternates */
+  font-variant-ligatures: common-ligatures contextual;
+
+  /* Force specific Arabic OpenType features */
+  /* 'mkmk' = Mark to Mark positioning (CRITICAL for stacked diacritics) */
+  /* 'ccmp' = Glyph Composition/Decomposition */
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "mkmk" 1, "ccmp" 1,  "rlig" 1, "mark" 1;
+
+  /* Ensure the browser doesn't try to synthesize bold/italic, which breaks shaping */
+  font-synthesis: none;
+
+  /* Force high-quality text rendering */
+  text-rendering: optimizeLegibility;
+
+  /* 2. Language & Direction (Crucial for shaping) */
+  direction: rtl;
+  unicode-bidi: isolate;
+
+  /* 4. Rendering Stability */
+  -webkit-font-smoothing: antialiased;
 }
 
 .verse-number {
@@ -121,7 +141,6 @@ body {
   /*font-weight: bold;*/
   font-size: 0.7rem;
 }
-
 
 /* --- Tajweed Rule Colors --- */
 .tajweed-ghunna {
@@ -253,7 +272,7 @@ body {
   bottom: -5px; /* Position below the letter, accounting for descenders */
   left: 50%;
   transform: translateX(-50%);
-  font-size: .8rem;
+  font-size: .5rem;
   font-family: sans-serif;
   font-weight: normal;
   opacity: 0;
