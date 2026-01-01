@@ -245,6 +245,9 @@ function buildHtmlFromRules(text, rules) {
     if (rule.index < currentIndex) continue;
 
     output += text.slice(currentIndex, rule.index);
+    if (rule.type.startsWith('waqf-')) {
+        output += ' ';
+    }
     output += `<span class="${rule.type}">${text.slice(rule.index, rule.index + rule.length)}</span>`;
     currentIndex = rule.index + rule.length;
   }
