@@ -118,45 +118,55 @@ function detectSilentLetter(text, i) {
     if (curr === 'ا' && prev === TANWEEN[0]) {
         return { index: i, length: 1 };
     }
-
+    
     // Case 2: Silent alif after plural wauw
     if (curr === 'ا' && prev === 'و' && text[i-2] === DAMMA) {
         return { index: i, length: 1 };
     }
 
-    // Case 3: Hamzat al-Wasl (ٱ or ا)
+    // Case 3: Definite Article "ال"
     if (curr === 'ا' || curr === HAMZAT_WASL) {
-        // A wasl is followed by a sukun or shadda on the next consonant.
-        let nextLetterIndex = i + 1;
-        while(nextLetterIndex < text.length && !isArabicLetter(text[nextLetterIndex])) {
-            nextLetterIndex++;
-        }
-        if (nextLetterIndex >= text.length) return null;
+        const isConnected = i > 0;
+        if (isConnected) {
+            let lamIndex = i + 1;
+            if (text[lamIndex] !== 'ل') return null;
 
-        let diacriticIndex = nextLetterIndex + 1;
-        let hasSukunOrShadda = false;
-        while(diacriticIndex < text.length && isDiacritic(text[diacriticIndex])) {
-            if (text[diacriticIndex] === SUKUN || text[diacriticIndex] === SHADDA) {
-                hasSukunOrShadda = true;
-                break;
+            let afterLamIndex = lamIndex + 1;
+            let hasShadda = false;
+            while (afterLamIndex < text.length && !isArabicLetter(text[afterLamIndex])) {
+                if (text[afterLamIndex] === SHADDA) hasShadda = true;
+                afterLamIndex++;
             }
-            diacriticIndex++;
-        }
-        if (!hasSukunOrShadda) return null;
+            if (afterLamIndex >= text.length) return null;
 
-        // It's a wasl. Is it connected?
-        if (i > 0 && isVowel(prev)) {
-            // Is it 'al shamsi'?
-            if (text[i+1] === 'ل' && text[nextLetterIndex+1] === SHADDA && SUN_LETTERS.includes(text[nextLetterIndex])) {
-                return { index: i, length: 2 }; // silent alif and lam
+            const afterLamChar = text[afterLamIndex];
+            if (!hasShadda) hasShadda = text[afterLamIndex + 1] === SHADDA;
+
+            const isShamsi = SUN_LETTERS.includes(afterLamChar) && hasShadda;
+
+            if (isShamsi) {
+                return { index: i, length: lamIndex - i + 1 }; // Both alif and lam silent
+            } else if (isVowel(prev) || prev === ' ') {
+                return { index: i, length: 1 }; // Only alif silent (Qamari)
             }
-            return { index: i, length: 1 }; // silent alif
         }
-        // It's a wasl at the start of utterance. Is the lam silent?
-        if (i === 0) {
-            if (text[i+1] === 'ل' && text[nextLetterIndex+1] === SHADDA && SUN_LETTERS.includes(text[nextLetterIndex])) {
-                return { index: i + 1, length: 1 }; // silent lam only
-            }
+    }
+    
+    // Case 4: Lam Shamsi at the beginning of text
+    if (i === 0 && curr === 'ا' && text[i+1] === 'ل') {
+        let afterLamIndex = i + 2;
+        let hasShadda = false;
+        while (afterLamIndex < text.length && !isArabicLetter(text[afterLamIndex])) {
+            if (text[afterLamIndex] === SHADDA) hasShadda = true;
+            afterLamIndex++;
+        }
+        if (afterLamIndex >= text.length) return null;
+        
+        const afterLamChar = text[afterLamIndex];
+        if (!hasShadda) hasShadda = text[afterLamIndex + 1] === SHADDA;
+
+        if (SUN_LETTERS.includes(afterLamChar) && hasShadda) {
+            return { index: i + 1, length: 1 }; // Only lam silent
         }
     }
 
@@ -348,13 +358,12 @@ function isMaddLazim(text, i) {
     let j = i + 1;
     if (text[j] === MADDAH_ABOVE) j++;
 
-    while (j < text.length && isDiacritic(text[j]) && text[j] !== SHADDA && text[j] !== SUKUN) { j++; }
-    if (j >= text.length) return false;
-    if (isWordBreak(text[j])) return false;
-    let k = j + 1;
-    while (k < text.length && isDiacritic(text[k])) {
-        if (text[k] === SHADDA || text[k] === SUKUN) return true;
-        k++;
+    while (j < text.length) {
+        const char = text[j];
+        if (char === ' ') return false; // Word boundary
+        if (char === SUKUN || char === SHADDA) return true;
+        if (isArabicLetter(char)) return false; // Another letter without sukun/shadda
+        j++;
     }
     return false;
 }
