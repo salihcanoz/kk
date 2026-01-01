@@ -118,58 +118,47 @@ function detectSilentLetter(text, i) {
     if (curr === 'ا' && prev === TANWEEN[0]) {
         return { index: i, length: 1 };
     }
-    
+
     // Case 2: Silent alif after plural wauw
     if (curr === 'ا' && prev === 'و' && text[i-2] === DAMMA) {
         return { index: i, length: 1 };
     }
 
-    // Case 3: Definite Article "ال"
+    // Case 3: Hamzat al-Wasl (ٱ or ا)
     if (curr === 'ا' || curr === HAMZAT_WASL) {
-        const isConnected = i > 0 && (isVowel(prev) || prev === ' ');
-        if (isConnected) {
-            let lamIndex = i + 1;
-            if (text[lamIndex] !== 'ل' || isVowel(text[lamIndex+1])) return null;
+        // A wasl is followed by a sukun or shadda on the next consonant.
+        let nextLetterIndex = i + 1;
+        while(nextLetterIndex < text.length && !isArabicLetter(text[nextLetterIndex])) {
+            nextLetterIndex++;
+        }
+        if (nextLetterIndex >= text.length) return null;
 
-            let afterLamIndex = lamIndex + 1;
-            let hasShadda = false;
-            while (afterLamIndex < text.length && !isArabicLetter(text[afterLamIndex])) {
-                if (text[afterLamIndex] === SHADDA) hasShadda = true;
-                afterLamIndex++;
+        let diacriticIndex = nextLetterIndex + 1;
+        let hasSukunOrShadda = false;
+        while(diacriticIndex < text.length && isDiacritic(text[diacriticIndex])) {
+            if (text[diacriticIndex] === SUKUN || text[diacriticIndex] === SHADDA) {
+                hasSukunOrShadda = true;
+                break;
             }
-            if (afterLamIndex >= text.length) return null;
+            diacriticIndex++;
+        }
+        if (!hasSukunOrShadda) return null;
 
-            const afterLamChar = text[afterLamIndex];
-            if (!hasShadda) hasShadda = text[afterLamIndex + 1] === SHADDA;
-
-            const isShamsi = SUN_LETTERS.includes(afterLamChar) && hasShadda;
-
-            if (isShamsi) {
-                return { index: i, length: lamIndex - i + 1 }; // Both alif and lam silent
-            } else {
-                return { index: i, length: 1 }; // Only alif silent (Qamari)
+        // It's a wasl. Is it connected?
+        if (i > 0 && isVowel(prev)) {
+            // Is it 'al shamsi'?
+            if (text[i+1] === 'ل' && text[nextLetterIndex+1] === SHADDA && SUN_LETTERS.includes(text[nextLetterIndex])) {
+                return { index: i, length: 2 }; // silent alif and lam
+            }
+            return { index: i, length: 1 }; // silent alif
+        }
+        // It's a wasl at the start of utterance. Is the lam silent?
+        if (i === 0) {
+            if (text[i+1] === 'ل' && text[nextLetterIndex+1] === SHADDA && SUN_LETTERS.includes(text[nextLetterIndex])) {
+                return { index: i + 1, length: 1 }; // silent lam only
             }
         }
     }
-    
-    // Case 4: Lam Shamsi at the beginning of text
-    if (i === 0 && curr === 'ا' && text[i+1] === 'ل') {
-        let afterLamIndex = i + 2;
-        let hasShadda = false;
-        while (afterLamIndex < text.length && !isArabicLetter(text[afterLamIndex])) {
-            if (text[afterLamIndex] === SHADDA) hasShadda = true;
-            afterLamIndex++;
-        }
-        if (afterLamIndex >= text.length) return null;
-        
-        const afterLamChar = text[afterLamIndex];
-        if (!hasShadda) hasShadda = text[afterLamIndex + 1] === SHADDA;
-
-        if (SUN_LETTERS.includes(afterLamChar) && hasShadda) {
-            return { index: i + 1, length: 1 }; // Only lam silent
-        }
-    }
-
 
     return null;
 }
@@ -214,8 +203,6 @@ function detectMaddRule(text, i, curr, next, prev) {
 
     // Standard Madd Letters
     if (isMaddLetter(curr, prev)) {
-        if (isFollowedBySilentStart(text, i)) return null;
-        
         if (next === MADDAH_ABOVE) {
              if (isMaddLazim(text, i)) return { index: i, length: 2, type: 'madd-lazim' };
              if (isMaddMuttasil(text, i)) return { index: i, length: 2, type: 'madd-muttasil' };
