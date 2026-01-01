@@ -46,6 +46,17 @@ function detectAllRules(text) {
     const next = text[i + 1] || '';
     const prev = text[i - 1] || '';
 
+    if (curr === 'و' && next === '\u08d1') {
+        addRule(rules, i, 1, 'tajweed-qasr');
+        addRule(rules, i + 1, 1, 'hidden-char');
+        continue;
+    }
+
+    if (curr === '\u08d1') {
+        addRule(rules, i, 1, 'hidden-char');
+        continue;
+    }
+
     // Waqf Signs
     const waqfClass = WAQF_CLASSES[curr];
     if (waqfClass) {
