@@ -110,30 +110,49 @@ function detectMaddRule(text, i, curr, next, prev) {
     }
 
     // Dagger Alif / Subscript Alif
-    if (next === DAGGER_ALIF || next === SUBSCRIPT_ALIF) {
-        const charAfter = text[i + 2];
-        if (next === SUBSCRIPT_ALIF && (charAfter === 'ي' || charAfter === 'ی' || charAfter === 'ى')) return null;
-        if (isFollowedBySilentStart(text, i + 1)) return null;
+    let lookaheadIndex = i + 1;
+    let hasShadda = false;
+    let hasFatha = false;
 
-        let length = 2;
+    if (text[lookaheadIndex] === SHADDA) {
+        hasShadda = true;
+        lookaheadIndex++;
+    }
+    if (text[lookaheadIndex] === FATHA) {
+        hasFatha = true;
+        lookaheadIndex++;
+    }
+
+    if (text[lookaheadIndex] === DAGGER_ALIF || text[lookaheadIndex] === SUBSCRIPT_ALIF) {
+        const daggerType = text[lookaheadIndex];
+        if (daggerType === SUBSCRIPT_ALIF && (text[lookaheadIndex + 1] === 'ي' || text[lookaheadIndex + 1] === 'ی' || text[lookaheadIndex + 1] === 'ى')) return null;
+        if (isFollowedBySilentStart(text, i)) return null;
+
+        let length = (lookaheadIndex - i) + 1;
         let hasMaddah = false;
-        if (charAfter === MADDAH_ABOVE) {
-            length = 3;
+        if (text[lookaheadIndex + 1] === MADDAH_ABOVE) {
+            length++;
             hasMaddah = true;
         }
 
         let type = 'madd-asli';
-        if (isMaddLazim(text, i + 1)) type = 'madd-lazim';
-        else if (isMaddArid(text, i + 1)) type = 'madd-arid';
-        else if (isMaddMuttasil(text, i + 1)) type = 'madd-muttasil';
-        else if (isMaddMunfasil(text, i + 1)) type = 'madd-munfasil';
+        if (isMaddLazim(text, lookaheadIndex)) type = 'madd-lazim';
+        else if (isMaddArid(text, lookaheadIndex)) type = 'madd-arid';
+        else if (isMaddMuttasil(text, lookaheadIndex)) type = 'madd-muttasil';
+        else if (isMaddMunfasil(text, lookaheadIndex)) type = 'madd-munfasil';
         else if (hasMaddah) type = 'madd-munfasil';
 
         return { index: i, length: length, type: type };
     }
 
+
     // Standard Madd Letters
     if (isMaddLetter(curr, prev)) {
+        // Exclude hamzat al-wasl in 'al-' definite article
+        if (curr === 'ا' && prev !== MADDAH_ABOVE && text[i+1] === 'ل' && (text[i+2] === SHADDA || text[i+2] === SUKUN)) {
+            return null;
+        }
+
         if (next === MADDAH_ABOVE) {
              if (isMaddLazim(text, i)) return { index: i, length: 2, type: 'madd-lazim' };
              if (isMaddMuttasil(text, i)) return { index: i, length: 2, type: 'madd-muttasil' };
@@ -153,6 +172,7 @@ function detectMaddRule(text, i, curr, next, prev) {
 
     // Alif Maddah
     if (curr === ALIF_MADDAH) {
+        if (isMaddLazim(text, i)) return { index: i, length: 1, type: 'madd-lazim' };
         if (isMaddMuttasil(text, i)) return { index: i, length: 1, type: 'madd-muttasil' };
         if (isMaddMunfasil(text, i)) return { index: i, length: 1, type: 'madd-munfasil' };
         return { index: i, length: 1, type: 'madd-asli' };
