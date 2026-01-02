@@ -31,7 +31,7 @@ const WAQF_CLASSES = {
   '\u06D6': 'waqf-continue', // Sala
   '\u06DB': 'waqf-muanaqah', // Mu'anaqah
   '\u0619': 'waqf-jaiz',      // Small high dotless head of khah
-  '\u06D9': 'waqf-continue' // Laam-Alif
+  // '\u06D9': 'waqf-continue' // Laam-Alif
 };
 
 // --- Main Tajweed Function ---
