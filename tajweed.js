@@ -57,11 +57,9 @@ function detectAllRules(text) {
       continue;
     }
 
-    // Priority 2: Silent Letters
-    const silentLetterRule = detectSilentLetter(text, i);
-    if (silentLetterRule) {
-        addRule(rules, silentLetterRule.index, silentLetterRule.length, 'silent-letter');
-        i = silentLetterRule.index + silentLetterRule.length - 1;
+    // Priority 2: Iltiqa as-Sakinain (meeting of two silent letters)
+    if (isMaddLetter(curr, prev) && isFollowedBySilentStart(text, i)) {
+        addRule(rules, i, 1, 'silent-letter');
         continue;
     }
 
@@ -77,20 +75,11 @@ function detectAllRules(text) {
         continue;
     }
 
-    const maddRule = detectMaddRule(text, i, curr, next, prev);
-    if (maddRule) {
-        addRule(rules, maddRule.index, maddRule.length, `tajweed-${maddRule.type}`);
-        if (alreadyMarked(rules, i)) continue;
-    }
-
     const nunSakinahResult = detectNunSakinahRule(text, i);
     if (nunSakinahResult) {
       addRule(rules, nunSakinahResult.trigger.index, nunSakinahResult.trigger.length, nunSakinahResult.trigger.type);
       if (nunSakinahResult.target) {
         addRule(rules, nunSakinahResult.target.index, nunSakinahResult.target.length, nunSakinahResult.target.type);
-        if(text[nunSakinahResult.target.index+1] === SHADDA) {
-            addRule(rules, nunSakinahResult.target.index+1, 1, nunSakinahResult.target.type);
-        }
       }
       continue;
     }
@@ -102,6 +91,20 @@ function detectAllRules(text) {
 
     if (QALQALAH_LETTERS.includes(curr) && next === SUKUN) {
         addRule(rules, i, 2, 'tajweed-qalqalah');
+        continue;
+    }
+
+    const maddRule = detectMaddRule(text, i, curr, next, prev);
+    if (maddRule) {
+        addRule(rules, maddRule.index, maddRule.length, `tajweed-${maddRule.type}`);
+        if (alreadyMarked(rules, i)) continue;
+    }
+    
+    // Last Priority: Other Silent Letters
+    const silentLetterRule = detectSilentLetter(text, i);
+    if (silentLetterRule) {
+        addRule(rules, silentLetterRule.index, silentLetterRule.length, 'silent-letter');
+        i = silentLetterRule.index + silentLetterRule.length - 1;
         continue;
     }
   }
@@ -338,18 +341,26 @@ function isMaddLeen(text, i, curr, prev, next) {
     if (!((curr === 'و' || curr === 'ي' || curr === 'ی' || curr === 'ى') && prev === FATHA && next === SUKUN)) {
         return false;
     }
-    return isAtStop(text, i);
+    
+    let j = i + 2; // Start after the leen letter and its sukun
+    let letterCount = 0;
+    while (j < text.length && !isWordBreak(text[j])) {
+        if (isArabicLetter(text[j])) {
+            letterCount++;
+        }
+        j++;
+    }
+
+    // Madd Leen only occurs if there is exactly one letter after it before the stop
+    return letterCount === 1 && isAtStop(text, j);
 }
 
 function isAtStop(text, i) {
     let j = i;
-    while (j < text.length && !isWordBreak(text[j])) {
-        j++;
-    }
     while (j < text.length && text[j] === ' ') {
         j++;
     }
-    if (j >= text.length) return true;
+    if (j >= text.length) return true; // End of text is a stop
     const charAtBreak = text[j];
     return Object.keys(WAQF_CLASSES).includes(charAtBreak) || charAtBreak === AYAH_END;
 }
@@ -361,8 +372,9 @@ function isMaddLazim(text, i) {
     while (j < text.length) {
         const char = text[j];
         if (char === ' ') return false; // Word boundary
+        if (isWordBreak(char)) return false;
         if (char === SUKUN || char === SHADDA) return true;
-        if (isArabicLetter(char)) return false; // Another letter without sukun/shadda
+        if (isArabicLetter(char)) return false;
         j++;
     }
     return false;
