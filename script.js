@@ -405,6 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     juzSelect.value = juz;
     pageSelect.value = settings.currentPage;
+    window.scrollTo(0, 0);
     saveSettings();
   }
 
