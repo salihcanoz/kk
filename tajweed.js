@@ -129,6 +129,10 @@ function detectSilentLetter(text, i) {
     const curr = text[i];
     const prev = text[i - 1] || '';
 
+    if (curr === 'ا' && isVowel(text[i + 1])) {
+        return null;
+    }
+
     // Case 1: Silent alif after tanween fathah
     if (curr === 'ا' && prev === TANWEEN[0]) {
         return { index: i, length: 1 };
@@ -162,7 +166,7 @@ function detectSilentLetter(text, i) {
                     if (text[afterLamIndex] === SHADDA) shaddaOnLam = true;
                     afterLamIndex++;
                 }
-                
+
                 if (afterLamIndex < text.length) {
                     const afterLamChar = text[afterLamIndex];
                     let shaddaOnNext = false;
@@ -195,7 +199,7 @@ function detectSilentLetter(text, i) {
             }
         }
     }
-    
+
     // Case 4: Lam Shamsi at the beginning of text
     if (i === 0 && (curr === 'ا' || curr === HAMZAT_WASL)) {
         let lamIndex = i + 1;
@@ -209,7 +213,7 @@ function detectSilentLetter(text, i) {
                 afterLamIndex++;
             }
             if (afterLamIndex >= text.length) return null;
-            
+
             const afterLamChar = text[afterLamIndex];
             let shaddaOnNext = false;
             if (!shaddaOnLam) {
@@ -521,7 +525,7 @@ function isMaddMunfasil(text, i) {
 
     const nextChar = text[j];
     if (HAMZA_FORMS.includes(nextChar)) return true;
-    if (nextChar === 'ا' && (j + 1 < text.length && isVowel(text[j+1]))) return true;
+    if (nextChar === 'ا' && (j + 1 < text.length && (isVowel(text[j+1]) || text[j+1] === DAGGER_ALIF || text[j+1] === MADDAH_ABOVE))) return true;
     if (nextChar === ALIF_MADDAH) return true;
 
     return false;
