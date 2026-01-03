@@ -75,7 +75,7 @@ function detectAllRules(text) {
     }
 
     // Priority 2: Iltiqa as-Sakinain (meeting of two silent letters)
-    if (isMaddLetter(curr, prev) && isFollowedBySilentStart(text, i)) {
+    if (isMaddLetter(curr, prev) && !isDiacritic(next) && isFollowedBySilentStart(text, i)) {
         addRule(rules, i, 1, 'silent-letter');
         continue;
     }
