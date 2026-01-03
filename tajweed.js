@@ -144,6 +144,8 @@ function detectSilentLetter(text, i) {
         const isConnected = i > 0;
         if (isConnected) {
             let lamIndex = i + 1;
+            if (text[lamIndex] === FATHA) lamIndex++; // Skip Fatha on Alif
+
             if (text[lamIndex] !== 'ل') return null;
 
             // Handle special case for words like الَّذِينَ where the laam has a shadda
@@ -193,30 +195,35 @@ function detectSilentLetter(text, i) {
     }
     
     // Case 4: Lam Shamsi at the beginning of text
-    if (i === 0 && curr === 'ا' && text[i+1] === 'ل') {
-        let afterLamIndex = i + 2;
-        let shaddaOnLam = false;
-        while (afterLamIndex < text.length && !isArabicLetter(text[afterLamIndex])) {
-            if (text[afterLamIndex] === SHADDA) shaddaOnLam = true;
-            afterLamIndex++;
-        }
-        if (afterLamIndex >= text.length) return null;
-        
-        const afterLamChar = text[afterLamIndex];
-        let shaddaOnNext = false;
-        if (!shaddaOnLam) {
-            let k = afterLamIndex + 1;
-            while (k < text.length && isDiacritic(text[k])) {
-                if (text[k] === SHADDA) {
-                    shaddaOnNext = true;
-                    break;
-                }
-                k++;
-            }
-        }
+    if (i === 0 && (curr === 'ا' || curr === HAMZAT_WASL)) {
+        let lamIndex = i + 1;
+        if (text[lamIndex] === FATHA) lamIndex++; // Skip Fatha on Alif
 
-        if (SUN_LETTERS.includes(afterLamChar) && shaddaOnNext) {
-            return { index: i + 1, length: 1 }; // Only lam silent
+        if (text[lamIndex] === 'ل') {
+            let afterLamIndex = lamIndex + 1;
+            let shaddaOnLam = false;
+            while (afterLamIndex < text.length && !isArabicLetter(text[afterLamIndex])) {
+                if (text[afterLamIndex] === SHADDA) shaddaOnLam = true;
+                afterLamIndex++;
+            }
+            if (afterLamIndex >= text.length) return null;
+            
+            const afterLamChar = text[afterLamIndex];
+            let shaddaOnNext = false;
+            if (!shaddaOnLam) {
+                let k = afterLamIndex + 1;
+                while (k < text.length && isDiacritic(text[k])) {
+                    if (text[k] === SHADDA) {
+                        shaddaOnNext = true;
+                        break;
+                    }
+                    k++;
+                }
+            }
+
+            if (SUN_LETTERS.includes(afterLamChar) && shaddaOnNext) {
+                return { index: lamIndex, length: 1 }; // Only lam silent
+            }
         }
     }
 
