@@ -76,7 +76,13 @@ function detectAllRules(text) {
 
     // Priority 2: Iltiqa as-Sakinain (meeting of two silent letters)
     if (isMaddLetter(curr, prev) && !isDiacritic(next) && isFollowedBySilentStart(text, i)) {
-        addRule(rules, i, 1, 'silent-letter');
+        let startIndex = i;
+        let length = 1;
+        if (curr === 'ا' && prev === MADDAH_ABOVE) {
+            startIndex = i - 1;
+            length = 2;
+        }
+        addRule(rules, startIndex, length, 'silent-letter');
         continue;
     }
 
@@ -150,7 +156,7 @@ function detectSilentLetter(text, i) {
         const isConnected = i > 0;
         if (isConnected) {
             let lamIndex = i + 1;
-            if (text[lamIndex] === FATHA) lamIndex++; // Skip Fatha on Alif if present
+            // Removed Fatha skipping here to respect explicit vowel
 
             if (text[lamIndex] === 'ل') {
                 // Handle special case for words like الَّذِينَ where the laam has a shadda
@@ -204,7 +210,7 @@ function detectSilentLetter(text, i) {
     // Case 4: Lam Shamsi at the beginning of text
     if (i === 0 && (curr === 'ا' || curr === HAMZAT_WASL)) {
         let lamIndex = i + 1;
-        if (text[lamIndex] === FATHA) lamIndex++; // Skip Fatha on Alif
+        // Removed Fatha skipping here
 
         if (text[lamIndex] === 'ل') {
             let afterLamIndex = lamIndex + 1;
@@ -301,7 +307,7 @@ function detectMaddRule(text, i, curr, next, prev) {
     }
 
     // Standard Madd Letters
-    if (isMaddLetter(curr, prev)) {
+    if (isMaddLetter(curr, prev) || (curr === 'ا' && next === MADDAH_ABOVE)) {
         // Alif at start of word (after space) cannot be a madd letter
         if (curr === 'ا' && prev === ' ') return null;
 
@@ -314,15 +320,22 @@ function detectMaddRule(text, i, curr, next, prev) {
 
         if (isDiacritic(next)) return null;
 
+        let startIndex = i;
+        let length = 1;
+        if (curr === 'ا' && prev === MADDAH_ABOVE) {
+            startIndex = i - 1;
+            length = 2;
+        }
+
         if (isMaddLazim(text, i)) {
              // Exclude Alif followed by Lam (Al- definition) from Madd Lazim
              if (curr === 'ا' && next === 'ل') return null;
-             return { index: i, length: 1, type: 'madd-lazim' };
+             return { index: startIndex, length: length, type: 'madd-lazim' };
         }
-        if (isMaddArid(text, i)) return { index: i, length: 1, type: 'madd-arid' };
-        if (isMaddMuttasil(text, i)) return { index: i, length: 1, type: 'madd-muttasil' };
-        if (isMaddMunfasil(text, i)) return { index: i, length: 1, type: 'madd-munfasil' };
-        return { index: i, length: 1, type: 'madd-asli' };
+        if (isMaddArid(text, i)) return { index: startIndex, length: length, type: 'madd-arid' };
+        if (isMaddMuttasil(text, i)) return { index: startIndex, length: length, type: 'madd-muttasil' };
+        if (isMaddMunfasil(text, i)) return { index: startIndex, length: length, type: 'madd-munfasil' };
+        return { index: startIndex, length: length, type: 'madd-asli' };
     }
 
     // Alif Maddah
@@ -432,7 +445,7 @@ function isVowel(char) {
 
 function isMaddLetter(curr, prev) {
   return (
-    (curr === 'ا' && (prev === FATHA || prev === SHADDA)) ||
+    (curr === 'ا' && (prev === FATHA || prev === SHADDA || prev === MADDAH_ABOVE)) ||
     (curr === 'و' && (prev === DAMMA)) ||
     ((curr === 'ي' || curr === 'ی' || curr === 'ى') && (prev === KASRA || prev === SUBSCRIPT_ALIF))
   );
@@ -554,8 +567,25 @@ function isFollowedBySilentStart(text, index) {
 
     const nextChar = text[j];
     if (nextChar === HAMZAT_WASL) return true;
-    if (nextChar === 'ا' && text[j+1] === 'ل') {
-        return true;
+    if (nextChar === 'ا') {
+        let k = j + 1;
+        if (text[k] === FATHA) k++;
+        if (text[k] === 'ل') {
+             // Check if Lam is followed by Sukun or Shadda (or is Shamsi)
+             let m = k + 1;
+             while (m < text.length && !isArabicLetter(text[m])) {
+                 if (text[m] === SUKUN || text[m] === SHADDA) return true;
+                 m++;
+             }
+             // Also check next letter for Shadda (Shamsi)
+             if (m < text.length) {
+                 let n = m + 1;
+                 while (n < text.length && isDiacritic(text[n])) {
+                     if (text[n] === SHADDA) return true;
+                     n++;
+                 }
+             }
+        }
     }
     return false;
 }
