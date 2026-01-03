@@ -135,8 +135,9 @@ function detectSilentLetter(text, i) {
     }
     
     // Case 2: Silent alif after plural wauw
-    if (curr === 'ا' && prev === 'و' && text[i-2] === DAMMA) {
-        return { index: i, length: 1 };
+    if (curr === 'ا') {
+        if (prev === 'و' && text[i-2] === DAMMA) return { index: i, length: 1 };
+        if (prev === MADDAH_ABOVE && text[i-2] === 'و' && text[i-3] === DAMMA) return { index: i, length: 1 };
     }
 
     // Case 3: Definite Article "ال"
@@ -412,8 +413,8 @@ function isVowel(char) {
 function isMaddLetter(curr, prev) {
   return (
     (curr === 'ا' && (prev === FATHA || prev === SHADDA || prev === MADDAH_ABOVE)) ||
-    (curr === 'و' && prev === DAMMA) ||
-    ((curr === 'ي' || curr === 'ی' || curr === 'ى') && (prev === KASRA || prev === SUBSCRIPT_ALIF))
+    (curr === 'و' && (prev === DAMMA || prev === MADDAH_ABOVE)) ||
+    ((curr === 'ي' || curr === 'ی' || curr === 'ى') && (prev === KASRA || prev === SUBSCRIPT_ALIF || prev === MADDAH_ABOVE))
   );
 }
 
@@ -500,6 +501,11 @@ function isMaddMuttasil(text, i) {
 function isMaddMunfasil(text, i) {
     let j = i + 1;
     if (text[j] === MADDAH_ABOVE) j++;
+
+    // Skip silent Alif after Waw
+    if (text[i] === 'و' && text[j] === 'ا') {
+        j++;
+    }
 
     while (j < text.length && /\s/.test(text[j])) { j++; }
 
