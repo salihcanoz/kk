@@ -56,6 +56,23 @@ function detectAllRules(text) {
       addRule(rules, i, 1, waqfClass);
       continue;
     }
+    
+    // Ghunna on Noon/Meem Mushaddadah
+    if (curr === 'ن' || curr === 'م') {
+        let j = i + 1;
+        let foundShadda = false;
+        while (j < text.length && isDiacritic(text[j])) {
+            if (text[j] === SHADDA) {
+                foundShadda = true;
+                break;
+            }
+            j++;
+        }
+        if (foundShadda) {
+            addRule(rules, i, j - i + 1, 'tajweed-ghunna');
+            continue;
+        }
+    }
 
     // Priority 2: Iltiqa as-Sakinain (meeting of two silent letters)
     if (isMaddLetter(curr, prev) && isFollowedBySilentStart(text, i)) {
@@ -84,24 +101,16 @@ function detectAllRules(text) {
       continue;
     }
 
-    if (curr === 'ن' || curr === 'م') {
-        let j = i + 1;
-        let foundShadda = false;
-        while (j < text.length && isDiacritic(text[j])) {
-            if (text[j] === SHADDA) {
-                foundShadda = true;
-                break;
-            }
-            j++;
-        }
-        if (foundShadda) {
-            addRule(rules, i, j - i + 1, 'tajweed-ghunna');
-            continue;
-        }
-    }
-
     if (QALQALAH_LETTERS.includes(curr) && next === SUKUN) {
         addRule(rules, i, 2, 'tajweed-qalqalah');
+        continue;
+    }
+    
+    // Silent letters need to be detected before madd rules to avoid incorrect madd detection
+    const silentLetterRule = detectSilentLetter(text, i);
+    if (silentLetterRule) {
+        addRule(rules, silentLetterRule.index, silentLetterRule.length, 'silent-letter');
+        i = silentLetterRule.index + silentLetterRule.length - 1;
         continue;
     }
 
@@ -109,14 +118,6 @@ function detectAllRules(text) {
     if (maddRule) {
         addRule(rules, maddRule.index, maddRule.length, `tajweed-${maddRule.type}`);
         if (alreadyMarked(rules, i)) continue;
-    }
-    
-    // Last Priority: Other Silent Letters
-    const silentLetterRule = detectSilentLetter(text, i);
-    if (silentLetterRule) {
-        addRule(rules, silentLetterRule.index, silentLetterRule.length, 'silent-letter');
-        i = silentLetterRule.index + silentLetterRule.length - 1;
-        continue;
     }
   }
   return rules;
@@ -144,6 +145,14 @@ function detectSilentLetter(text, i) {
         if (isConnected) {
             let lamIndex = i + 1;
             if (text[lamIndex] !== 'ل') return null;
+
+            // Handle special case for words like الَّذِينَ where the laam has a shadda
+            if (text[lamIndex + 1] === SHADDA) {
+                 if (isVowel(prev) || prev === ' ') {
+                    return { index: i, length: 1 }; // Only alif is silent
+                }
+                return null;
+            }
 
             let afterLamIndex = lamIndex + 1;
             let shaddaOnLam = false;
