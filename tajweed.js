@@ -11,7 +11,9 @@ const MADDAH_ABOVE = '\u0653';
 const AYAH_END = '\u06DD'; // ۝
 const HAMZAT_WASL = '\u0671';
 const ALIF = '\u0627';
+const WAUW_WITH_HAMZA= '\u0624';
 
+const HAMZA = 'ء';
 const HAMZA_FORMS = ['ء', 'أ', 'إ', 'ؤ', 'ئ'];
 const TANWEEN = ['\u064B', '\u064C', '\u064D']; // Fathatan, Dammatan, Kasratan
 
@@ -256,6 +258,10 @@ function detectSilentLetter(text, i) {
         }
     }
 
+    if (curr === ALIF && prev === ' ' && !isDiacritic(text[i +1])) {
+        return { index: i, length: 1 };
+    }
+
     return null;
 }
 
@@ -329,6 +335,11 @@ function detectMaddRule(text, i, curr, next, prev) {
         return { index: i-2, length: 3, type: 'madd-asli' };
     }
 
+    //hamza on wauw
+    if (curr === WAUW_WITH_HAMZA && next === DAMMA) {
+        return { index: i, length: 2, type: 'madd-asli' };
+    }
+
     return null;
 }
 
@@ -338,6 +349,8 @@ function detectNunSakinahRule(text, i) {
 
     let searchIndex = i + triggerLength;
     if (TANWEEN.includes(text[i]) && (text[i+1] === 'ا' || text[i+1] === 'ى')) {
+
+        console.log(text.substring(i -20, i))
         searchIndex++;
     }
 
