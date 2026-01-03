@@ -129,8 +129,9 @@ function detectSilentLetter(text, i) {
     const curr = text[i];
     const prev = text[i - 1] || '';
 
-    if (curr === 'ا' && isVowel(text[i + 1])) {
-        return null;
+    if (curr === 'ا' || curr === HAMZAT_WASL) {
+        if (isVowel(text[i + 1])) return null;
+        if (text[i + 1] === '\u0654' || text[i + 1] === '\u0655') return null;
     }
 
     // Case 1: Silent alif after tanween fathah
@@ -301,6 +302,9 @@ function detectMaddRule(text, i, curr, next, prev) {
 
     // Standard Madd Letters
     if (isMaddLetter(curr, prev)) {
+        // Alif at start of word (after space) cannot be a madd letter
+        if (curr === 'ا' && prev === ' ') return null;
+
         if (next === MADDAH_ABOVE) {
              if (isMaddLazim(text, i)) return { index: i, length: 2, type: 'madd-lazim' };
              if (isMaddMuttasil(text, i)) return { index: i, length: 2, type: 'madd-muttasil' };
@@ -310,7 +314,11 @@ function detectMaddRule(text, i, curr, next, prev) {
 
         if (isDiacritic(next)) return null;
 
-        if (isMaddLazim(text, i)) return { index: i, length: 1, type: 'madd-lazim' };
+        if (isMaddLazim(text, i)) {
+             // Exclude Alif followed by Lam (Al- definition) from Madd Lazim
+             if (curr === 'ا' && next === 'ل') return null;
+             return { index: i, length: 1, type: 'madd-lazim' };
+        }
         if (isMaddArid(text, i)) return { index: i, length: 1, type: 'madd-arid' };
         if (isMaddMuttasil(text, i)) return { index: i, length: 1, type: 'madd-muttasil' };
         if (isMaddMunfasil(text, i)) return { index: i, length: 1, type: 'madd-munfasil' };
@@ -424,9 +432,9 @@ function isVowel(char) {
 
 function isMaddLetter(curr, prev) {
   return (
-    (curr === 'ا' && (prev === FATHA || prev === SHADDA || prev === MADDAH_ABOVE)) ||
-    (curr === 'و' && (prev === DAMMA || prev === MADDAH_ABOVE)) ||
-    ((curr === 'ي' || curr === 'ی' || curr === 'ى') && (prev === KASRA || prev === SUBSCRIPT_ALIF || prev === MADDAH_ABOVE))
+    (curr === 'ا' && (prev === FATHA || prev === SHADDA)) ||
+    (curr === 'و' && (prev === DAMMA)) ||
+    ((curr === 'ي' || curr === 'ی' || curr === 'ى') && (prev === KASRA || prev === SUBSCRIPT_ALIF))
   );
 }
 
