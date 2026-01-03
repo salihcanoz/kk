@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }, false);
 
   function handleSwipe() {
-    const swipeThreshold = 50; // Minimum distance for a swipe
+    const swipeThreshold = 100; // Minimum distance for a swipe
     if (touchEndX < touchStartX - swipeThreshold) {
       // Swiped left (RTL: Previous Page)
       if (settings.currentPage > 0) {
