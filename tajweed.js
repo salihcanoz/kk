@@ -84,9 +84,20 @@ function detectAllRules(text) {
       continue;
     }
 
-    if ((curr === 'ن' || curr === 'م') && next === SHADDA) {
-        addRule(rules, i, 2, 'tajweed-ghunna');
-        continue;
+    if (curr === 'ن' || curr === 'م') {
+        let j = i + 1;
+        let foundShadda = false;
+        while (j < text.length && isDiacritic(text[j])) {
+            if (text[j] === SHADDA) {
+                foundShadda = true;
+                break;
+            }
+            j++;
+        }
+        if (foundShadda) {
+            addRule(rules, i, j - i + 1, 'tajweed-ghunna');
+            continue;
+        }
     }
 
     if (QALQALAH_LETTERS.includes(curr) && next === SUKUN) {
@@ -156,6 +167,13 @@ function detectSilentLetter(text, i) {
             }
 
             const isShamsi = SUN_LETTERS.includes(afterLamChar) && shaddaOnNext;
+
+            if (shaddaOnLam) {
+                if (isVowel(prev) || prev === ' ') {
+                    return { index: i, length: 1 };
+                }
+                return null;
+            }
 
             if (isShamsi) {
                 return { index: i, length: lamIndex - i + 1 }; // Both alif and lam silent
