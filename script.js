@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     currentPage: 0, // Start from page 0
     fontFamily: "'Amiri', serif",
     fontSize: 36,
-    showAbbreviations: false
+    showAbbreviations: true
   };
 
   let settings = {...defaultSettings};
@@ -93,6 +93,9 @@ document.addEventListener('DOMContentLoaded', () => {
   abbrCheckbox.type = 'checkbox';
   abbrCheckbox.id = 'toggleAbbreviations';
   abbrCheckbox.checked = settings.showAbbreviations;
+  if (abbrCheckbox.checked) {
+    display.classList.add('show-abbreviations');
+  }
 
   const abbrLabel = document.createElement('label');
   abbrLabel.htmlFor = 'toggleAbbreviations';

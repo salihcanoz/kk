@@ -10,6 +10,7 @@ const SUBSCRIPT_ALIF = '\u0656';
 const MADDAH_ABOVE = '\u0653';
 const AYAH_END = '\u06DD'; // ۝
 const HAMZAT_WASL = '\u0671';
+const ALIF = '\u0627';
 
 const HAMZA_FORMS = ['ء', 'أ', 'إ', 'ؤ', 'ئ'];
 const TANWEEN = ['\u064B', '\u064C', '\u064D']; // Fathatan, Dammatan, Kasratan
@@ -57,23 +58,6 @@ function detectAllRules(text) {
             continue;
         }
 
-        // Ghunna on Noon/Meem Mushaddadah
-        if (curr === 'ن' || curr === 'م') {
-            let j = i + 1;
-            let foundShadda = false;
-            while (j < text.length && isDiacritic(text[j])) {
-                if (text[j] === SHADDA) {
-                    foundShadda = true;
-                    break;
-                }
-                j++;
-            }
-            if (foundShadda) {
-                addRule(rules, i, j - i + 1, 'tajweed-ghunna');
-                continue;
-            }
-        }
-
         // Priority 2: Iltiqa as-Sakinain (meeting of two silent letters)
         if (isMaddLetter(curr, prev) && !isDiacritic(next) && isFollowedBySilentStart(text, i)) {
             addRule(rules, i, 1, 'silent-letter');
@@ -92,15 +76,6 @@ function detectAllRules(text) {
             continue;
         }
 
-        const nunSakinahResult = detectNunSakinahRule(text, i);
-        if (nunSakinahResult) {
-            addRule(rules, nunSakinahResult.trigger.index, nunSakinahResult.trigger.length, nunSakinahResult.trigger.type);
-            if (nunSakinahResult.target) {
-                addRule(rules, nunSakinahResult.target.index, nunSakinahResult.target.length, nunSakinahResult.target.type);
-            }
-            continue;
-        }
-
         if (QALQALAH_LETTERS.includes(curr) && next === SUKUN) {
             addRule(rules, i, 2, 'tajweed-qalqalah');
             continue;
@@ -110,6 +85,33 @@ function detectAllRules(text) {
         if (maddRule) {
             addRule(rules, maddRule.index, maddRule.length, `tajweed-${maddRule.type}`);
             if (alreadyMarked(rules, i)) continue;
+        }
+
+        // Ghunna on Noon/Meem Mushaddadah
+        if (curr === 'ن' || curr === 'م') {
+            let j = i + 1;
+            let foundShadda = false;
+            while (j < text.length && isDiacritic(text[j])) {
+                if (text[j] === SHADDA) {
+                    foundShadda = true;
+                    break;
+                }
+                j++;
+            }
+            if (foundShadda) {
+                let diff = text[i+3] === ALIF ? 3 : text[i+3] === MADDAH_ABOVE ? 1 :0;
+                addRule(rules, i-diff, j - i + diff +1, 'tajweed-ghunna');
+                continue;
+            }
+        }
+
+        const nunSakinahResult = detectNunSakinahRule(text, i);
+        if (nunSakinahResult) {
+            addRule(rules, nunSakinahResult.trigger.index, nunSakinahResult.trigger.length, nunSakinahResult.trigger.type);
+            if (nunSakinahResult.target) {
+                //addRule(rules, nunSakinahResult.target.index, nunSakinahResult.target.length, nunSakinahResult.target.type);
+            }
+            continue;
         }
 
         // Silent letters need to be detected before madd rules to avoid incorrect madd detection
@@ -292,7 +294,7 @@ function detectMaddRule(text, i, curr, next, prev) {
 
     // Madd al-Leen
     if (isMaddLeen(text, i, curr, prev, next)) {
-        return { index: i, length: 2, type: 'madd-liin' };
+        return { index: i-2, length: 4, type: 'madd-liin' };
     }
 
     // Standard Madd Letters
@@ -306,11 +308,17 @@ function detectMaddRule(text, i, curr, next, prev) {
 
         if (isDiacritic(next)) return null;
 
-        if (isMaddLazim(text, i)) return { index: i, length: 1, type: 'madd-lazim' };
-        if (isMaddArid(text, i)) return { index: i, length: 1, type: 'madd-arid' };
-        if (isMaddMuttasil(text, i)) return { index: i, length: 1, type: 'madd-muttasil' };
-        if (isMaddMunfasil(text, i)) return { index: i, length: 1, type: 'madd-munfasil' };
-        return { index: i, length: 1, type: 'madd-asli' };
+        if (isMaddLazim(text, i)) return { index: i-4, length: 4, type: 'madd-lazim' };
+        if (isMaddArid(text, i)) return { index: i-3, length: 4, type: 'madd-arid' };
+        if (isMaddMuttasil(text, i)) return { index: i-3, length: 4, type: 'madd-muttasil' };
+        if (isMaddMunfasil(text, i)) return { index: (text[i-2] === SHADDA ? i-1 : i-3), length: (text[i-2] === SHADDA ? 2 : 4), type: 'madd-munfasil' };
+
+        let length = 3;
+        if (prev === SHADDA) {
+            i --;
+            length++;
+        }
+        return { index: i-2, length: length, type: 'madd-asli' };
     }
 
     // Alif Maddah
@@ -318,7 +326,7 @@ function detectMaddRule(text, i, curr, next, prev) {
         if (isMaddLazim(text, i)) return { index: i, length: 1, type: 'madd-lazim' };
         if (isMaddMuttasil(text, i)) return { index: i, length: 1, type: 'madd-muttasil' };
         if (isMaddMunfasil(text, i)) return { index: i, length: 1, type: 'madd-munfasil' };
-        return { index: i, length: 1, type: 'madd-asli' };
+        return { index: i-2, length: 3, type: 'madd-asli' };
     }
 
     return null;
@@ -462,7 +470,9 @@ function isMaddLazim(text, i) {
     // Now inspect the diacritics on that next letter
     let k = j + 1;
     while (k < text.length && isDiacritic(text[k])) {
-        if (text[k] === SUKUN || text[k] === SHADDA) return true;
+        if ((text[k] === SUKUN || text[k] === SHADDA) && text[k-1] !== FATHA) {
+            return true;
+        }
         k++;
     }
 
@@ -557,3 +567,4 @@ function addRule(rules, index, length, type) {
 function alreadyMarked(rules, index) {
     return rules.some(r => index >= r.index && index < r.index + r.length);
 }
+
