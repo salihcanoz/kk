@@ -321,6 +321,14 @@ function detectMaddRule(text, i, curr, next, prev) {
         return { index: i, length: 1, type: 'madd-asli' };
     }
 
+    // Madd Badal with omitted madd letter (rasm variant)
+    if (curr === 'ؤ' && next === DAMMA) {
+        const afterDamma = text[i + 2] || '';
+        if (afterDamma !== 'و') {
+            return { index: i, length: 2, type: 'madd-asli' };
+        }
+    }
+
     return null;
 }
 
