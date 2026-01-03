@@ -30,8 +30,8 @@ const WAQF_CLASSES = {
   '\u06D7': 'waqf-awla',     // Qala
   '\u06D6': 'waqf-continue', // Sala
   '\u06DB': 'waqf-muanaqah', // Mu'anaqah
-  '\u0619': 'waqf-jaiz',      // Small high dotless head of khah
-  // '\u06D9': 'waqf-continue' // Laam-Alif
+  '\u0619': 'waqf-jaiz',     // Small high dotless head of khah
+  '\u06D9': 'waqf-continue'  // Small high lam-alif (ۙ)
 };
 
 // --- Main Tajweed Function ---
@@ -367,16 +367,24 @@ function isAtStop(text, i) {
 
 function isMaddLazim(text, i) {
     let j = i + 1;
+
+    // Skip optional maddah mark immediately after the madd letter
     if (text[j] === MADDAH_ABOVE) j++;
 
-    while (j < text.length) {
-        const char = text[j];
-        if (char === ' ') return false; // Word boundary
-        if (isWordBreak(char)) return false;
-        if (char === SUKUN || char === SHADDA) return true;
-        if (isArabicLetter(char)) return false;
+    // Find the next Arabic letter (skip harakat/marks)
+    while (j < text.length && !isArabicLetter(text[j])) {
+        if (text[j] === ' ' || isWordBreak(text[j])) return false;
         j++;
     }
+    if (j >= text.length) return false;
+
+    // Now inspect the diacritics on that next letter
+    let k = j + 1;
+    while (k < text.length && isDiacritic(text[k])) {
+        if (text[k] === SUKUN || text[k] === SHADDA) return true;
+        k++;
+    }
+
     return false;
 }
 
