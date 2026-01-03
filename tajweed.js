@@ -143,7 +143,16 @@ function detectSilentLetter(text, i) {
             if (afterLamIndex >= text.length) return null;
 
             const afterLamChar = text[afterLamIndex];
-            if (!hasShadda) hasShadda = text[afterLamIndex + 1] === SHADDA;
+            if (!hasShadda) {
+                let k = afterLamIndex + 1;
+                while (k < text.length && isDiacritic(text[k])) {
+                    if (text[k] === SHADDA) {
+                        hasShadda = true;
+                        break;
+                    }
+                    k++;
+                }
+            }
 
             const isShamsi = SUN_LETTERS.includes(afterLamChar) && hasShadda;
 
@@ -166,7 +175,16 @@ function detectSilentLetter(text, i) {
         if (afterLamIndex >= text.length) return null;
         
         const afterLamChar = text[afterLamIndex];
-        if (!hasShadda) hasShadda = text[afterLamIndex + 1] === SHADDA;
+        if (!hasShadda) {
+            let k = afterLamIndex + 1;
+            while (k < text.length && isDiacritic(text[k])) {
+                if (text[k] === SHADDA) {
+                    hasShadda = true;
+                    break;
+                }
+                k++;
+            }
+        }
 
         if (SUN_LETTERS.includes(afterLamChar) && hasShadda) {
             return { index: i + 1, length: 1 }; // Only lam silent
