@@ -105,20 +105,20 @@ function detectAllRules(text) {
         addRule(rules, i, 2, 'tajweed-qalqalah');
         continue;
     }
-    
-    // Silent letters need to be detected before madd rules to avoid incorrect madd detection
-    const silentLetterRule = detectSilentLetter(text, i);
-    if (silentLetterRule) {
-        addRule(rules, silentLetterRule.index, silentLetterRule.length, 'silent-letter');
-        i = silentLetterRule.index + silentLetterRule.length - 1;
-        continue;
-    }
 
     const maddRule = detectMaddRule(text, i, curr, next, prev);
     if (maddRule) {
         addRule(rules, maddRule.index, maddRule.length, `tajweed-${maddRule.type}`);
         if (alreadyMarked(rules, i)) continue;
     }
+
+      // Silent letters need to be detected before madd rules to avoid incorrect madd detection
+      const silentLetterRule = detectSilentLetter(text, i);
+      if (silentLetterRule) {
+          addRule(rules, silentLetterRule.index, silentLetterRule.length, 'silent-letter');
+          i = silentLetterRule.index + silentLetterRule.length - 1;
+          continue;
+      }
   }
   return rules;
 }
