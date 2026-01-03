@@ -392,7 +392,12 @@ body {
 }
 
 .silent-letter {
-  color: #b4b4b9;
+  color: #b4b4b9 !important;
+}
+
+/* If a silent letter ever ends up with an abbreviation pseudo-element, suppress it */
+.silent-letter::after {
+  content: none !important;
 }
 
 #tajweed-legend {
