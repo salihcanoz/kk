@@ -144,52 +144,53 @@ function detectSilentLetter(text, i) {
         const isConnected = i > 0;
         if (isConnected) {
             let lamIndex = i + 1;
-            if (text[lamIndex] === FATHA) lamIndex++; // Skip Fatha on Alif
+            if (text[lamIndex] === FATHA) lamIndex++; // Skip Fatha on Alif if present
 
-            if (text[lamIndex] !== 'ل') return null;
-
-            // Handle special case for words like الَّذِينَ where the laam has a shadda
-            if (text[lamIndex + 1] === SHADDA) {
-                 if (isVowel(prev) || prev === ' ') {
-                    return { index: i, length: 1 }; // Only alif is silent
-                }
-                return null;
-            }
-
-            let afterLamIndex = lamIndex + 1;
-            let shaddaOnLam = false;
-            while (afterLamIndex < text.length && !isArabicLetter(text[afterLamIndex])) {
-                if (text[afterLamIndex] === SHADDA) shaddaOnLam = true;
-                afterLamIndex++;
-            }
-            if (afterLamIndex >= text.length) return null;
-
-            const afterLamChar = text[afterLamIndex];
-            let shaddaOnNext = false;
-            if (!shaddaOnLam) {
-                let k = afterLamIndex + 1;
-                while (k < text.length && isDiacritic(text[k])) {
-                    if (text[k] === SHADDA) {
-                        shaddaOnNext = true;
-                        break;
+            if (text[lamIndex] === 'ل') {
+                // Handle special case for words like الَّذِينَ where the laam has a shadda
+                if (text[lamIndex + 1] === SHADDA) {
+                     if (isVowel(prev) || prev === ' ') {
+                        return { index: i, length: 1 }; // Only alif is silent
                     }
-                    k++;
+                    return null;
                 }
-            }
 
-            const isShamsi = SUN_LETTERS.includes(afterLamChar) && shaddaOnNext;
-
-            if (shaddaOnLam) {
-                if (isVowel(prev) || prev === ' ') {
-                    return { index: i, length: 1 };
+                let afterLamIndex = lamIndex + 1;
+                let shaddaOnLam = false;
+                while (afterLamIndex < text.length && !isArabicLetter(text[afterLamIndex])) {
+                    if (text[afterLamIndex] === SHADDA) shaddaOnLam = true;
+                    afterLamIndex++;
                 }
-                return null;
-            }
+                
+                if (afterLamIndex < text.length) {
+                    const afterLamChar = text[afterLamIndex];
+                    let shaddaOnNext = false;
+                    if (!shaddaOnLam) {
+                        let k = afterLamIndex + 1;
+                        while (k < text.length && isDiacritic(text[k])) {
+                            if (text[k] === SHADDA) {
+                                shaddaOnNext = true;
+                                break;
+                            }
+                            k++;
+                        }
+                    }
 
-            if (isShamsi) {
-                return { index: i, length: lamIndex - i + 1 }; // Both alif and lam silent
-            } else if (isVowel(prev) || prev === ' ') {
-                return { index: i, length: 1 }; // Only alif silent (Qamari)
+                    const isShamsi = SUN_LETTERS.includes(afterLamChar) && shaddaOnNext;
+
+                    if (shaddaOnLam) {
+                        if (isVowel(prev) || prev === ' ') {
+                            return { index: i, length: 1 };
+                        }
+                        return null;
+                    }
+
+                    if (isShamsi) {
+                        return { index: i, length: lamIndex - i + 1 }; // Both alif and lam silent
+                    } else if (isVowel(prev) || prev === ' ') {
+                        return { index: i, length: 1 }; // Only alif silent (Qamari)
+                    }
+                }
             }
         }
     }
@@ -224,6 +225,31 @@ function detectSilentLetter(text, i) {
             if (SUN_LETTERS.includes(afterLamChar) && shaddaOnNext) {
                 return { index: lamIndex, length: 1 }; // Only lam silent
             }
+        }
+    }
+    
+    // Case 5: Hamzat Wasl after Fa or Waw (e.g., فَاتَّقُوا)
+    if (curr === 'ا' && prev === FATHA) {
+        const prevChar = text[i-2];
+        if (prevChar === 'ف' || prevChar === 'و') {
+            // Check if next letter has shadda (indicating assimilation or Form VIII verb)
+            let nextCharIndex = i + 1;
+            while (nextCharIndex < text.length && isDiacritic(text[nextCharIndex])) {
+                if (text[nextCharIndex] === SHADDA) {
+                    return { index: i, length: 1 };
+                }
+                nextCharIndex++;
+            }
+            // Also check the character after the next character (for shadda on the letter after Alif)
+             if (nextCharIndex < text.length) {
+                 let k = nextCharIndex + 1;
+                 while (k < text.length && isDiacritic(text[k])) {
+                     if (text[k] === SHADDA) {
+                         return { index: i, length: 1 };
+                     }
+                     k++;
+                 }
+             }
         }
     }
 
@@ -489,6 +515,12 @@ function isMaddMunfasil(text, i) {
 
 function isFollowedBySilentStart(text, index) {
     let j = index + 1;
+    
+    // Skip the silent alif after plural wauw if present
+    if (text[index] === 'و' && text[j] === 'ا') {
+        j++;
+    }
+
     while (j < text.length && (text[j] === ' ' || isDiacritic(text[j]))) {
         j++;
     }
