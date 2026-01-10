@@ -11,6 +11,8 @@ const MADDAH_ABOVE = '\u0653';
 const AYAH_END = '\u06DD'; // ۝
 const HAMZAT_WASL = '\u0671';
 const ALIF = '\u0627';
+const ALIF_MAKSURA = '\u0649';
+const WAUW = 'و';
 const WAUW_WITH_HAMZA= '\u0624';
 
 const HAMZA = 'ء';
@@ -54,6 +56,7 @@ function detectAllRules(text) {
         const curr = text[i];
         const next = text[i + 1] || '';
         const prev = text[i - 1] || '';
+        const prevPrev = text[i - 2] || '';
 
         // Priority 1: Waqf Signs
         const waqfClass = WAQF_CLASSES[curr];
@@ -63,12 +66,12 @@ function detectAllRules(text) {
         }
 
         // Priority 2: Iltiqa as-Sakinain (meeting of two silent letters)
-        if (isMaddLetter(curr, prev) && !isDiacritic(next) && isFollowedBySilentStart(text, i)) {
+        if (isMaddLetter(curr, prev, prevPrev) && !isDiacritic(next) && isFollowedBySilentStart(text, i)) {
             addRule(rules, i, 1, 'silent-letter');
             continue;
         }
 
-        // Priority 3: Other Tajweed Rules
+                // Priority 3: Other Tajweed Rules
         if (curr === 'و' && next === '\u08d1') {
             addRule(rules, i, 1, 'tajweed-qasr');
             addRule(rules, i + 1, 1, 'hidden-char');
@@ -76,7 +79,7 @@ function detectAllRules(text) {
         }
 
         if (curr === '\u08d1') {
-            addRule(rules, i, 1, 'hidden-char');
+            addRule(rules, i-2, 3, 'tajweed-qasr');            
             continue;
         }
 
@@ -85,10 +88,19 @@ function detectAllRules(text) {
             continue;
         }
 
-        const maddRule = detectMaddRule(text, i, curr, next, prev);
+        const maddRule = detectMaddRule(text, i, curr, next, prev, prevPrev);
         if (maddRule) {
             addRule(rules, maddRule.index, maddRule.length, `tajweed-${maddRule.type}`);
             if (alreadyMarked(rules, i)) continue;
+        }
+
+        const nunSakinahResult = detectNunSakinahRule(text, i);
+        if (nunSakinahResult) {
+            addRule(rules, nunSakinahResult.trigger.index, nunSakinahResult.trigger.length, nunSakinahResult.trigger.type);
+            if (nunSakinahResult.target) {
+                //addRule(rules, nunSakinahResult.target.index, nunSakinahResult.target.length, nunSakinahResult.target.type);
+            }
+            continue;
         }
 
         // Ghunna on Noon/Meem Mushaddadah
@@ -103,18 +115,9 @@ function detectAllRules(text) {
                 j++;
             }
             if (foundShadda) {
-                addRule(rules, i, j - i + 1, 'tajweed-ghunna');
+                addRule(rules, i, j - i-2, 'tajweed-ghunna');
                 continue;
             }
-        }
-
-        const nunSakinahResult = detectNunSakinahRule(text, i);
-        if (nunSakinahResult) {
-            addRule(rules, nunSakinahResult.trigger.index, nunSakinahResult.trigger.length, nunSakinahResult.trigger.type);
-            if (nunSakinahResult.target) {
-                //addRule(rules, nunSakinahResult.target.index, nunSakinahResult.target.length, nunSakinahResult.target.type);
-            }
-            continue;
         }
 
         // Silent letters need to be detected before madd rules to avoid incorrect madd detection
@@ -133,6 +136,7 @@ function detectAllRules(text) {
 function detectSilentLetter(text, i) {
     const curr = text[i];
     const prev = text[i - 1] || '';
+    const next = text[i + 1] || '';
 
     // Case 1: Silent alif after tanween fathah
     if (curr === 'ا' && prev === TANWEEN[0]) {
@@ -141,7 +145,8 @@ function detectSilentLetter(text, i) {
 
     // Case 2: Silent alif after plural wauw
     if (curr === 'ا') {
-        if (prev === 'و' && text[i-2] === DAMMA) return { index: i, length: 1 };
+        if (prev === 'و' && (text[i-2] === DAMMA || !hasVowel(text, i-1))) return { index: i, length: 1 };
+        if (prev === SUKUN && (text[i-2] === WAUW)) return { index: i, length: 1 };
         if (prev === MADDAH_ABOVE && text[i-2] === 'و' && text[i-3] === DAMMA) return { index: i, length: 1 };
     }
 
@@ -265,10 +270,14 @@ function detectSilentLetter(text, i) {
         return { index: i, length: 1 };
     }
 
+    if (curr === WAUW && !isVowel(next)) {
+        return { index: i, length: 1 };
+    }
+
     return null;
 }
 
-function detectMaddRule(text, i, curr, next, prev) {
+function detectMaddRule(text, i, curr, next, prev, prevPrev) {
     // Madd Lazim Harfi
     if (HURUF_MUQATTAAT.includes(curr) && next === MADDAH_ABOVE) {
         return { index: i, length: 2, type: 'madd-lazim' };
@@ -295,7 +304,14 @@ function detectMaddRule(text, i, curr, next, prev) {
         else if (isMaddArid(text, lookaheadIndex)) type = 'madd-arid';
         else if (isMaddMuttasil(text, lookaheadIndex)) type = 'madd-muttasil';
         else if (isMaddMunfasil(text, lookaheadIndex)) type = 'madd-munfasil';
-        else if (hasMaddah) type = 'madd-munfasil';
+        else if (hasMaddah) {type = 'madd-munfasil';
+            length++;
+        }
+        else {
+            if (text[lookaheadIndex + 1] === 'ى') {
+                length++;
+            }
+        }
 
         return { index: i, length: length, type: type };
     }
@@ -306,7 +322,7 @@ function detectMaddRule(text, i, curr, next, prev) {
     }
 
     // Standard Madd Letters
-    if (isMaddLetter(curr, prev)) {
+    if (isMaddLetter(curr, prev, prevPrev)) {
         if (next === MADDAH_ABOVE) {
             if (isMaddLazim(text, i)) return { index: i, length: 2, type: 'madd-lazim' };
             if (isMaddMuttasil(text, i)) return { index: i, length: 2, type: 'madd-muttasil' };
@@ -317,20 +333,43 @@ function detectMaddRule(text, i, curr, next, prev) {
         if (isDiacritic(next)) return null;
 
         if (isMaddLazim(text, i)) return { index: i-4, length: 4, type: 'madd-lazim' };
-        if (isMaddArid(text, i)) return { index: i-3, length: 4, type: 'madd-arid' };
+        if (isMaddArid(text, i)) return { index: i-2, length: 4, type: 'madd-arid' };
         if (isMaddMuttasil(text, i)) return { index: i-3, length: 4, type: 'madd-muttasil' };
-        if (isMaddMunfasil(text, i)) return { index: (text[i-2] === SHADDA ? i-1 : i-3), length: (text[i-2] === SHADDA ? 2 : 4), type: 'madd-munfasil' };
+        if (isMaddMunfasil(text, i)) {
+            let idx = i - 3;
+            let length = 4;
+            if (text[i - 2] === SHADDA) {
+                idx = i - 1;
+                length = 2;
+            }
+            if (text[i - 1] === ALIF_MAKSURA) {
+                length++;
+            }
+            return { index: idx, length: length, type: 'madd-munfasil' }
+        };
 
-        if (text[i-2] === SHADDA) {
-             return { index: i-1, length: 2, type: 'madd-asli' };
+        if (text[i - 2] === SHADDA) {
+             return { index: i - 1, length: 2, type: 'madd-asli' };
         }
 
         let length = 3;
         if (prev === SHADDA) {
+            if (prevPrev === '\u064B') { //fathatan
+                return null;
+            }
             i --;
             length++;
         }
-        return { index: i-2, length: length, type: 'madd-asli' };
+
+        let nextLetter = getNextLetter(text, i);
+
+        if (nextLetter && nextLetter.letter === ALIF) {
+            if (!isVowel(text[nextLetter.index + 1])) {
+                return null;
+            }
+        }
+
+        return { index: i - 2, length: length, type: 'madd-asli' };
     }
 
     // Alif Maddah
@@ -342,7 +381,7 @@ function detectMaddRule(text, i, curr, next, prev) {
     }
 
     //hamza on wauw
-    if (curr === WAUW_WITH_HAMZA && next === DAMMA) {
+    if (curr === WAUW_WITH_HAMZA && next === DAMMA && text[i+2] !== '\u08d1') {
         return { index: i, length: 2, type: 'madd-asli' };
     }
 
@@ -355,7 +394,6 @@ function detectNunSakinahRule(text, i) {
     
     let searchIndex = i + triggerLength;
     if (TANWEEN.includes(text[i]) && (text[i+1] === 'ا' || text[i+1] === 'ى')) {
-        //console.log(text.substring(i -20, i))
         searchIndex++;
     }
 
@@ -368,35 +406,65 @@ function detectNunSakinahRule(text, i) {
     }
     if (nextLetterIndex >= text.length) return null;
 
-    const nextLetter = text[nextLetterIndex];
+    //const nextLetter = text[nextLetterIndex];
+    const nextLetter = getNextLetter(text, nextLetterIndex)// text[nextLetterIndex];
     const triggerStartIndex = TANWEEN.includes(text[i]) ? i - 1 : i;
     const finalTriggerLength = searchIndex - triggerStartIndex;
 
-    if (YANMOU_LETTERS.includes(nextLetter)) {
+    if (!nextLetter) {
+        return null;
+    }
+
+    if (YANMOU_LETTERS.includes(text[nextLetterIndex])) {
         return {
             trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bi-ghunna', length: finalTriggerLength + 2 },
             target: { index: nextLetterIndex, type: 'tajweed-idgham-bi-ghunna', length: 1 },
         };
     }
 
-    if (IDGHAM_BILA_GHUNNA_LETTERS.includes(nextLetter)) {
+    if (IDGHAM_BILA_GHUNNA_LETTERS.includes(text[nextLetterIndex])) {
         return {
             trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bila-ghunna', length: finalTriggerLength + 2},
             target: { index: nextLetterIndex, type: 'tajweed-idgham-bila-ghunna', length: 1 },
         };
     }
 
-    if (IKHFA_LETTERS.includes(nextLetter)) {
-        return { trigger: { index: triggerStartIndex, type: 'tajweed-ikhfa', length: finalTriggerLength }, target: null };
+    if (IQLAB_LETTERS.includes(text[nextLetterIndex])) {
+        return { trigger: { index: triggerStartIndex + 1, type: 'tajweed-iqlab', length: finalTriggerLength + 2 }, target: null };
     }
 
-    if (IQLAB_LETTERS.includes(nextLetter)) {
-        return { trigger: { index: triggerStartIndex, type: 'tajweed-iqlab', length: finalTriggerLength }, target: null };
+    if (checkIhkfa(text, nextLetterIndex)) {
+        return { trigger: { index: triggerStartIndex, type: 'tajweed-ikhfa', length: finalTriggerLength }, target: null };
     }
     
     return null;
 }
 
+function checkIhkfa(text, i) {
+    let isIkhfa = IKHFA_LETTERS.includes(text[i]);
+    if (!isIkhfa){
+        return false;
+    }
+
+    let prev = getPrevLetter(text, i);    
+    if (!prev) {
+        return false;
+    }
+
+    if (TANWEEN.includes(text[prev.index + 1]) || ((text[prev.index] + text[prev.index + 1]) === 'نْ') ) {
+        return true;
+    }
+
+    if (!hasVowel(text, prev.index+1)) {
+        if (TANWEEN.includes(text[prev.index])) {
+            return true;
+        }
+    }
+
+    //console.log(text[prev.index+1].charCodeAt(0).toString(16));
+
+    return false;
+}
 
 // --- HTML Builder ---
 function buildHtmlFromRules(text, rules) {
@@ -421,9 +489,7 @@ function buildHtmlFromRules(text, rules) {
     return output;
 }
 
-
 // --- Helper Functions ---
-
 function isArabicLetter(char) {
     return /[\u0621-\u064A]/.test(char);
 }
@@ -437,13 +503,13 @@ function isNunSakinahOrTanween(text, i) {
 }
 
 function isVowel(char) {
-    return char === FATHA || char === DAMMA || char === KASRA;
+    return char === FATHA || char === DAMMA || char === KASRA || char === SUKUN;
 }
 
-function isMaddLetter(curr, prev) {
+function isMaddLetter(curr, prev, prevPrev) {
     return (
         (curr === ALIF && (prev === FATHA || prev === SHADDA || prev === MADDAH_ABOVE)) ||
-        (curr === 'و' && (prev === DAMMA || prev === MADDAH_ABOVE)) ||
+        (curr === 'و' && (prev === DAMMA || prev === MADDAH_ABOVE) && prevPrev !== SHADDA) ||
         ((curr === 'ي' || curr === 'ی' || curr === 'ى') && (prev === KASRA || prev === SUBSCRIPT_ALIF || prev === MADDAH_ABOVE))
     );
 }
@@ -589,3 +655,47 @@ function addRule(rules, index, length, type) {
 function alreadyMarked(rules, index) {
     return rules.some(r => index >= r.index && index < r.index + r.length);
 }
+
+function getNextLetter(text,i) {
+    let nextLetterIndex = i + 1;
+    while (nextLetterIndex < text.length) {
+        const char = text[nextLetterIndex];
+        if (isArabicLetter(char)) break;
+        if (Object.keys(WAQF_CLASSES).includes(char) || char === AYAH_END) return null; // Stop at waqf/ayah end
+        nextLetterIndex++;
+    }
+    if (nextLetterIndex >= text.length) return null;
+
+    return {index: nextLetterIndex, letter:text[nextLetterIndex]};
+}
+
+function getPrevLetter(text,i) {
+    let prevLetterIndex = i - 1;
+    while (prevLetterIndex >= 0) {
+        const char = text[prevLetterIndex];
+        if (isArabicLetter(char)) break;
+        if (Object.keys(WAQF_CLASSES).includes(char) || char === AYAH_END) return null; // Stop at waqf/ayah end
+        prevLetterIndex--;
+    }
+    if (prevLetterIndex < 0) return null;
+
+    return {index: prevLetterIndex, letter:text[prevLetterIndex]};
+}
+
+function hasVowel(text, i) {
+    let prev = getPrevLetter(text, i);
+    let next = getNextLetter(text, i);
+
+    if (prev.index == i - 1 || next.index == i + 1) {
+        return false;
+    }
+    return true;
+}
+
+
+
+
+
+console.log(checkIhkfa('مَنْ یَ',0));
+
+
