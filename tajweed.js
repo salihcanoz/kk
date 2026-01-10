@@ -374,22 +374,26 @@ function detectNunSakinahRule(text, i) {
 
     if (YANMOU_LETTERS.includes(nextLetter)) {
         return {
-            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bi-ghunna', length: finalTriggerLength },
+            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bi-ghunna', length: finalTriggerLength + 2 },
             target: { index: nextLetterIndex, type: 'tajweed-idgham-bi-ghunna', length: 1 },
         };
     }
+
     if (IDGHAM_BILA_GHUNNA_LETTERS.includes(nextLetter)) {
         return {
-            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bila-ghunna', length: finalTriggerLength },
+            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bila-ghunna', length: finalTriggerLength + 2},
             target: { index: nextLetterIndex, type: 'tajweed-idgham-bila-ghunna', length: 1 },
         };
     }
+
     if (IKHFA_LETTERS.includes(nextLetter)) {
         return { trigger: { index: triggerStartIndex, type: 'tajweed-ikhfa', length: finalTriggerLength }, target: null };
     }
+
     if (IQLAB_LETTERS.includes(nextLetter)) {
         return { trigger: { index: triggerStartIndex, type: 'tajweed-iqlab', length: finalTriggerLength }, target: null };
     }
+    
     return null;
 }
 
