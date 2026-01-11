@@ -66,9 +66,11 @@ function detectAllRules(text) {
         }
 
         // Priority 2: Iltiqa as-Sakinain (meeting of two silent letters)
-        if (isMaddLetter(curr, prev, prevPrev) && !isDiacritic(next) && isFollowedBySilentStart(text, i)) {
-            addRule(rules, i, 1, 'silent-letter');
-            continue;
+        if (isMaddLetter(curr, prev, prevPrev)) {
+            if (isFollowedBySakinInSameWord(text, i) || (!isDiacritic(next) && isFollowedBySilentStart(text, i))) {
+                 addRule(rules, i, 1, 'silent-letter');
+                 continue;
+            }
         }
 
         // Priority 3: Other Tajweed Rules
@@ -545,6 +547,50 @@ function isMaddLetter(curr, prev, prevPrev) {
     );
 }
 
+function isFollowedBySakinInSameWord(text, index) {
+    let nextLetterIndex = index + 1;
+
+    // Check for space, indicating next word.
+    let tempIndex = index + 1;
+    while(tempIndex < text.length && isDiacritic(text[tempIndex])) {
+        tempIndex++;
+    }
+    if (tempIndex < text.length && text[tempIndex] === ' ') return false;
+
+
+    while(nextLetterIndex < text.length && isDiacritic(text[nextLetterIndex])) {
+        nextLetterIndex++;
+    }
+
+    if (nextLetterIndex >= text.length || !isArabicLetter(text[nextLetterIndex])) {
+        return false;
+    }
+
+    // Found next letter. Check for sukun or shadda on it.
+    let k = nextLetterIndex + 1;
+    while (k < text.length && isDiacritic(text[k])) {
+        if (text[k] === SUKUN || text[k] === SHADDA) {
+            return true;
+        }
+        // If we find a vowel, the letter is not silent.
+        if (isVowel(text[k]) && text[k] !== SUKUN) {
+            return false;
+        }
+        k++;
+    }
+    
+    // Check for implicit sukun: letter is not followed by any vowel diacritics.
+    if (k === nextLetterIndex + 1) { // No diacritics found on the letter
+        if(text[k] && !isWordBreak(text[k]) && !isArabicLetter(text[k]) && !isDiacritic(text[k])) {
+             // not a word break, not a letter, not a diacritic... could be something else, assume not sakin
+            return false;
+        }
+        return true; // No vowel found, so it's sakin
+    }
+
+    return false;
+}
+
 function isMaddLeen(text, i, curr, prev, next) {
     if (!((curr === 'و' || curr === 'ي' || curr === 'ی' || curr === 'ى') && prev === FATHA && next === SUKUN)) {
         return false;
@@ -580,16 +626,31 @@ function isMaddLazim(text, i) {
     if (text[j] === MADDAH_ABOVE) j++;
 
     // Find the next Arabic letter (skip harakat/marks)
-    while (j < text.length && !isArabicLetter(text[j])) {
+    let letterIndex = -1;
+    while (j < text.length) {
+        if (isArabicLetter(text[j])) {
+            letterIndex = j;
+            break;
+        }
         if (text[j] === ' ' || isWordBreak(text[j])) return false;
         j++;
     }
-    if (j >= text.length) return false;
+    if (letterIndex === -1) return false;
 
     // Now inspect the diacritics on that next letter
-    let k = j + 1;
+    let k = letterIndex + 1;
     while (k < text.length && isDiacritic(text[k])) {
         if ((text[k] === SUKUN || text[k] === SHADDA) && text[k-1] !== FATHA) {
+            const letterWithSukun = text[letterIndex];
+            if (letterWithSukun === NOON && text[k] === SUKUN) {
+                let nextLetterResult = getNextLetter(text, k);
+                if (nextLetterResult) {
+                    const nextLetter = nextLetterResult.letter;
+                    if (YANMOU_LETTERS.includes(nextLetter) || IDGHAM_BILA_GHUNNA_LETTERS.includes(nextLetter) || IKHFA_LETTERS.includes(nextLetter) || IQLAB_LETTERS.includes(nextLetter)) {
+                        return false; // This is a nun sakinah rule, not madd lazim
+                    }
+                }
+            }
             return true;
         }
         k++;
