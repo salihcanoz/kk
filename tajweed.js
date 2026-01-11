@@ -360,7 +360,7 @@ function detectMaddRule(text, i, curr, next, prev, prevPrev) {
         };
 
         if (text[i - 2] === SHADDA) {
-             return { index: i - 1, length: 2, type: 'madd-asli' };
+             return { index: i - 3, length: 4, type: 'madd-asli' };
         }
 
         let length = 3;
@@ -531,8 +531,8 @@ function isVowel(char) {
 function isMaddLetter(curr, prev, prevPrev) {
     return (
         (curr === ALIF && (prev === FATHA || prev === SHADDA || prev === MADDAH_ABOVE)) ||
-        (curr === 'و' && (prev === DAMMA || prev === MADDAH_ABOVE) && prevPrev !== SHADDA) ||
-        ((curr === 'ي' || curr === 'ی' || curr === 'ى') && (prev === KASRA || prev === SUBSCRIPT_ALIF || prev === MADDAH_ABOVE))
+        (curr === 'و' && (prev === DAMMA || prev === MADDAH_ABOVE || (prev === SHADDA && prevPrev === DAMMA))) ||
+        ((curr === 'ي' || curr === 'ی' || curr === 'ى') && (prev === KASRA || prev === SUBSCRIPT_ALIF || prev === MADDAH_ABOVE || (prev === SHADDA && prevPrev === KASRA)))
     );
 }
 
@@ -713,9 +713,3 @@ function hasVowel(text, i) {
     }
     return true;
 }
-
-
-
-
-
-console.log(checkIhkfa('مَنْ یَ',0));
