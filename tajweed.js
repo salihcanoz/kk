@@ -67,9 +67,13 @@ function detectAllRules(text) {
 
         // Priority 2: Iltiqa as-Sakinain (meeting of two silent letters)
         if (isMaddLetter(curr, prev, prevPrev)) {
-            if (isFollowedBySakinInSameWord(text, i) || (!isDiacritic(next) && isFollowedBySilentStart(text, i))) {
-                 addRule(rules, i, 1, 'silent-letter');
-                 continue;
+            // A madd letter should not have a vowel. If it has a Fatha, Damma, or Kasra, it's a regular letter.
+            const hasVowel = isVowel(next) && next !== SUKUN;
+            if (!hasVowel) {
+                if (isFollowedBySakinInSameWord(text, i) || (!isDiacritic(next) && isFollowedBySilentStart(text, i))) {
+                     addRule(rules, i, 1, 'silent-letter');
+                     continue;
+                }
             }
         }
 
