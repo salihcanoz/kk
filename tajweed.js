@@ -71,7 +71,7 @@ function detectAllRules(text) {
             continue;
         }
 
-                // Priority 3: Other Tajweed Rules
+        // Priority 3: Other Tajweed Rules
         if (curr === 'و' && next === '\u08d1') {
             addRule(rules, i, 1, 'tajweed-qasr');
             addRule(rules, i + 1, 1, 'hidden-char');
@@ -147,6 +147,7 @@ function detectSilentLetter(text, i) {
     if (curr === 'ا') {
         if (prev === 'و' && (text[i-2] === DAMMA || !hasVowel(text, i-1))) return { index: i, length: 1 };
         if (prev === SUKUN && (text[i-2] === WAUW)) return { index: i, length: 1 };
+        if (prev === DAMMA && (text[i-2] === WAUW)) return { index: i, length: 1 };
         if (prev === MADDAH_ABOVE && text[i-2] === 'و' && text[i-3] === DAMMA) return { index: i, length: 1 };
     }
 
@@ -364,8 +365,8 @@ function detectMaddRule(text, i, curr, next, prev, prevPrev) {
         let nextLetter = getNextLetter(text, i);
 
         if (nextLetter && nextLetter.letter === ALIF) {
-            if (!isVowel(text[nextLetter.index + 1])) {
-                return null;
+            if (!isVowel(text[nextLetter.index-2])) {
+                return null;                
             }
         }
 
@@ -686,7 +687,7 @@ function hasVowel(text, i) {
     let prev = getPrevLetter(text, i);
     let next = getNextLetter(text, i);
 
-    if (prev.index == i - 1 || next.index == i + 1) {
+    if ((prev && prev.index == i - 1) || (next && next.index == i + 1)) {
         return false;
     }
     return true;
