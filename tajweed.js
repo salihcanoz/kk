@@ -79,7 +79,13 @@ function detectAllRules(text) {
         }
 
         if (curr === '\u08d1') {
-            addRule(rules, i-2, 3, 'tajweed-qasr');            
+            if (text[i-1] === ALIF) { // Check if it follows an Alif
+                addRule(rules, i - 1, 1, 'tajweed-qasr');
+                addRule(rules, i, 1, 'hidden-char');
+            } else {
+                 // Fallback for cases I haven't seen. The old rule was probably for something.
+                 addRule(rules, i-2, 3, 'tajweed-qasr');
+            }
             continue;
         }
 
@@ -289,6 +295,9 @@ function detectSilentLetter(text, i) {
 }
 
 function detectMaddRule(text, i, curr, next, prev, prevPrev) {
+    if (next === '\u08d1') {
+        return null;
+    }
     // Madd Lazim Harfi
     if (HURUF_MUQATTAAT.includes(curr) && next === MADDAH_ABOVE) {
         return { index: i, length: 2, type: 'madd-lazim' };
