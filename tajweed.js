@@ -156,12 +156,17 @@ function detectSilentLetter(text, i) {
         const isConnected = i > 0;
         if (isConnected) {
             let lamIndex = i + 1;
-            if (text[lamIndex] === FATHA) lamIndex++; // Skip Fatha on Alif if present
+            let hasVowelOnAlif = false;
+            if (text[lamIndex] === FATHA || text[lamIndex] === DAMMA || text[lamIndex] === KASRA) {
+                hasVowelOnAlif = true;
+                lamIndex++;
+            }
 
             if (text[lamIndex] === 'ل') {
                 // Handle special case for words like الَّذِينَ where the laam has a shadda
                 if (text[lamIndex + 1] === SHADDA) {
                     if (isVowel(prev) || prev === ' ') {
+                        if (hasVowelOnAlif) return null;
                         return { index: i, length: 1 }; // Only alif is silent
                     }
                     return null;
@@ -192,14 +197,19 @@ function detectSilentLetter(text, i) {
 
                     if (shaddaOnLam) {
                         if (isVowel(prev) || prev === ' ') {
+                            if (hasVowelOnAlif) return null;
                             return { index: i, length: 1 };
                         }
                         return null;
                     }
 
                     if (isShamsi) {
+                        if (hasVowelOnAlif) {
+                            return { index: lamIndex, length: 1 }; // Only lam silent
+                        }
                         return { index: i, length: lamIndex - i + 1 }; // Both alif and lam silent
                     } else if (isVowel(prev) || prev === ' ') {
+                        if (hasVowelOnAlif) return null;
                         return { index: i, length: 1 }; // Only alif silent (Qamari)
                     }
                 }
@@ -271,7 +281,7 @@ function detectSilentLetter(text, i) {
         return { index: i, length: 1 };
     }
 
-    if (curr === WAUW && !isVowel(next)) {
+    if (curr === WAUW && !isVowel(next) && next !== SHADDA && !TANWEEN.includes(next)) {
         return { index: i, length: 1 };
     }
 
@@ -409,33 +419,44 @@ function detectNunSakinahRule(text, i) {
 
     //const nextLetter = text[nextLetterIndex];
     const nextLetter = getNextLetter(text, nextLetterIndex)// text[nextLetterIndex];
-    const triggerStartIndex = TANWEEN.includes(text[i]) ? i - 1 : i;
-    const finalTriggerLength = searchIndex - triggerStartIndex;
+    
+    let triggerStartIndex = i;
+    if (TANWEEN.includes(text[i])) {
+        let k = i - 1;
+        while (k >= 0 && isDiacritic(text[k])) {
+            k--;
+        }
+        triggerStartIndex = k;
+    }
+
+    const triggerGroupLength = searchIndex - triggerStartIndex;
+    const fullLength = (nextLetterIndex - triggerStartIndex) + 1;
+    const nextChar = text[nextLetterIndex];
 
     if (!nextLetter) {
         return null;
     }
 
-    if (YANMOU_LETTERS.includes(text[nextLetterIndex])) {
+    if (YANMOU_LETTERS.includes(nextChar)) {
         return {
-            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bi-ghunna', length: finalTriggerLength + 2 },
+            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bi-ghunna', length: fullLength },
             target: { index: nextLetterIndex, type: 'tajweed-idgham-bi-ghunna', length: 1 },
         };
     }
 
-    if (IDGHAM_BILA_GHUNNA_LETTERS.includes(text[nextLetterIndex])) {
+    if (IDGHAM_BILA_GHUNNA_LETTERS.includes(nextChar)) {
         return {
-            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bila-ghunna', length: finalTriggerLength + 2},
+            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bila-ghunna', length: fullLength},
             target: { index: nextLetterIndex, type: 'tajweed-idgham-bila-ghunna', length: 1 },
         };
     }
 
-    if (IQLAB_LETTERS.includes(text[nextLetterIndex])) {
-        return { trigger: { index: triggerStartIndex + 1, type: 'tajweed-iqlab', length: finalTriggerLength + 2 }, target: null };
+    if (IQLAB_LETTERS.includes(nextChar)) {
+        return { trigger: { index: triggerStartIndex, type: 'tajweed-iqlab', length: fullLength }, target: null };
     }
 
-    if (checkIhkfa(text, nextLetterIndex)) {
-        return { trigger: { index: triggerStartIndex, type: 'tajweed-ikhfa', length: finalTriggerLength }, target: null };
+    if (IKHFA_LETTERS.includes(nextChar)) {
+        return { trigger: { index: triggerStartIndex, type: 'tajweed-ikhfa', length: triggerGroupLength }, target: null };
     }
     
     return null;
@@ -698,5 +719,3 @@ function hasVowel(text, i) {
 
 
 console.log(checkIhkfa('مَنْ یَ',0));
-
-
