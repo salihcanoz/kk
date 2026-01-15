@@ -70,7 +70,11 @@ function detectAllRules(text) {
             // A madd letter should not have a vowel. If it has a Fatha, Damma, or Kasra, it's a regular letter.
             const hasVowel = isVowel(next) && next !== SUKUN;
             if (!hasVowel) {
-                if (isFollowedBySakinInSameWord(text, i) || (!isDiacritic(next) && isFollowedBySilentStart(text, i))) {
+                // Don't mark as silent if followed by alif (which creates madd asli)
+                if (next === ALIF) {
+                    // This is madd asli, let the madd rule handle it
+                    // Skip this rule
+                } else if (isFollowedBySakinInSameWord(text, i) || (!isDiacritic(next) && isFollowedBySilentStart(text, i))) {
                      addRule(rules, i, 1, 'silent-letter');
                      continue;
                 }
@@ -157,9 +161,23 @@ function detectSilentLetter(text, i) {
 
     // Case 2: Silent alif after plural wauw
     if (curr === 'ا') {
-        if (prev === 'و' && (text[i-2] === DAMMA || !hasVowel(text, i-1))) return { index: i, length: 1 };
+        // Don't mark as silent if wauw is a madd letter (i.e., followed by alif for madd asli)
+        if (prev === 'و' && (text[i-2] === DAMMA || !hasVowel(text, i-1))) {
+            // Check if this is madd asli: wauw with damma followed by alif
+            // In madd asli, the alif is not silent but part of the madd
+            if (isMaddLetter('و', text[i-2], text[i-3])) {
+                return null; // This is madd asli, not a silent alif
+            }
+            return { index: i, length: 1 };
+        }
         if (prev === SUKUN && (text[i-2] === WAUW)) return { index: i, length: 1 };
-        if (prev === DAMMA && (text[i-2] === WAUW)) return { index: i, length: 1 };
+        if (prev === DAMMA && (text[i-2] === WAUW)) {
+            // Don't mark as silent if this is part of madd asli
+            if (isMaddLetter('و', text[i-2], text[i-3])) {
+                return null;
+            }
+            return { index: i, length: 1 };
+        }
         if (prev === MADDAH_ABOVE && text[i-2] === 'و' && text[i-3] === DAMMA) return { index: i, length: 1 };
     }
 
@@ -419,8 +437,16 @@ function detectNunSakinahRule(text, i) {
     if (!isTrigger) return null;
     
     let searchIndex = i + triggerLength;
-    if (TANWEEN.includes(text[i]) && (text[i+1] === 'ا' || text[i+1] === 'ى')) {
-        searchIndex++;
+    
+    // For tanween, check if followed by alif maksura (possibly with diacritics in between)
+    if (TANWEEN.includes(text[i])) {
+        let j = i + triggerLength;
+        while (j < text.length && isDiacritic(text[j])) {
+            j++;
+        }
+        if (text[j] === 'ا' || text[j] === 'ى') {
+            searchIndex = j + 1;
+        }
     }
 
     let nextLetterIndex = searchIndex;
