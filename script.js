@@ -302,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.documentElement.style.setProperty('--abbr-madd-munfasil', `"${t.abbrMaddMunfasil || 'Mn'}"`);
       document.documentElement.style.setProperty('--abbr-madd-arid', `"${t.abbrMaddArid || 'A'}"`);
       document.documentElement.style.setProperty('--abbr-madd-liin', `"${t.abbrMaddLiin || 'ML'}"`);
-      document.documentElement.style.setProperty('--abbr-madd-silah', `"${t.abbrMaddSilah || 'MS'}"`);
+      document.documentElement.style.setProperty('--abbr-silat-ha', `"${t.abbrSilatHa || 'MS'}"`);
       document.documentElement.style.setProperty('--abbr-madd-lazim', `"${t.abbrMaddLazim || 'Lz'}"`);
       document.documentElement.style.setProperty('--abbr-madd-asli', `"${t.abbrMaddAsli || 'MA'}"`);
       document.documentElement.style.setProperty('--abbr-qalqalah', `"${t.abbrQalqalah || 'Q'}"`);
@@ -431,7 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #E91E63; margin-right: 5px;">■</span> <div>${t.maddMunfasil}</div></li>
             <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #1ABC9C; margin-right: 5px;">■</span> <div>${t.maddArid}</div></li>
             <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #F39C12; margin-right: 5px;">■</span> <div>${t.maddLiin}</div></li>
-            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #9932CC; margin-right: 5px;">■</span> <div>${t.maddSilah}</div></li>
+            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #9932CC; margin-right: 5px;">■</span> <div>${t.silatHa}</div></li>
             <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #e74c3c; margin-right: 5px;">■</span> <div>${t.maddAsli}</div></li>
             <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #2980b9; margin-right: 5px;">■</span> <div>${t.qalqalah}</div></li>
             <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #8e44ad; margin-right: 5px;">■</span> <div>${t.iqlab}</div></li>
