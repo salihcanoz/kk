@@ -502,8 +502,15 @@ function detectMaddRule(text, i, curr, next, prev, prevPrev) {
     
     if (shouldApplyMaddLazim) {
         let maddahIndex = i + 1;
+        let hasVowel = false;
         while (maddahIndex < text.length && isDiacritic(text[maddahIndex])) {
+            if (text[maddahIndex] === FATHA || text[maddahIndex] === DAMMA || text[maddahIndex] === KASRA) {
+                hasVowel = true;
+            }
             if (text[maddahIndex] === MADDAH_ABOVE) {
+                if (hasVowel) {
+                    break;
+                }
                 // Found maddah after this huruf muqattaat letter
                 const length = (maddahIndex - i) + 1;
                 return { index: i, length: length, type: 'madd-lazim' };
@@ -520,7 +527,7 @@ function detectMaddRule(text, i, curr, next, prev, prevPrev) {
     if (text[lookaheadIndex] === DAGGER_ALIF || text[lookaheadIndex] === SUBSCRIPT_ALIF) {
         const daggerType = text[lookaheadIndex];
         if (daggerType === SUBSCRIPT_ALIF && (text[lookaheadIndex + 1] === 'ي' || text[lookaheadIndex + 1] === 'ی' || text[lookaheadIndex + 1] === 'ى')) return null;
-
+        
         let length = (lookaheadIndex - i) + 1;
         let hasMaddah = false;
         if (text[lookaheadIndex + 1] === MADDAH_ABOVE) {
@@ -528,12 +535,12 @@ function detectMaddRule(text, i, curr, next, prev, prevPrev) {
             hasMaddah = true;
         }
 
-        let type = 'madd-asli';
-        if (isMaddLazim(text, lookaheadIndex)) type = 'madd-lazim';
-        else if (isMaddArid(text, lookaheadIndex)) type = 'madd-arid';
-        else if (isMaddMuttasil(text, lookaheadIndex)) type = 'madd-muttasil';
-        else if (isMaddMunfasil(text, lookaheadIndex)) type = 'madd-munfasil';
-        else if (hasMaddah) {type = 'madd-munfasil';
+        let type = 'madd-asli'; // Default to madd-asli
+        if (isMaddLazim(text, lookaheadIndex)) type = 'madd-lazim'; // Check for Lazim first
+        else if (isMaddMuttasil(text, lookaheadIndex)) type = 'madd-muttasil'; // Then Muttasil
+        else if (isMaddMunfasil(text, lookaheadIndex)) type = 'madd-munfasil'; // Then Munfasil
+        else if (isMaddArid(text, lookaheadIndex)) type = 'madd-arid'; // Then Arid
+        else if (hasMaddah) { // If it has a maddah mark but didn't fit other categories, it's likely munfasil
             length++;
         }
         else {
@@ -546,15 +553,15 @@ function detectMaddRule(text, i, curr, next, prev, prevPrev) {
     }
 
     // Regular Alif (not dagger/subscript) with maddah: check if vowel is on consonant before madd letter
-    // This handles cases like "مَٓا" where meem (consonant) + fatha + maddah + alif should be madd-munfasil
+    // This handles cases like "مَٓا" where meem (consonant) + fatha + maddah + alif should be madd-munfasil, not madd lazim
     lookaheadIndex = i + 1;
     // Skip vowels to find maddah
     while (lookaheadIndex < text.length && isDiacritic(text[lookaheadIndex]) && text[lookaheadIndex] !== MADDAH_ABOVE) {
         lookaheadIndex++;
     }
     if (lookaheadIndex < text.length && text[lookaheadIndex] === MADDAH_ABOVE) {
-        lookaheadIndex++;
-        if (lookaheadIndex < text.length && text[lookaheadIndex] === 'ا') {
+        let alifIndex = lookaheadIndex + 1;
+        if (alifIndex < text.length && text[alifIndex] === 'ا') {
             // We have vowel + maddah + alif on a consonant letter
             // Check if this is on a consonant (not a madd letter)
             if (!isMaddLetter(prev, prevPrev, text[i - 3])) {
