@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     currentPage: 0, // Start from page 0
     fontFamily: "'Amiri', serif",
     fontSize: 36,
-    showAbbreviations: true
+    tajweedMode: 'colors-abbr' // 'none', 'colors', 'colors-abbr'
   };
 
   let settings = {...defaultSettings};
@@ -83,31 +83,27 @@ document.addEventListener('DOMContentLoaded', () => {
     fontSelect.appendChild(option);
   });
 
-  // Abbreviation Toggle Checkbox
-  const abbrContainer = document.createElement('div');
-  abbrContainer.style.display = 'flex';
-  abbrContainer.style.alignItems = 'center';
-  abbrContainer.style.marginLeft = '10px';
-
-  const abbrCheckbox = document.createElement('input');
-  abbrCheckbox.type = 'checkbox';
-  abbrCheckbox.id = 'toggleAbbreviations';
-  abbrCheckbox.checked = settings.showAbbreviations;
-  if (abbrCheckbox.checked) {
-    display.classList.add('show-abbreviations');
-  }
-
-  const abbrLabel = document.createElement('label');
-  abbrLabel.htmlFor = 'toggleAbbreviations';
-  abbrLabel.id = 'abbrLabel';
+  // Tajweed Display Mode Dropdown
+  const tajweedSelect = document.createElement('select');
+  tajweedSelect.id = 'tajweedMode';
+  const tajweedModes = [
+    { value: 'none', key: 'tajweedNone', default: 'No tajweed' },
+    { value: 'colors', key: 'tajweedColors', default: 'Colors' },
+    { value: 'colors-abbr', key: 'tajweedColorsAndAbbr', default: 'Colors and Abbrevations' }
+  ];
+  tajweedModes.forEach(mode => {
+    const option = document.createElement('option');
+    option.value = mode.value;
+    option.textContent = (t && t[mode.key]) ? t[mode.key] : mode.default;
+    if (mode.value === settings.tajweedMode) option.selected = true;
+    tajweedSelect.appendChild(option);
+  });
 
   settingsContainer.appendChild(langSelect);
   settingsContainer.appendChild(decreaseFontBtn);
   settingsContainer.appendChild(fontSelect);
   settingsContainer.appendChild(increaseFontBtn);
-  abbrContainer.appendChild(abbrCheckbox);
-  abbrContainer.appendChild(abbrLabel);
-  settingsContainer.appendChild(abbrContainer);
+  settingsContainer.appendChild(tajweedSelect);
 
   // Add to Navbar
   const navbar = document.querySelector('.navbar');
@@ -138,16 +134,10 @@ document.addEventListener('DOMContentLoaded', () => {
     saveSettings();
   };
 
-  abbrCheckbox.addEventListener('change', (e) => {
-    settings.showAbbreviations = e.target.checked;
-    if (settings.showAbbreviations) {
-      display.classList.add('show-abbreviations');
-    }
-    else {
-      display.classList.remove('show-abbreviations');
-    }
-    saveSettings();
-  });
+  tajweedSelect.onchange = () => {
+    settings.tajweedMode = tajweedSelect.value;
+    loadMushafPage(settings.currentPage);
+  };
 
   langSelect.onchange = () => {
     settings.language = langSelect.value;
@@ -272,20 +262,33 @@ document.addEventListener('DOMContentLoaded', () => {
     // Apply loaded settings to UI
     display.style.fontFamily = settings.fontFamily;
     display.style.fontSize = settings.fontSize + 'px';
-    if (settings.showAbbreviations) {
+    display.classList.remove('show-abbreviations');
+    if (settings.tajweedMode === 'colors-abbr') {
       display.classList.add('show-abbreviations');
-    }
-    else {
-      display.classList.remove('show-abbreviations');
     }
 
     // Update translatable text
     if (t) {
       decreaseFontBtn.title = t.decreaseFont;
       increaseFontBtn.title = t.increaseFont;
-      abbrLabel.textContent = t.rulesLabel;
       prevBtn.textContent = t.nextPage;
       nextBtn.textContent = t.prevPage;
+
+      const tajweedSelect = document.getElementById('tajweedMode');
+      const tajweedModes = [
+        { value: 'none', key: 'tajweedNone', default: 'No tajweed' },
+        { value: 'colors', key: 'tajweedColors', default: 'Colors' },
+        { value: 'colors-abbr', key: 'tajweedColorsAndAbbr', default: 'Colors and Abbrevations' }
+      ];
+      if (tajweedSelect) {
+        for (let i = 0; i < tajweedSelect.options.length; i++) {
+          const option = tajweedSelect.options[i];
+          const mode = tajweedModes.find(m => m.value === option.value);
+          if (mode) {
+            option.textContent = t[mode.key] || mode.default;
+          }
+        }
+      }
     }
 
     populateSurahDropdown();
@@ -368,6 +371,12 @@ document.addEventListener('DOMContentLoaded', () => {
     contentDiv.className = 'quran-content';
     let fullTextHTML = '';
 
+    if (settings.tajweedMode === 'colors-abbr') {
+      display.classList.add('show-abbreviations');
+    } else {
+      display.classList.remove('show-abbreviations');
+    }
+
     if (verses.length > 0) {
         let currentSurah = -1;
         verses.forEach(verse => {
@@ -383,11 +392,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const BASMALAH = "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحٖیمِ";
 
             if (verse.i === 1 && verse.surah !== 1 && verse.surah !== 9) {
-                 const coloredBasmalah = applyTajweed(BASMALAH);
+                 let coloredBasmalah = BASMALAH;
+                 if (settings.tajweedMode !== 'none') {
+                    coloredBasmalah = applyTajweed(BASMALAH);
+                 }
                  fullTextHTML += `<div class="basmalah" style="text-align: center; margin-bottom: 10px; width: 100%;">${coloredBasmalah}</div>`;
             }
 
-            const processedText = applyTajweed(text);
+            let processedText = text;
+            if (settings.tajweedMode !== 'none') {
+              processedText = applyTajweed(text);
+            }
             fullTextHTML += `${processedText} <span class="verse-number">${verse.i}</span> `;
         });
     } else {
