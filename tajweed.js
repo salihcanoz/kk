@@ -742,8 +742,16 @@ function detectNunSakinahRule(text, i) {
     }
 
     if (YANMOU_LETTERS.includes(nextChar)) {
+        let idghamLength = fullLength;
+        if (nextChar === 'و') {
+            let k = nextLetterIndex + 1;
+            while (k < text.length && isDiacritic(text[k])) {
+                k++;
+            }
+            idghamLength = k - triggerStartIndex;
+        }
         return {
-            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bi-ghunna', length: fullLength },
+            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bi-ghunna', length: idghamLength },
             target: { index: nextLetterIndex, type: 'tajweed-idgham-bi-ghunna', length: 1 },
         };
     }
