@@ -347,7 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
     for (let i = 0; i < totalMushafPages; i++) {
       const option = document.createElement('option');
       option.value = i;
-      option.textContent = `${t ? t.page : 'Page'} ${i + 1}`;
+      option.textContent = `${t ? t.page : 'Page'} ${i}`;
       pageSelect.appendChild(option);
     }
     pageSelect.value = currentPage;
@@ -399,7 +399,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     settings.currentPage = pageIndex;
     const juz = getJuzNumber(pageNum);
-    pageInfo.textContent = `${t ? t.page : 'Page'} ${pageNum} | ${t ? t.juz : 'Juz'} ${juz}`;
+    pageInfo.textContent = `${t ? t.page : 'Page'} ${pageIndex} | ${t ? t.juz : 'Juz'} ${juz}`;
     nextBtn.disabled = settings.currentPage === 0;
     prevBtn.disabled = settings.currentPage === totalMushafPages - 1;
 

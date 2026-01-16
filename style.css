@@ -203,12 +203,8 @@ body {
   color: #b4b4b9;
 }
 
-.tajweed-silah {
+.tajweed-silat-ha {
   color: #7ea24b;
-}
-
-.tajweed-madd-silah {
-  color: #9932CC;
 }
 
 .tajweed-ikhfa-shafawi {
@@ -295,7 +291,7 @@ body {
   --abbr-madd-munfasil: "Mn";
   --abbr-madd-arid: "A";
   --abbr-madd-liin: "ML";
-  --abbr-madd-silah: "S";
+  --abbr-silat-ha: "S";
   --abbr-madd-lazim: "Lz";
   --abbr-madd-asli: "MA";
   --abbr-qalqalah: "Q";
@@ -337,9 +333,9 @@ body {
   content: var(--abbr-madd-liin);
   color: #F39C12;
 }
-.tajweed-madd-silah::after {
-  content: var(--abbr-madd-silah);
-  color: #9932CC;
+.tajweed-silat-ha::after {
+  content: var(--abbr-silat-ha);
+  color: #7ea24b;
 }
 
 .tajweed-madd-lazim::after {
@@ -374,10 +370,6 @@ body {
 .tajweed-qasr::after {
   content: var(--abbr-qasr);
   color: inherit;
-}
-
-.tajweed-silah::after {
-  content: attr(data-label);
 }
 
 .tajweed-ikhfa-shafawi::after {

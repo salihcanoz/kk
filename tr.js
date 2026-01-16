@@ -14,7 +14,7 @@ const translations = {
     maddMunfasil: 'Madd Munfasil (Separated)',
     maddArid: "Madd 'Arid (Temporary)",
     maddLiin: 'Madd Liin: Soft Elongation',
-    maddSilah: 'Madd Silah: Connecting Elongation',
+  
     maddLazim: 'Madd Lazim: ',
     maddAsli: 'Madd Asli: Natural Elongation (2)',
     qalqalah: 'Qalqalah: Echoing Sound',
