@@ -672,9 +672,9 @@ function detectMaddRule(text, i, curr, next, prev, prevPrev) {
  * @returns {Object|null} Rule object with trigger and optional target, or null
  */
 function detectNunSakinahRule(text, i) {
-    console.log(`Checking position ${i}: "${text[i]}" with next: "${text[i+1]}"`);
+    //console.log(`Checking position ${i}: "${text[i]}" with next: "${text[i+1]}"`);
     const { isTrigger, triggerLength } = isNunSakinahOrTanween(text, i);
-    console.log(`Is trigger: ${isTrigger}, length: ${triggerLength}`);
+    //console.log(`Is trigger: ${isTrigger}, length: ${triggerLength}`);
 
     if (!isTrigger) return null;
     
@@ -777,7 +777,7 @@ function isExceptionToIdgham(text, noonIndex, yawawIndex) {
     // Remove all diacritics for comparison
     const word = wordWithDiacritics.replace(/[\u064B-\u065F\u0670\u0653]/g, '');
     
-    console.log(`Checking exception for word: "${word}" from "${wordWithDiacritics}"`);
+    //console.log(`Checking exception for word: "${word}" from "${wordWithDiacritics}"`);
     
     // List of exception words (without diacritics)
     // Now includes both with and without definite article "ال"
@@ -790,7 +790,7 @@ function isExceptionToIdgham(text, noonIndex, yawawIndex) {
     ];
     
     const isException = exceptionWords.includes(word);
-    console.log(`Is exception: ${isException}`);
+    //console.log(`Is exception: ${isException}`);
     
     return isException;
 }
