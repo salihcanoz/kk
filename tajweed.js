@@ -726,7 +726,7 @@ function detectNunSakinahRule(text, i) {
 
     if (IDGHAM_BILA_GHUNNA_LETTERS.includes(nextChar)) {
         return {
-            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bila-ghunna', length: fullLength},
+            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bila-ghunna', length: fullLength + 1},
             target: { index: nextLetterIndex, type: 'tajweed-idgham-bila-ghunna', length: 1 },
         };
     }
