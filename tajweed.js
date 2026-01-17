@@ -30,7 +30,7 @@ const HAMZA = 'ء';
 const HAMZA_FORMS = ['ء', 'أ', 'إ', 'ؤ', 'ئ'];
 const TANWEEN = ['\u064B', '\u064C', '\u064D']; // Fathatan, Dammatan, Kasratan
 
-const YANMOU_LETTERS = ['ي', 'ن', 'م', 'و'];
+const YANMOU_LETTERS = ['ي', 'ی', 'ى', 'ن', 'م', 'و']; // Added Persian Yeh and Alif Maksura
 const IDGHAM_BILA_GHUNNA_LETTERS = ['ل', 'ر'];
 const IKHFA_LETTERS = ['ت', 'ث', 'ج', 'د', 'ذ', 'ز', 'س', 'ش', 'ص', 'ض', 'ط', 'ظ', 'ف', 'ق', 'ك'];
 const IQLAB_LETTERS = ['ب'];
@@ -672,7 +672,10 @@ function detectMaddRule(text, i, curr, next, prev, prevPrev) {
  * @returns {Object|null} Rule object with trigger and optional target, or null
  */
 function detectNunSakinahRule(text, i) {
+    console.log(`Checking position ${i}: "${text[i]}" with next: "${text[i+1]}"`);
     const { isTrigger, triggerLength } = isNunSakinahOrTanween(text, i);
+    console.log(`Is trigger: ${isTrigger}, length: ${triggerLength}`);
+
     if (!isTrigger) return null;
     
     let searchIndex = i + triggerLength;
@@ -692,13 +695,17 @@ function detectNunSakinahRule(text, i) {
     while (nextLetterIndex < text.length) {
         const char = text[nextLetterIndex];
         if (isArabicLetter(char)) break;
-        if (Object.keys(WAQF_CLASSES).includes(char) || char === AYAH_END) return null; // Stop at waqf/ayah end
+        if (Object.keys(WAQF_CLASSES).includes(char) || char === AYAH_END) return null;
         nextLetterIndex++;
     }
     if (nextLetterIndex >= text.length) return null;
 
-    //const nextLetter = text[nextLetterIndex];
-    const nextLetter = getNextLetter(text, nextLetterIndex)// text[nextLetterIndex];
+    const nextLetter = text[nextLetterIndex];
+    
+    // Check for exceptions before processing idgham
+    if (isExceptionToIdgham(text, i, nextLetterIndex)) {
+        return null; // No idgham for exception words
+    }
     
     let triggerStartIndex = i;
     if (TANWEEN.includes(text[i])) {
@@ -711,35 +718,92 @@ function detectNunSakinahRule(text, i) {
 
     const triggerGroupLength = searchIndex - triggerStartIndex;
     const fullLength = (nextLetterIndex - triggerStartIndex) + 1;
-    const nextChar = text[nextLetterIndex];
 
-    if (!nextLetter) {
-        return null;
-    }
-
-    if (YANMOU_LETTERS.includes(nextChar)) {
+    if (YANMOU_LETTERS.includes(nextLetter)) {
         return {
-            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bi-ghunna', length: fullLength },
+            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bi-ghunna', length: fullLength + 1 },
             target: { index: nextLetterIndex, type: 'tajweed-idgham-bi-ghunna', length: 1 },
         };
     }
 
-    if (IDGHAM_BILA_GHUNNA_LETTERS.includes(nextChar)) {
+    if (IDGHAM_BILA_GHUNNA_LETTERS.includes(nextLetter)) {
         return {
-            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bila-ghunna', length: fullLength + 1},
+            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bila-ghunna', length: fullLength},
             target: { index: nextLetterIndex, type: 'tajweed-idgham-bila-ghunna', length: 1 },
         };
     }
 
-    if (IQLAB_LETTERS.includes(nextChar)) {
+    if (IQLAB_LETTERS.includes(nextLetter)) {
         return { trigger: { index: triggerStartIndex, type: 'tajweed-iqlab', length: fullLength }, target: null };
     }
 
-    if (IKHFA_LETTERS.includes(nextChar)) {
+    if (IKHFA_LETTERS.includes(nextLetter)) {
         return { trigger: { index: triggerStartIndex, type: 'tajweed-ikhfa', length: triggerGroupLength }, target: null };
     }
     
     return null;
+}
+
+/**
+ * Check if the context is an exception to idgham rules
+ * Exceptions are when noon sakinah or tanween is followed by ي or و in the SAME word
+ * for these specific words: دنيا, صنوان, قنوان, بنيان
+ */
+function isExceptionToIdgham(text, noonIndex, yawawIndex) {
+    // First, check if the next letter is ي or و
+    const nextLetter = text[yawawIndex];
+    const isYawaw = nextLetter === 'ي' || nextLetter === 'ی' || nextLetter === 'ى' || nextLetter === 'و';
+    if (!isYawaw) {
+        return false;
+    }
+    
+    // Get the full word containing the noon
+    let wordStart = noonIndex;
+    let wordEnd = noonIndex;
+    
+    // Find start of word
+    while (wordStart > 0 && !isWordBreak(text[wordStart - 1])) {
+        wordStart--;
+    }
+    
+    // Find end of word
+    while (wordEnd < text.length && !isWordBreak(text[wordEnd])) {
+        wordEnd++;
+    }
+    
+    // Extract the word
+    const wordWithDiacritics = text.slice(wordStart, wordEnd);
+    
+    // Remove all diacritics for comparison
+    const word = wordWithDiacritics.replace(/[\u064B-\u065F\u0670\u0653]/g, '');
+    
+    console.log(`Checking exception for word: "${word}" from "${wordWithDiacritics}"`);
+    
+    // List of exception words (without diacritics)
+    // Now includes both with and without definite article "ال"
+    const exceptionWords = [
+        'دنيا', 'دنیا', // dunya (without Al)
+        'الدنیا', 'الدنيا', // dunya with definite article Al-
+        'صنوان', // sinwan
+        'قنوان', // qinwan
+        'بنيان', 'بنیان' // bunyan
+    ];
+    
+    const isException = exceptionWords.includes(word);
+    console.log(`Is exception: ${isException}`);
+    
+    return isException;
+}
+
+// Also update the isWordBreak function to be more comprehensive
+function isWordBreak(char) {
+    return char === ' ' || 
+           char === '\t' || 
+           char === '\n' || 
+           char === '\r' ||
+           Object.keys(WAQF_CLASSES).includes(char) ||
+           char === AYAH_END ||
+           char === undefined;
 }
 
 function checkIhkfa(text, i) {
@@ -798,14 +862,28 @@ function isArabicLetter(char) {
 
 function isNunSakinahOrTanween(text, i) {
     const curr = text[i];
-    if (curr === NOON && text[i+1] === SUKUN) return { isTrigger: true, triggerLength: 2 };
+    
+    // Check for noon with sukun (either regular sukun or subscript alef)
+    if (curr === NOON && (text[i+1] === SUKUN || text[i+1] === '\u0656')) {
+        return { isTrigger: true, triggerLength: 2 };
+    }
+    
     if (TANWEEN.includes(curr)) return { isTrigger: true, triggerLength: 1 };
-    if (curr === NOON && !isVowel(text[i+1]) && text[i+1] !== SHADDA) return { isTrigger: true, triggerLength: 1 };
+    
+    // Check for noon without explicit vowel
+    if (curr === NOON && !isVowel(text[i+1]) && text[i+1] !== SHADDA) {
+        return { isTrigger: true, triggerLength: 1 };
+    }
+    
     return { isTrigger: false, triggerLength: 0 };
 }
 
 function isVowel(char) {
     return char === FATHA || char === DAMMA || char === KASRA || char === SUKUN;
+}
+
+function isVowelWithoutSukun(char) {
+    return char === FATHA || char === DAMMA || char === KASRA;
 }
 
 function isMaddLetter(curr, prev, prevPrev) {
