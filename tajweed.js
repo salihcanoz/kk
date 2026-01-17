@@ -158,14 +158,12 @@ function detectAllRules(text) {
             addRule(rules, i, 2, 'tajweed-qalqalah', markedPositions);
             continue;
         }
-
-        // Check for Silat-Ha before Madd rules
+                // Check for Silat-Ha before Madd rules
         const silatHaRule = detectSilatHa(text, i, curr, prev);
         if (silatHaRule) {
             addRule(rules, silatHaRule.index, silatHaRule.length, `tajweed-${silatHaRule.type}`, markedPositions);
             // Don't continue - allow other rules to be detected too
-        }
-
+        }        
         const maddRule = detectMaddRule(text, i, curr, next, prev, prevPrev);
         if (maddRule) {
             addRule(rules, maddRule.index, maddRule.length, `tajweed-${maddRule.type}`, markedPositions);
@@ -210,7 +208,6 @@ function detectAllRules(text) {
 }
 
 // --- Rule-Specific Detectors ---
-
 /**
  * Detects Silat al-Ha ad-Damir (pronoun suffix Ha with madd)
  * Silat-ha applies when:
@@ -266,7 +263,6 @@ function detectSilatHa(text, i, curr, prev) {
     return { index: i, length: 2, type: 'silat-ha' };
 
 }
-
 /**
  * Detects silent (non-pronounced) letters in Arabic text
  * Handles multiple cases:
@@ -478,44 +474,21 @@ function detectMaddRule(text, i, curr, next, prev, prevPrev) {
     // Only apply to uncommon huruf muqattaat like daad that rarely appear in regular words
     // Common letters like meem, lam, alif must be isolated to trigger madd-lazim
     // This avoids marking common letters in regular words as madd-lazim
-    const RARE_HURUF_MUQATTAAT = ['ض', 'ص', 'ع', 'ح']; // Less common in regular words
-    const COMMON_HURUF_MUQATTAAT = ['ا', 'ل', 'م', 'ر', 'ك', 'ه', 'ي', 'ط', 'س', 'ق', 'ن']; // Very common
-    
-    let shouldApplyMaddLazim = false;
-    
-    if (RARE_HURUF_MUQATTAAT.includes(curr)) {
-        // Rare huruf muqattaat: apply madd-lazim whenever there's maddah (less likely false positives)
-        shouldApplyMaddLazim = true;
-    } else if (COMMON_HURUF_MUQATTAAT.includes(curr)) {
-        // Common huruf muqattaat: only apply if truly isolated to avoid false positives in regular words
-        shouldApplyMaddLazim = (i === 0 || text[i - 1] === ' ');
-        if (!shouldApplyMaddLazim) {
-            let checkIndex = i - 1;
-            while (checkIndex >= 0 && isDiacritic(text[checkIndex])) {
-                checkIndex--;
-            }
-            if (checkIndex >= 0 && text[checkIndex] === ' ') {
-                shouldApplyMaddLazim = true;
-            }
-        }
-    }
-    
-    if (shouldApplyMaddLazim) {
+    // Madd Lazim Harfi: Huruf Muqattaat (isolated letters) with maddah
+    // This section directly checks for MADDAH_ABOVE after any HURUF_MUQATTAAT letter
+    // First check for Madd Lazim Harfi (isolated letters with maddah)
+    if (HURUF_MUQATTAAT.includes(curr)) {
+        // Check for maddah mark on this letter
         let maddahIndex = i + 1;
-        let hasVowel = false;
-        while (maddahIndex < text.length && isDiacritic(text[maddahIndex])) {
-            if (text[maddahIndex] === FATHA || text[maddahIndex] === DAMMA || text[maddahIndex] === KASRA) {
-                hasVowel = true;
-            }
-            if (text[maddahIndex] === MADDAH_ABOVE) {
-                if (hasVowel) {
-                    break;
-                }
-                // Found maddah after this huruf muqattaat letter
-                const length = (maddahIndex - i) + 1;
-                return { index: i, length: length, type: 'madd-lazim' };
-            }
+        // Skip any shadda first (like in صَّٓ)
+        if (text[maddahIndex] === SHADDA) {
             maddahIndex++;
+        }
+        // Check for maddah
+        if (maddahIndex < text.length && text[maddahIndex] === MADDAH_ABOVE) {
+            // This is Madd Lazim Harfi
+            const length = (maddahIndex - i) + 1;
+            return { index: i, length: length, type: 'madd-lazim' };
         }
     }
 
@@ -527,7 +500,7 @@ function detectMaddRule(text, i, curr, next, prev, prevPrev) {
     if (text[lookaheadIndex] === DAGGER_ALIF || text[lookaheadIndex] === SUBSCRIPT_ALIF) {
         const daggerType = text[lookaheadIndex];
         if (daggerType === SUBSCRIPT_ALIF && (text[lookaheadIndex + 1] === 'ي' || text[lookaheadIndex + 1] === 'ی' || text[lookaheadIndex + 1] === 'ى')) return null;
-        
+
         let length = (lookaheadIndex - i) + 1;
         let hasMaddah = false;
         if (text[lookaheadIndex + 1] === MADDAH_ABOVE) {
@@ -535,12 +508,12 @@ function detectMaddRule(text, i, curr, next, prev, prevPrev) {
             hasMaddah = true;
         }
 
-        let type = 'madd-asli'; // Default to madd-asli
-        if (isMaddLazim(text, lookaheadIndex)) type = 'madd-lazim'; // Check for Lazim first
-        else if (isMaddMuttasil(text, lookaheadIndex)) type = 'madd-muttasil'; // Then Muttasil
-        else if (isMaddMunfasil(text, lookaheadIndex)) type = 'madd-munfasil'; // Then Munfasil
-        else if (isMaddArid(text, lookaheadIndex)) type = 'madd-arid'; // Then Arid
-        else if (hasMaddah) { // If it has a maddah mark but didn't fit other categories, it's likely munfasil
+        let type = 'madd-asli';
+        if (isMaddLazim(text, lookaheadIndex)) type = 'madd-lazim';
+        else if (isMaddArid(text, lookaheadIndex)) type = 'madd-arid';
+        else if (isMaddMuttasil(text, lookaheadIndex)) type = 'madd-muttasil';
+        else if (isMaddMunfasil(text, lookaheadIndex)) type = 'madd-munfasil';
+        else if (hasMaddah) {type = 'madd-munfasil';
             length++;
         }
         else {
@@ -553,20 +526,16 @@ function detectMaddRule(text, i, curr, next, prev, prevPrev) {
     }
 
     // Regular Alif (not dagger/subscript) with maddah: check if vowel is on consonant before madd letter
-    // This handles cases like "مَٓا" where meem (consonant) + fatha + maddah + alif should be madd-munfasil, not madd lazim
+    // This handles cases like "مَٓا" where meem (consonant) + fatha + maddah + alif should be madd-munfasil
     lookaheadIndex = i + 1;
-    // Skip vowels to find maddah
-    while (lookaheadIndex < text.length && isDiacritic(text[lookaheadIndex]) && text[lookaheadIndex] !== MADDAH_ABOVE) {
+    if (text[lookaheadIndex] === MADDAH_ABOVE) {
         lookaheadIndex++;
-    }
-    if (lookaheadIndex < text.length && text[lookaheadIndex] === MADDAH_ABOVE) {
-        let alifIndex = lookaheadIndex + 1;
-        if (alifIndex < text.length && text[alifIndex] === 'ا') {
+        if (text[lookaheadIndex] === 'ا') {
             // We have vowel + maddah + alif on a consonant letter
             // Check if this is on a consonant (not a madd letter)
             if (!isMaddLetter(prev, prevPrev, text[i - 3])) {
                 // Vowel is on a consonant, followed by alif with maddah = madd-munfasil
-                return { index: i, length: lookaheadIndex - i + 1, type: 'madd-munfasil' };
+                return { index: i - 1, length: 4, type: 'madd-munfasil' };
             }
         }
     }
@@ -574,35 +543,6 @@ function detectMaddRule(text, i, curr, next, prev, prevPrev) {
     // Madd al-Leen
     if (isMaddLeen(text, i, curr, prev, next)) {
         return { index: i-2, length: 4, type: 'madd-liin' };
-    }
-
-    // Check for Noon/Meem/Waw/Ya followed by Alif (with shadda in between) - madd asli
-    if ((curr === NOON || curr === MEEM || curr === 'و' || curr === 'ي' || curr === 'ی' || curr === 'ى')) {
-        // Look ahead to find if there's shadda and then alif
-        let lookAheadIndex = i + 1;
-        let foundShadda = false;
-        
-        // Skip diacritics and look for shadda
-        while (lookAheadIndex < text.length && isDiacritic(text[lookAheadIndex])) {
-            if (text[lookAheadIndex] === SHADDA) {
-                foundShadda = true;
-                break;
-            }
-            lookAheadIndex++;
-        }
-        
-        // If we found shadda, continue looking for alif
-        if (foundShadda) {
-            lookAheadIndex++; // Move past the shadda
-            while (lookAheadIndex < text.length && isDiacritic(text[lookAheadIndex])) {
-                lookAheadIndex++;
-            }
-            
-            if (lookAheadIndex < text.length && text[lookAheadIndex] === ALIF) {
-                // Found Noon/Meem/Waw/Ya with Shadda followed by Alif = madd asli
-                return { index: i, length: lookAheadIndex - i + 1, type: 'madd-asli' };
-            }
-        }
     }
 
     // Standard Madd Letters
@@ -658,10 +598,10 @@ function detectMaddRule(text, i, curr, next, prev, prevPrev) {
 
         let nextLetter = getNextLetter(text, i);
 
-        // Don't mark as madd-asli if followed by alif in the same word (madd munfasil instead)
-        // Only mark as madd-asli if followed by non-vowel letter or nothing in the same word
         if (nextLetter && nextLetter.letter === ALIF) {
-            return null;
+            if (!isVowel(text[nextLetter.index-2])) {
+                return null;                
+            }
         }
 
         return { index: i - 2, length: length, type: 'madd-asli' };
@@ -678,6 +618,42 @@ function detectMaddRule(text, i, curr, next, prev, prevPrev) {
     //hamza on wauw
     if (curr === WAUW_WITH_HAMZA && next === DAMMA && text[i+2] !== '\u08d1') {
         return { index: i, length: 2, type: 'madd-asli' };
+    }
+
+    // Silat al-Ha ad-Damir: Ha (pronoun suffix - last letter of word) with damma/fatha/kasra followed by any vowel-bearing letter
+    if (curr === 'ه' && (prev === DAMMA || prev === FATHA || prev === KASRA)) {
+        // Ha must be the LAST letter of the word (followed by space or end of text)
+        let nextCharIndex = i + 1;
+        while (nextCharIndex < text.length && isDiacritic(text[nextCharIndex])) {
+            nextCharIndex++;
+        }
+        
+        // Check if ha is at word end (space or end of text follows)
+        if (nextCharIndex < text.length && text[nextCharIndex] !== ' ') {
+            return null; // Ha is not at word end, not a suffix
+        }
+        
+        // Now check if there's a vowel-bearing letter after the word boundary
+        let nextLetterIndex = nextCharIndex;
+        while (nextLetterIndex < text.length && !isArabicLetter(text[nextLetterIndex])) {
+            nextLetterIndex++;
+        }
+        
+        if (nextLetterIndex < text.length) {
+            // Check if next letter has a vowel (not sukun)
+            let nextVowelIndex = nextLetterIndex + 1;
+            let hasVowel = false;
+            while (nextVowelIndex < text.length && isDiacritic(text[nextVowelIndex])) {
+                if (isVowel(text[nextVowelIndex])) {
+                    hasVowel = true;
+                    break;
+                }
+                nextVowelIndex++;
+            }
+            if (hasVowel) {
+                return { index: i - 1, length: 2, type: 'silat-ha' };
+            }
+        }
     }
 
     return null;
@@ -742,16 +718,8 @@ function detectNunSakinahRule(text, i) {
     }
 
     if (YANMOU_LETTERS.includes(nextChar)) {
-        let idghamLength = fullLength;
-        if (nextChar === 'و') {
-            let k = nextLetterIndex + 1;
-            while (k < text.length && isDiacritic(text[k])) {
-                k++;
-            }
-            idghamLength = k - triggerStartIndex;
-        }
         return {
-            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bi-ghunna', length: idghamLength },
+            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bi-ghunna', length: fullLength },
             target: { index: nextLetterIndex, type: 'tajweed-idgham-bi-ghunna', length: 1 },
         };
     }
@@ -844,9 +812,7 @@ function isMaddLetter(curr, prev, prevPrev) {
     return (
         (curr === ALIF && (prev === FATHA || prev === SHADDA || prev === MADDAH_ABOVE)) ||
         (curr === 'و' && (prev === DAMMA || prev === MADDAH_ABOVE || (prev === SHADDA && prevPrev === DAMMA))) ||
-        ((curr === 'ي' || curr === 'ی' || curr === 'ى') && (prev === KASRA || prev === SUBSCRIPT_ALIF || prev === MADDAH_ABOVE || (prev === SHADDA && prevPrev === KASRA))) ||
-        (curr === NOON && (prev === FATHA || prev === DAMMA || prev === KASRA || prev === SHADDA)) ||
-        (curr === MEEM && (prev === FATHA || prev === DAMMA || prev === KASRA || prev === SHADDA))
+        ((curr === 'ي' || curr === 'ی' || curr === 'ى') && (prev === KASRA || prev === SUBSCRIPT_ALIF || prev === MADDAH_ABOVE || (prev === SHADDA && prevPrev === KASRA)))
     );
 }
 
@@ -940,23 +906,52 @@ function isMaddLazim(text, i) {
     }
     if (letterIndex === -1) return false;
 
+    const nextLetter = text[letterIndex];
+    
     // Now inspect the diacritics on that next letter
     let k = letterIndex + 1;
+    let hasSukun = false;
+    let hasShadda = false;
+    
     while (k < text.length && isDiacritic(text[k])) {
-        if ((text[k] === SUKUN || text[k] === SHADDA) && text[k-1] !== FATHA) {
-            const letterWithSukun = text[letterIndex];
-            if (letterWithSukun === NOON && text[k] === SUKUN) {
-                let nextLetterResult = getNextLetter(text, k);
-                if (nextLetterResult) {
-                    const nextLetter = nextLetterResult.letter;
-                    if (YANMOU_LETTERS.includes(nextLetter) || IDGHAM_BILA_GHUNNA_LETTERS.includes(nextLetter) || IKHFA_LETTERS.includes(nextLetter) || IQLAB_LETTERS.includes(nextLetter)) {
-                        return false; // This is a nun sakinah rule, not madd lazim
-                    }
+        if (text[k] === SUKUN) hasSukun = true;
+        if (text[k] === SHADDA) hasShadda = true;
+        k++;
+    }
+
+    // Special case for alif: check if followed by a letter with shadda
+    if (nextLetter === ALIF && !hasSukun && !hasShadda) {
+        // Look for the next letter after alif
+        const nextLetterAfterAlif = getNextLetter(text, letterIndex);
+        if (nextLetterAfterAlif) {
+            // Check if that letter has shadda
+            let m = nextLetterAfterAlif.index + 1;
+            while (m < text.length && isDiacritic(text[m])) {
+                if (text[m] === SHADDA) {
+                    // Alif followed by letter with shadda = Madd Lazim
+                    return true;
+                }
+                m++;
+            }
+        }
+    }
+
+    // Check for sukun or shadda on the immediate next letter
+    if (hasSukun || hasShadda) {
+        const letterWithSukun = text[letterIndex];
+        if (letterWithSukun === NOON && hasSukun) {
+            let nextLetterResult = getNextLetter(text, k);
+            if (nextLetterResult) {
+                const nextNextLetter = nextLetterResult.letter;
+                if (YANMOU_LETTERS.includes(nextNextLetter) || 
+                    IDGHAM_BILA_GHUNNA_LETTERS.includes(nextNextLetter) || 
+                    IKHFA_LETTERS.includes(nextNextLetter) || 
+                    IQLAB_LETTERS.includes(nextNextLetter)) {
+                    return false; // This is a nun sakinah rule, not madd lazim
                 }
             }
-            return true;
         }
-        k++;
+        return true;
     }
 
     return false;
@@ -1062,7 +1057,6 @@ function getNextLetter(text,i) {
     while (nextLetterIndex < text.length) {
         const char = text[nextLetterIndex];
         if (isArabicLetter(char)) break;
-        if (char === ' ') return null; // Stop at word boundary
         if (Object.keys(WAQF_CLASSES).includes(char) || char === AYAH_END) return null; // Stop at waqf/ayah end
         nextLetterIndex++;
     }
