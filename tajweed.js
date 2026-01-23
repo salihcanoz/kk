@@ -26,6 +26,11 @@ function detectAllRules(text) {
             continue;
         }
 
+        found = detectSilentAlifLam(text, i);
+        if (found) {
+            continue;
+        }
+
         found = detectMadds(text, i);
         if (found) {
             continue;
@@ -74,6 +79,52 @@ function buildHtmlFromRules(text) {
     return output;
 }
 
+function detectSilentAlifLam(text, i) {
+    if (text[i] !== ALIF || text[i+1] !== LAM) {
+        return false;
+    }
+
+    if (!isWordStart(text, i)) {
+        return false;
+    }
+
+    let nextCharIndex = i + 2;
+    while (nextCharIndex < text.length && isDiacritic(text[nextCharIndex])) {
+        nextCharIndex++;
+    }
+
+    if (nextCharIndex >= text.length || !isArabicLetter(text[nextCharIndex])) {
+        return false;
+    }
+
+    if (hasArabicShadda(text, nextCharIndex)) {
+        if (isStartOfSpeech(text, i)) {
+             rules.push({ index: i + 1, length: 1, type: 'silent-letter' });
+        } else {
+             rules.push({ index: i, length: 2, type: 'silent-letter' });
+        }
+        return true;
+    }
+    
+    if (!isStartOfSpeech(text, i)) {
+        rules.push({ index: i, length: 1, type: 'silent-letter' });
+        return true;
+    }
+
+    return false;
+}
+
+function isStartOfSpeech(text, index) {
+    if (index === 0) return true;
+    for (let i = index - 1; i >= 0; i--) {
+        const char = text[i];
+        if (char === ' ') continue;
+        if (Object.keys(WAQF_CLASSES).includes(char) || char === AYAH_END) return true;
+        return false;
+    }
+    return true;
+}
+
 function detectMadds(text, index) {
     for (const madd of maddTypes) {
         if (text[index - 1] && text[index - 1] !== ' ' && text[index] === madd.char && !hasArabicVowel(text, index)) {
@@ -114,11 +165,6 @@ function detectMadds(text, index) {
             }
             else if (text[index] === ALIF && hasFathataan(text, prevIndex)) { // waw with sukun
                 continue
-            }
-            else if (text[nextIndex] === LAM && hasSukun(text, nextIndex)) { // lam with sukun
-                type = 'silent-letter';
-                prevIndex++;
-                length--;
             }
             else if (hasQasr(text, index)) {
                 type = 'tajweed-qasr';
@@ -257,14 +303,14 @@ function detectNunSakinah(text, i) {
 
     if (YANMOU_LETTERS.includes(nextLetter)) {
         return {
-            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bi-ghunna', length: fullLength +1 },
+            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bi-ghunna', length: fullLength + 1 },
             target: { index: nextLetterIndex, type: 'tajweed-idgham-bi-ghunna', length: 1 },
         };
     }
 
     if (IDGHAM_BILA_GHUNNA_LETTERS.includes(nextLetter)) {
         return {
-            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bila-ghunna', length: fullLength },
+            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bila-ghunna', length: fullLength + 1 },
             target: { index: nextLetterIndex, type: 'tajweed-idgham-bila-ghunna', length: 1 },
         };
     }
@@ -274,7 +320,8 @@ function detectNunSakinah(text, i) {
     }
 
     if (IKHFA_LETTERS.includes(nextLetter)) {
-        return { trigger: { index: triggerStartIndex, type: 'tajweed-ikhfa', length: triggerGroupLength }, target: null };
+        return { trigger: { index: triggerStartIndex, type: 'tajweed-ikhfa', length: fullLength - 1 },
+            target: null };
     }
 
     return null;
@@ -736,7 +783,3 @@ const YANMOU_LETTERS = ['ي', 'ی', 'ى', 'ن', 'م', 'و']; // Added Persian Ye
 const IDGHAM_BILA_GHUNNA_LETTERS = ['ل', 'ر'];
 const IKHFA_LETTERS = ['ت', 'ث', 'ج', 'د', 'ذ', 'ز', 'س', 'ش', 'ص', 'ض', 'ط', 'ظ', 'ف', 'ق', 'ك'];
 const IQLAB_LETTERS = ['ب'];
-
-
-//-----------------------------------------------------------
-
