@@ -168,24 +168,35 @@ function detectMadds(text, index) {
             let length = index - prevIndex + madd.length;
             let type = madd.type;
             let nextIndex = getNextArabicBaseLetterIndex(text, index + madd.length);
-            if (isAtStop(text, index + length + 1)) { // end of ayah
-                type = 'tajweed-madd-arid';
+
+            // Calculate where the next letter ends (skipping its diacritics) to check for stop
+            let checkStopIndex = nextIndex;
+            if (nextIndex !== -1) {
+                checkStopIndex = nextIndex + 1;
+                while (checkStopIndex < text.length && isDiacritic(text[checkStopIndex])) {
+                    checkStopIndex++;
+                }
             }
-            else if (hasArabicShadda(text, nextIndex)) {
-                type = 'tajweed-madd-lazim';
+
+            if (hasArabicShadda(text, nextIndex)) {
+                if (hasArabicMadda(text, index) || hasArabicMadda(text, prevIndex)) {
+                    type = 'tajweed-madd-lazim';
+                } else if (madd.char === ALIF) {
+                    rules.push({ index: index, length: 1, type: 'silent-letter' });
+                    return true;
+                } else {
+                    continue;
+                }
+            }
+            else if (isSameWord(text, index, nextIndex) && isAtStop(text, checkStopIndex)) {
+                if (hasFathataan(text, nextIndex) && text[nextIndex] !== 'ة') {
+                    // Not Arid
+                } else {
+                    type = 'tajweed-madd-arid';
+                }
             }
             else if (hasArabicMadda(text, index)) {
-                let hasBreak = false;
-                if (nextIndex !== -1) {
-                    for (let k = index + 1; k < nextIndex; k++) {
-                        if (isWordBreak(text[k])) {
-                            hasBreak = true;
-                            break;
-                        }
-                    }
-                }
-                
-                if (hasBreak) {
+                if (!isSameWord(text, index, nextIndex)) {
                     type = 'tajweed-madd-munfasil';
                     length++;
                 } else {
@@ -256,6 +267,16 @@ function detectMadds(text, index) {
     }
 
     return false;
+}
+
+function isSameWord(text, index1, index2) {
+    if (index2 === -1 || index2 >= text.length) return false;
+    for (let k = index1 + 1; k < index2; k++) {
+        if (isWordBreak(text[k])) {
+            return false;
+        }
+    }
+    return true;
 }
 
 function detectHurufMuqattaat(text, index) {
@@ -541,8 +562,13 @@ function hasFathataan(text, index) {
     if (!text || index < 0 || index >= text.length - 1) {
         return false;
     }
-
-    return text[index + 1] === FATHATAN;
+    
+    let i = index + 1;
+    while (i < text.length && isDiacritic(text[i])) {
+        if (text[i] === FATHATAN) return true;
+        i++;
+    }
+    return false;
 }
 
 function hasQasr(text, index) {
