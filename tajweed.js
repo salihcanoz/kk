@@ -128,6 +128,13 @@ function detectSilentHamzatWasl(text, i) {
     
     if (hasArabicVowel(text, i)) return false;
     
+    // Check for Superscript Alif or Madda
+    let j = i + 1;
+    while (j < text.length && isDiacritic(text[j])) {
+        if (text[j] === SUPERSCRIPT_ALIF || text[j] === '\u0653') return false;
+        j++;
+    }
+    
     rules.push({ index: i, length: 1, type: 'silent-letter' });
     return true;
 }
