@@ -31,6 +31,11 @@ function detectAllRules(text) {
             continue;
         }
 
+        found = detectSilentHamzatWasl(text, i);
+        if (found) {
+            continue;
+        }
+
         found = detectMadds(text, i);
         if (found) {
             continue;
@@ -112,6 +117,19 @@ function detectSilentAlifLam(text, i) {
     }
 
     return false;
+}
+
+function detectSilentHamzatWasl(text, i) {
+    if (text[i] !== ALIF) return false;
+    if (text[i+1] === LAM) return false; // Handled by detectSilentAlifLam
+    
+    if (!isWordStart(text, i)) return false;
+    if (isStartOfSpeech(text, i)) return false;
+    
+    if (hasArabicVowel(text, i)) return false;
+    
+    rules.push({ index: i, length: 1, type: 'silent-letter' });
+    return true;
 }
 
 function isStartOfSpeech(text, index) {
@@ -348,6 +366,13 @@ function detectSilatHa(text, i) {
     const curr = text[i];
     if (curr !== 'ه') {
         return null;
+    }
+
+    // Check if Ha has Fatha
+    let checkIndex = i + 1;
+    while (checkIndex < text.length && isDiacritic(text[checkIndex])) {
+        if (text[checkIndex] === FATHA) return null;
+        checkIndex++;
     }
 
     // Check if ه is at word end (followed by space, waqf mark, or end of text)
