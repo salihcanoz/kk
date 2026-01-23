@@ -36,6 +36,11 @@ function detectAllRules(text) {
             continue;
         }
 
+        found = detectIdghamMutakaribain(text, i);
+        if (found) {
+            continue;
+        }
+
         found = detectMadds(text, i);
         if (found) {
             continue;
@@ -148,6 +153,40 @@ function isStartOfSpeech(text, index) {
         return false;
     }
     return true;
+}
+
+function detectIdghamMutakaribain(text, i) {
+    const curr = text[i];
+    
+    // Lam (ل) followed by Ra (ر)
+    if (curr === LAM) {
+        if (hasSukun(text, i) || !hasArabicVowel(text, i)) {
+            let nextIndex = getNextArabicBaseLetterIndex(text, i + 1);
+            if (nextIndex !== -1 && text[nextIndex] === 'ر') {
+                 let len = 1;
+                 if (hasSukun(text, i)) len = 2;
+                 
+                 rules.push({ index: i, length: len + 3, type: 'tajweed-idgham-mutakaribain' });
+                 return true;
+            }
+        }
+    }
+    
+    // Qaf (ق) followed by Kaf (ك)
+    if (curr === 'ق') {
+        if (hasSukun(text, i) || !hasArabicVowel(text, i)) {
+            let nextIndex = getNextArabicBaseLetterIndex(text, i + 1);
+            if (nextIndex !== -1 && text[nextIndex] === 'ك') {
+                 let len = 1;
+                 if (hasSukun(text, i)) len = 2;
+                 
+                 rules.push({ index: i, length: len, type: 'tajweed-idgham-mutakaribain' });
+                 rules.push({ index: nextIndex, length: 1, type: 'tajweed-idgham-mutakaribain' });
+                 return true;
+            }
+        }
+    }
+    return false;
 }
 
 function detectMadds(text, index) {

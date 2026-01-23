@@ -17,7 +17,6 @@ const translations = {
     maddMunfasil: 'Madd Munfasil (Separated)',
     maddArid: "Madd 'Arid (Temporary)",
     maddLiin: 'Madd Liin: Soft Elongation',
-  
     maddLazim: 'Madd Lazim: ',
     maddAsli: 'Madd Asli: Natural Elongation (2)',
     qalqalah: 'Qalqalah: Echoing Sound',
@@ -25,6 +24,7 @@ const translations = {
     silatHa: 'Silat Ha: Connecting Elongation',
     idghamGhunna: 'Idgham bi Ghunna',
     idghamBila: 'Idgham bila Ghunna',
+    idghamMutakaribain: 'Idgham Mutakaribain',
     ikhfa: 'Ikhfa: Hiding',
     sajdah: 'Sajdah: Prostration',
     lazim: 'Lazim: Mandatory Stop',
@@ -79,6 +79,7 @@ const translations = {
     abbrIqlab: 'Iq',
     abbrIdghamGhunna: 'IdG',
     abbrIdghamBila: 'IdB',
+    abbrIdghamMutakaribain: 'IdM',
     abbrIkhfa: 'Ik'
   },
   nl: {
@@ -106,6 +107,7 @@ const translations = {
     iqlab: 'Iqlab: Omdraaien',
     idghamGhunna: 'Idgham bi Ghunna',
     idghamBila: 'Idgham bila Ghunna',
+    idghamMutakaribain: 'Idgham Mutakaribein',
     ikhfa: 'Ikhfa: Verbergen',
     sajdah: 'Sajdah: Prostration',
     lazim: 'Lazim: Verplichte stop',
@@ -160,6 +162,7 @@ const translations = {
     abbrIqlab: 'Iq',
     abbrIdghamGhunna: 'IdG',
     abbrIdghamBila: 'IdB',
+    abbrIdghamMutakaribain: 'IdM',
     abbrIkhfa: 'Ik',
   },
   tr: {
@@ -187,6 +190,7 @@ const translations = {
     iqlab: 'İklab: Döndürme',
     idghamGhunna: 'İdgam bi Gunne',
     idghamBila: 'İdgam bila Gunne',
+    idghamMutakaribain: 'İdgam Mütekaribeyn',
     ikhfa: 'İhfa: Gizleme',
     sajdah: 'Secde: Tilavet secdesi',
     lazim: 'Lazım: Zorunlu durak',
@@ -241,6 +245,7 @@ const translations = {
     abbrIqlab: 'İk',
     abbrIdghamGhunna: 'İmG',
     abbrIdghamBila: 'İbG',
+    abbrIdghamMutakaribain: 'İM',
     abbrIkhfa: 'İh',
   }
 };

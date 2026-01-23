@@ -65,7 +65,6 @@ body {
     padding-right: 2.5rem; /* Make space for arrow */
 }
 
-
 .navbar select:hover,
 .navbar button:hover {
   background-color: #e4e9f0;
@@ -229,6 +228,10 @@ body {
   color: #5DADE2; /* Lighter Blue - Merging without nasalization */
 }
 
+.tajweed-idgham-mutakaribain {
+  color: #5DADE2;
+}
+
 .tajweed-iqlab {
   color: #8e44ad; /* Purple - Conversion */
 }
@@ -332,6 +335,7 @@ body {
   --abbr-iqlab: "Iq";
   --abbr-idgham-ghunna: "IdG";
   --abbr-idgham-bila: "IdB";
+  --abbr-idgham-mutakaribain: "IdM";
   --abbr-ikhfa: "Ik";
   --abbr-qasr: "Qsr";
 }
@@ -396,6 +400,11 @@ body {
   content: var(--abbr-idgham-bila);
   color: #5DADE2;
 }
+.tajweed-idgham-mutakaribain::after {
+  content: var(--abbr-idgham-mutakaribain);
+  color: #5DADE2;
+}
+
 .tajweed-ikhfa::after {
   content: var(--abbr-ikhfa);
   color: #d35400;
