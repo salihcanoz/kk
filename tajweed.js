@@ -128,6 +128,14 @@ function isStartOfSpeech(text, index) {
 function detectMadds(text, index) {
     for (const madd of maddTypes) {
         if (text[index - 1] && text[index - 1] !== ' ' && text[index] === madd.char && !hasArabicVowel(text, index)) {
+            
+            if (madd.char === ALIF) {
+                 let prevIndex = getPreviousArabicBaseLetterIndex(text, index);
+                 if (prevIndex !== -1 && text[prevIndex] === 'و' && !hasArabicVowel(text, prevIndex)) {
+                      continue;
+                 }
+            }
+
             let prevIndex = getPreviousArabicBaseLetterIndex(text, index);
             if (hasSukun(text, prevIndex)) {
                 continue;
@@ -320,7 +328,7 @@ function detectNunSakinah(text, i) {
 
     if (IDGHAM_BILA_GHUNNA_LETTERS.includes(nextLetter)) {
         return {
-            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bila-ghunna', length: fullLength+1 },
+            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bila-ghunna', length: fullLength +1 },
             target: { index: nextLetterIndex, type: 'tajweed-idgham-bila-ghunna', length: 1 },
         };
     }
