@@ -167,9 +167,24 @@ function detectMadds(text, index) {
             else if (hasArabicShadda(text, nextIndex)) {
                 type = 'tajweed-madd-lazim';
             }
-            else if (hasArabicMadda(text, index) && text[index +2] !== ALIF_MAKSURA)  {
-                type = 'tajweed-madd-muttasil';
-                length += 2;
+            else if (hasArabicMadda(text, index)) {
+                let hasBreak = false;
+                if (nextIndex !== -1) {
+                    for (let k = index + 1; k < nextIndex; k++) {
+                        if (isWordBreak(text[k])) {
+                            hasBreak = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (hasBreak) {
+                    type = 'tajweed-madd-munfasil';
+                    length++;
+                } else {
+                    type = 'tajweed-madd-muttasil';
+                    length += 2;
+                }
             }
             else if (hasArabicMadda(text, prevIndex) && hasHamzaAfter(text, index)) {
                 type = 'tajweed-madd-muttasil';
@@ -237,15 +252,24 @@ function detectMadds(text, index) {
 }
 
 function detectHurufMuqattaat(text, index) {
-    //if (!hasArabicVowel(text, index) && hasArabicMadda(text, index) && text[index + 1] !== SUBSCRIPT_ALIF) {
     if (
-        //isWordStart(text, index) &&
         !hasArabicVowel(text, index) &&
         MUQATTAAT.includes(text[index]) &&
         hasArabicMadda(text, index)
     ) {
-        rules.push({ index: index, length: 2, type: 'tajweed-madd-lazim' });
-        return true;
+        if (isStartOfSpeech(text, index)) {
+             rules.push({ index: index, length: 2, type: 'tajweed-madd-lazim' });
+             return true;
+        }
+        
+        let prevIndex = getPreviousArabicBaseLetterIndex(text, index);
+        if (prevIndex !== -1) {
+             const prevChar = text[prevIndex];
+             if (MUQATTAAT.includes(prevChar) && !hasArabicVowel(text, prevIndex)) {
+                  rules.push({ index: index, length: 2, type: 'tajweed-madd-lazim' });
+                  return true;
+             }
+        }
     }
 
     return false;
