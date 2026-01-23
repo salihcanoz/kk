@@ -184,6 +184,16 @@ function detectMadds(text, index) {
                 //length += 2;
             }
 
+            if (madd.char === 'و' && (type === 'tajweed-madd-asli' || type === 'tajweed-madd-arid')) {
+                let nextCharIndex = index + 1;
+                while (nextCharIndex < text.length && isDiacritic(text[nextCharIndex])) {
+                    nextCharIndex++;
+                }
+                if (nextCharIndex < text.length && text[nextCharIndex] === ALIF && !hasArabicVowel(text, nextCharIndex)) {
+                     length += (nextCharIndex - index);
+                }
+            }
+
             rules.push({ index: prevIndex, length: length, type: type });
             return true
         }
@@ -303,14 +313,14 @@ function detectNunSakinah(text, i) {
 
     if (YANMOU_LETTERS.includes(nextLetter)) {
         return {
-            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bi-ghunna', length: fullLength + 1 },
+            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bi-ghunna', length: fullLength +1 },
             target: { index: nextLetterIndex, type: 'tajweed-idgham-bi-ghunna', length: 1 },
         };
     }
 
     if (IDGHAM_BILA_GHUNNA_LETTERS.includes(nextLetter)) {
         return {
-            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bila-ghunna', length: fullLength + 1 },
+            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bila-ghunna', length: fullLength+1 },
             target: { index: nextLetterIndex, type: 'tajweed-idgham-bila-ghunna', length: 1 },
         };
     }
@@ -320,8 +330,7 @@ function detectNunSakinah(text, i) {
     }
 
     if (IKHFA_LETTERS.includes(nextLetter)) {
-        return { trigger: { index: triggerStartIndex, type: 'tajweed-ikhfa', length: fullLength - 1 },
-            target: null };
+        return { trigger: { index: triggerStartIndex, type: 'tajweed-ikhfa', length: triggerGroupLength }, target: null };
     }
 
     return null;
