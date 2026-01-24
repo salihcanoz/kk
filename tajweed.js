@@ -973,7 +973,7 @@ const maddTypes = [
     { char: SUBSCRIPT_ALIF, type: 'tajweed-madd-asli', length: 2 }
 ];
 
-const MUQATTAAT = ['ا', 'ل', 'م', 'ك', 'ه', 'ي', 'ع', 'ص', 'ط', 'س', 'ح', 'ق', 'ن'];
+const MUQATTAAT = ['ا', 'ل', 'م', 'ك', 'ه', 'ي', 'ع', 'ص', 'ط', 'س', 'ح', 'ق', 'ن', 'ی'];
 const QALQALAH = ['ق', 'ط', 'ب', 'ج', 'د'];
 
 const TANWEEN = ['\u064B', '\u064C', '\u064D']; // Fathatan, Dammatan, Kasratan

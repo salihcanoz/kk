@@ -114,16 +114,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Event Listeners ---
   decreaseFontBtn.onclick = () => {
-    if (settings.fontSize > 16) {
-      settings.fontSize -= 2;
+    if (settings.fontSize > 30) {
+      settings.fontSize *= 0.8;
       display.style.fontSize = settings.fontSize + 'px';
       saveSettings();
     }
   };
 
   increaseFontBtn.onclick = () => {
-    if (settings.fontSize < 60) {
-      settings.fontSize += 2;
+    if (settings.fontSize < 150) {
+      settings.fontSize *= 1.2;
       display.style.fontSize = settings.fontSize + 'px';
       saveSettings();
     }
@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }, false);
 
   function handleSwipe() {
-    const swipeThreshold = 100; // Minimum distance for a swipe
+    const swipeThreshold = 150; // Minimum distance for a swipe
     if (touchEndX < touchStartX - swipeThreshold) {
       // Swiped left (RTL: Previous Page)
       if (settings.currentPage > 0) {
