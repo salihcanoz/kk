@@ -466,7 +466,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #5DADE2; margin-right: 5px;">■</span> <div>${t.idghamBila}</div></li>
             <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #5DADE2; margin-right: 5px;">■</span> <div>${t.idghamMutakaribain}</div></li>
             <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #5DADE2; margin-right: 5px;">■</span> <div>${t.idghamMithlain}</div></li>
-            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #d35400; margin-right: 5px;">■</span> <div>${t.ikhfa}</div></li>
+            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #d0a386; margin-right: 5px;">■</span> <div>${t.ikhfa}</div></li>
         </ul>
         <h6 style="margin-top: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">${t.pauseMarksTitle}</h6>
         <ul style="list-style: none; padding: 0; margin: 0; font-size: .8rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px;">

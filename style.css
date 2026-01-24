@@ -417,7 +417,7 @@ body {
 
 .tajweed-ikhfa::after {
   content: var(--abbr-ikhfa);
-  color: #d35400;
+  color: #d0a386;
 }
 
 .tajweed-qasr::after {

@@ -450,20 +450,20 @@ function detectNunSakinah(text, i) {
         triggerStartIndex = k;
     }
 
-    const triggerGroupLength = searchIndex - triggerStartIndex;
-    const fullLength = (nextLetterIndex - triggerStartIndex) + 1;
+    let triggerGroupLength = searchIndex - triggerStartIndex;
+    const fullLength = (nextLetterIndex - triggerStartIndex);
 
     if (YANMOU_LETTERS.includes(nextLetter)) {
         return {
-            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bi-ghunna', length: fullLength +1 },
-            target: { index: nextLetterIndex, type: 'tajweed-idgham-bi-ghunna', length: 1 },
+            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bi-ghunna', length: fullLength },
+            target: null
         };
     }
 
     if (IDGHAM_BILA_GHUNNA_LETTERS.includes(nextLetter)) {
         return {
-            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bila-ghunna', length: fullLength +1 },
-            target: { index: nextLetterIndex, type: 'tajweed-idgham-bila-ghunna', length: 1 },
+            trigger: { index: triggerStartIndex, type: 'tajweed-idgham-bila-ghunna', length: fullLength},
+            target: null,
         };
     }
 
@@ -472,6 +472,9 @@ function detectNunSakinah(text, i) {
     }
 
     if (IKHFA_LETTERS.includes(nextLetter)) {
+        if (hasArabicShadda(text, i)) {
+            triggerGroupLength++;
+        }
         return { trigger: { index: triggerStartIndex, type: 'tajweed-ikhfa', length: triggerGroupLength }, target: null };
     }
 
