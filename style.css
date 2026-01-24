@@ -20,7 +20,7 @@ body {
     background-color: #ffffff;
     color: #2c3e50;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    position: sticky;
+    position: relative; /* Changed from sticky to relative */
     top: 0;
     z-index: 1000;
     flex-wrap: wrap; /* For responsiveness */
@@ -465,11 +465,4 @@ body {
 
 .hidden-char {
     display: none;
-}
-
-/* Mobile specific styles */
-@media (max-width: 768px) {
-    .navbar {
-        position: relative; /* Changed from sticky to relative for mobile */
-    }
 }
