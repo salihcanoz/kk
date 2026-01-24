@@ -572,6 +572,25 @@ function detectSilatHa(text, i) {
         return null; // Previous letter must have a vowel
     }
 
+    // Check if the next letter is Sakin or Hamzat Wasl
+    let j = nextCharIndex;
+    while (j < text.length && text[j] === ' ') {
+        j++;
+    }
+
+    if (j < text.length) {
+        const nextChar = text[j];
+        if (nextChar === ALIF || nextChar === '\u0671') { // Alif or Alif Wasla
+            return null;
+        }
+
+        if (isArabicLetter(nextChar)) {
+            if (hasSukun(text, j) || hasArabicShadda(text, j)) {
+                return null;
+            }
+        }
+    }
+
     let ruleLength = nextCharIndex - i;
     rules.push({index: i, length: ruleLength, type: 'tajweed-silat-ha'});
     return true;
