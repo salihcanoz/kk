@@ -1,6 +1,7 @@
 // Translations
 const translations = {
   en: {
+    title: 'Tajweed',
     decreaseFont: 'Decrease Font Size',
     increaseFont: 'Increase Font Size',
     rulesLabel: 'Rules',
@@ -85,6 +86,7 @@ const translations = {
     abbrIkhfa: 'Ik'
   },
   nl: {
+    title: 'Tadjwied',
     decreaseFont: 'Lettergrootte verkleinen',
     increaseFont: 'Lettergrootte vergroten',
     rulesLabel: 'Regels',
@@ -170,6 +172,7 @@ const translations = {
     abbrIkhfa: 'Ik',
   },
   tr: {
+    title: 'Tecvid',
     decreaseFont: 'Yazı Boyutunu Küçült',
     increaseFont: 'Yazı Boyutunu Büyüt',
     rulesLabel: 'Tecvid',

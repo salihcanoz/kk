@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const prevBtn = document.getElementById('prevBtn');
   const nextBtn = document.getElementById('nextBtn');
   const pageInfo = document.getElementById('pageInfo');
+  const appTitle = document.getElementById('appTitle');
 
   // --- Settings ---
   const defaultSettings = {
@@ -269,6 +270,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Update translatable text
     if (t) {
+      if (appTitle) appTitle.textContent = t.title || 'Quran Reader';
+      document.title = t.title || 'Quran Reader';
       decreaseFontBtn.title = t.decreaseFont;
       increaseFontBtn.title = t.increaseFont;
       prevBtn.textContent = t.nextPage;
