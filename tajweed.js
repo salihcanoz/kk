@@ -585,7 +585,7 @@ function detectSilatHa(text, i) {
         }
 
         if (isArabicLetter(nextChar)) {
-            if (hasSukun(text, j) || hasArabicShadda(text, j)) {
+            if (hasArabicShadda(text, j) || !hasHarakat(text, j)) {
                 return null;
             }
         }
@@ -730,6 +730,22 @@ function hasSukun(text, index) {
         return false;
     }
     return text[index + 1] === SUKUN;
+}
+
+function hasHarakat(text, index) {
+    if (!text || index < 0 || index >= text.length) {
+        return false;
+    }
+
+    let i = index + 1;
+    while (i < text.length && isDiacritic(text[i])) {
+        const c = text[i];
+        if (c === FATHA || c === DAMMA || c === KASRA || TANWEEN.includes(c)) {
+            return true;
+        }
+        i++;
+    }
+    return false;
 }
 
 function hasFathataan(text, index) {

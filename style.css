@@ -466,3 +466,10 @@ body {
 .hidden-char {
     display: none;
 }
+
+/* Mobile specific styles */
+@media (max-width: 768px) {
+    .navbar {
+        position: relative; /* Changed from sticky to relative for mobile */
+    }
+}
