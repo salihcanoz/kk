@@ -270,8 +270,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Update translatable text
     if (t) {
-      if (appTitle) appTitle.textContent = t.title || 'Quran Reader';
-      document.title = t.title || 'Quran Reader';
+      if (t.title) {
+        document.title = t.title;
+        if (appTitle) appTitle.textContent = t.title;
+      }
       decreaseFontBtn.title = t.decreaseFont;
       increaseFontBtn.title = t.increaseFont;
       prevBtn.textContent = t.nextPage;
@@ -408,7 +410,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (settings.tajweedMode !== 'none') {
               processedText = applyTajweed(text);
             }
-            fullTextHTML += `${processedText} <span class="verse-number">${verse.i}</span> `;
+            
+            let verseHtml = `${processedText} <span class="verse-number">${verse.i}</span> `;
+            if (text.includes('۩')) {
+                verseHtml = `<span class="sajdah-verse" style="background-color: #faf7e5;">${verseHtml}</span>`;
+            }
+            fullTextHTML += verseHtml;
         });
     } else {
         fullTextHTML = '<p style="text-align:center;">No verses found for this page.</p>';

@@ -186,7 +186,6 @@ function detectIdghamMutakaribain(text, i) {
                  if (hasSukun(text, i)) len = 2;
                  
                  rules.push({ index: i, length: len, type: 'tajweed-idgham-mutakaribain' });
-                 rules.push({ index: nextIndex, length: 1, type: 'tajweed-idgham-mutakaribain' });
                  return true;
             }
         }
