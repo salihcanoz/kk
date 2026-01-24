@@ -1,38 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quran</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quran</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet">
 
 </head>
 <body>
 
 <header class="navbar">
-  <div class="logo" id="appTitle">Quran</div>
-  <nav>
-    <select id="juzSelect" title="Select Juz"></select>
-    <select id="surahSelect">
-      <option>Loading...</option>
-    </select>
-    <select id="pageSelect" title="Select Page"></select>
-  </nav>
+    <div class="logo" id="appTitle">Quran</div>
+    <nav>
+        <select id="juzSelect" title="Select Juz"></select>
+        <select id="surahSelect">
+            <option>Loading...</option>
+        </select>
+        <select id="pageSelect" title="Select Page"></select>
+    </nav>
 </header>
 
 <main class="container">
-  <div id="quran-display" class="quran-text">
-    <!-- Verses will be loaded here -->
-  </div>
+    <div id="quran-display" class="quran-text">
+        <!-- Verses will be loaded here -->
+    </div>
 
-  <div class="pagination">
-    <button id="prevBtn">Previous Page &raquo;</button>
-    <span id="pageInfo"></span>
-    <button id="nextBtn">&laquo; Next Page</button>
-  </div>
+    <div class="pagination">
+        <button id="prevBtn">Previous Page &raquo;</button>
+        <span id="pageInfo"></span>
+        <button id="nextBtn">&laquo; Next Page</button>
+    </div>
 </main>
 
 <script src="tr.js"></script>
