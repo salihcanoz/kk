@@ -210,7 +210,7 @@ function detectMadds(text, index) {
 
             if (madd.char === SUPERSCRIPT_ALIF && nextIndex !== -1) {
                 const nextChar = text[nextIndex];
-                if (isArabicLetter(nextChar)) {
+                if (nextChar === ALIF || nextChar === '\u0649' || nextChar === ALIF_MAKSURA || nextChar === YA || nextChar === 'و' || nextChar === '\u063D' || nextChar === '\u06D2') {
                     let isHamza = false;
                     let hasVowel = false;
                     let j = nextIndex + 1;
@@ -483,16 +483,11 @@ function detectSilatHa(text, i) {
     // Check if Ha has Fatha
     let checkIndex = i + 1;
     while (checkIndex < text.length && isDiacritic(text[checkIndex])) {
-        if (text[checkIndex] === FATHA || text[checkIndex] === MADDA) return null;
+        if (text[checkIndex] === FATHA) return null;
         checkIndex++;
     }
 
     let nextCharIndex = i + 1;
-    let hasSubscriptAlif = false;
-    if (text[nextCharIndex] === SUBSCRIPT_ALIF) {
-        hasSubscriptAlif = true;
-        nextCharIndex++; // Move past SUBSCRIPT_ALIF
-    }
     while (nextCharIndex < text.length && isDiacritic(text[nextCharIndex])) {
         nextCharIndex++;
     }
@@ -523,10 +518,7 @@ function detectSilatHa(text, i) {
         return null; // Previous letter must have a vowel
     }
 
-    let ruleLength = 1;
-    if (hasSubscriptAlif) {
-        ruleLength = 2; // Mark ه and ٖ
-    }
+    let ruleLength = nextCharIndex - i;
     rules.push({ index: i, length: ruleLength, type: 'tajweed-silat-ha' });
     return true;
 }
@@ -676,6 +668,8 @@ function hasArabicMadda(text, index) {
         return false;
     }
 
+    const MADDA = '\u0653';
+
     let i = index + 1;
     while (i < text.length) {
         const char = text[i];
@@ -726,7 +720,7 @@ function getPreviousArabicBaseLetterIndex(text, index) {
         const char = text[i];
 
         // Skip Arabic combining marks (harakat, shadda, madda, etc.)
-        if (isDiacritic(char) || char === '\u0640' || /\s/.test(char)) {
+        if (isDiacritic(char) || char === '\u0640') {
             continue;
         }
 
@@ -749,10 +743,7 @@ function getNextArabicBaseLetterIndex(text, index) {
         }
 
         // Skip Arabic combining marks (harakat, shadda, madda, etc.)
-        if (isDiacritic(char)
-            || char === '\u0640'
-            || char === ALIF_MAKSURA
-            || /\s/.test(char)) {
+        if (isDiacritic(char) || char === ' ' || char === '\u0640') {
             continue;
         }
 
@@ -929,8 +920,6 @@ const SUBSCRIPT_ALIF = '\u0656';
 const SUPERSCRIPT_ALIF = '\u0670';
 const YA = '\u064A';
 
-const MADDA = '\u0653';
-
 const LAM = '\u0644';
 const MEEM = '\u0645';
 const NOON = '\u0646';
@@ -949,7 +938,7 @@ const QALQALAH = ['ق', 'ط', 'ب', 'ج', 'د'];
 
 const TANWEEN = ['\u064B', '\u064C', '\u064D']; // Fathatan, Dammatan, Kasratan
 
-const YANMOU_LETTERS = ['ي', 'ن', 'م', 'و']; // Added Persian Yeh and Alif Maksura
+const YANMOU_LETTERS = ['ي', 'ی', 'ى', 'ن', 'م', 'و']; // Added Persian Yeh and Alif Maksura
 const IDGHAM_BILA_GHUNNA_LETTERS = ['ل', 'ر'];
 const IKHFA_LETTERS = ['ت', 'ث', 'ج', 'د', 'ذ', 'ز', 'س', 'ش', 'ص', 'ض', 'ط', 'ظ', 'ف', 'ق', 'ك'];
 const IQLAB_LETTERS = ['ب'];
