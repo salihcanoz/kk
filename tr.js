@@ -25,6 +25,7 @@ const translations = {
     idghamGhunna: 'Idgham bi Ghunna',
     idghamBila: 'Idgham bila Ghunna',
     idghamMutakaribain: 'Idgham Mutakaribain',
+    idghamMithlain: 'Idgham Mithlain',
     ikhfa: 'Ikhfa: Hiding',
     sajdah: 'Sajdah: Prostration',
     lazim: 'Lazim: Mandatory Stop',
@@ -80,6 +81,7 @@ const translations = {
     abbrIdghamGhunna: 'IdG',
     abbrIdghamBila: 'IdB',
     abbrIdghamMutakaribain: 'IdM',
+    abbrIdghamMithlain: 'Idm',
     abbrIkhfa: 'Ik'
   },
   nl: {
@@ -108,6 +110,7 @@ const translations = {
     idghamGhunna: 'Idgham bi Ghunna',
     idghamBila: 'Idgham bila Ghunna',
     idghamMutakaribain: 'Idgham Mutakaribein',
+    idghamMithlain: 'Idgham Mithlein',
     ikhfa: 'Ikhfa: Verbergen',
     sajdah: 'Sajdah: Prostration',
     lazim: 'Lazim: Verplichte stop',
@@ -163,6 +166,7 @@ const translations = {
     abbrIdghamGhunna: 'IdG',
     abbrIdghamBila: 'IdB',
     abbrIdghamMutakaribain: 'IdM',
+    abbrIdghamMithlain: 'Idm',
     abbrIkhfa: 'Ik',
   },
   tr: {
@@ -191,6 +195,7 @@ const translations = {
     idghamGhunna: 'İdgam bi Gunne',
     idghamBila: 'İdgam bila Gunne',
     idghamMutakaribain: 'İdgam Mütekaribeyn',
+    idghamMithlain: 'İdgam Misleyn',
     ikhfa: 'İhfa: Gizleme',
     sajdah: 'Secde: Tilavet secdesi',
     lazim: 'Lazım: Zorunlu durak',
@@ -245,7 +250,7 @@ const translations = {
     abbrIqlab: 'İk',
     abbrIdghamGhunna: 'İmG',
     abbrIdghamBila: 'İbG',
-    abbrIdghamMutakaribain: 'İM',
+    abbrIdghamMithlain: 'İm',
     abbrIkhfa: 'İh',
   }
 };

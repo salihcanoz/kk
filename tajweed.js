@@ -61,6 +61,11 @@ function detectAllRules(text) {
             }
         }
 
+        found = detectIdghamMithlain(text, i);
+        if (found) {
+            continue;
+        }
+
         detectGhunna(text, i);
 
         detectSilatHa(text, i);
@@ -208,7 +213,7 @@ function detectMadds(text, index) {
             let type = madd.type;
             let nextIndex = getNextArabicBaseLetterIndex(text, index + madd.length);
 
-            if (madd.char === SUPERSCRIPT_ALIF && nextIndex !== -1) {
+            if ((madd.char === SUPERSCRIPT_ALIF || madd.char === SUBSCRIPT_ALIF) && nextIndex !== -1) {
                 const nextChar = text[nextIndex];
                 if (nextChar === ALIF || nextChar === '\u0649' || nextChar === ALIF_MAKSURA || nextChar === YA || nextChar === 'و' || nextChar === '\u063D' || nextChar === '\u06D2') {
                     let isHamza = false;
@@ -492,6 +497,11 @@ function detectSilatHa(text, i) {
         nextCharIndex++;
     }
 
+    // Include Small Waw or Small Ya
+    if (nextCharIndex < text.length && (text[nextCharIndex] === '\u06E5' || text[nextCharIndex] === '\u06E6')) {
+        nextCharIndex++;
+    }
+
     // Check if ه is at word end
     if (nextCharIndex < text.length) {
         const charAfterHa = text[nextCharIndex];
@@ -560,6 +570,37 @@ function detectGhunna(text, i) {
             rules.push({ index: i, length: 0, type: 'tajweed-ghunna' });
         }
     }
+}
+
+function detectIdghamMithlain(text, i) {
+    const curr = text[i];
+    if (curr !== MEEM) return false;
+
+    if (hasArabicVowel(text, i) && !hasSukun(text, i)) {
+        return false;
+    }
+    
+    if (hasArabicShadda(text, i)) return false;
+
+    let nextIndex = getNextArabicBaseLetterIndex(text, i + 1);
+    if (nextIndex === -1) return false;
+
+    if (text[nextIndex] === MEEM) {
+        let j = nextIndex + 1;
+        while (j < text.length && isDiacritic(text[j])) {
+            j++;
+        }
+        let length = j - i;
+        
+        rules.push({
+            index: i,
+            length: length,
+            type: 'tajweed-idgham-mithlain'
+        });
+        return true;
+    }
+    
+    return false;
 }
 
 function isMaddAsliHamzaOnWaw(text, index) {

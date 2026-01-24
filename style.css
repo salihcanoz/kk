@@ -232,6 +232,10 @@ body {
   color: #5DADE2;
 }
 
+.tajweed-idgham-mithlain {
+  color: #5DADE2;
+}
+
 .tajweed-iqlab {
   color: #8e44ad; /* Purple - Conversion */
 }
@@ -336,6 +340,7 @@ body {
   --abbr-idgham-ghunna: "IdG";
   --abbr-idgham-bila: "IdB";
   --abbr-idgham-mutakaribain: "IdM";
+  --abbr-idgham-mithlain: "Idm";
   --abbr-ikhfa: "Ik";
   --abbr-qasr: "Qsr";
 }
@@ -402,6 +407,11 @@ body {
 }
 .tajweed-idgham-mutakaribain::after {
   content: var(--abbr-idgham-mutakaribain);
+  color: #5DADE2;
+}
+
+.tajweed-idgham-mithlain::after {
+  content: var(--abbr-idgham-mithlain);
   color: #5DADE2;
 }
 
