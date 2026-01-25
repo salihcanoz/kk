@@ -193,7 +193,7 @@ body {
 }
 
 .tajweed-madd-munfasil {
-    color: #e290ab; /* Pink - Separated Elongation */
+    color: #A64AC9; /* Pink - Separated Elongation */
 }
 
 .tajweed-madd-arid {
@@ -367,7 +367,7 @@ body {
 
 .tajweed-madd-munfasil::after {
     content: var(--abbr-madd-munfasil);
-    color: #E91E63;
+    color: #A64AC9;
 }
 
 .tajweed-madd-arid::after {

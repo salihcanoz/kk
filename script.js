@@ -457,7 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <ul style="list-style: none; padding: 0; margin: 0; font-size: .9rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px;">
             <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #16a085; margin-right: 5px;">■</span> <div>${t.ghunna}</div></li>
             <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #A64AC9; margin-right: 5px;">■</span> <div>${t.maddMuttasil}</div></li>
-            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #E91E63; margin-right: 5px;">■</span> <div>${t.maddMunfasil}</div></li>
+            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #A64AC9; margin-right: 5px;">■</span> <div>${t.maddMunfasil}</div></li>
             <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #1ABC9C; margin-right: 5px;">■</span> <div>${t.maddArid}</div></li>
             <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #F39C12; margin-right: 5px;">■</span> <div>${t.maddLiin}</div></li>
             <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #7ea24b; margin-right: 5px;">■</span> <div>${t.silatHa}</div></li>
