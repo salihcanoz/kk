@@ -116,7 +116,7 @@ function detectSilentAlifLam(text, i) {
         return false;
     }
 
-    if (hasArabicShadda(text, nextCharIndex)) {
+    if (hasShadda(text, nextCharIndex)) {
         if (isStartOfSpeech(text, i)) {
             rules.push({index: i + 1, length: 1, type: 'silent-letter'});
         }
@@ -150,7 +150,7 @@ function detectSilentHamzatWasl(text, i) {
         return false;
     }
 
-    if (hasArabicVowel(text, i)) {
+    if (hasVowel(text, i)) {
         return false;
     }
 
@@ -186,8 +186,8 @@ function detectIdghamMutakaribain(text, i) {
 
     // Lam (ل) followed by Ra (ر)
     if (curr === LAM) {
-        if (hasSukun(text, i) || !hasArabicVowel(text, i)) {
-            let nextIndex = getNextArabicBaseLetterIndex(text, i + 1);
+        if (hasSukun(text, i) || !hasVowel(text, i)) {
+            let nextIndex = getNextBaseLetterIndex(text, i + 1);
             if (nextIndex !== -1 && text[nextIndex] === 'ر') {
                 let len = 1;
                 if (hasSukun(text, i)) {
@@ -202,8 +202,8 @@ function detectIdghamMutakaribain(text, i) {
 
     // Qaf (ق) followed by Kaf (ك)
     if (curr === 'ق') {
-        if (hasSukun(text, i) || !hasArabicVowel(text, i)) {
-            let nextIndex = getNextArabicBaseLetterIndex(text, i + 1);
+        if (hasSukun(text, i) || !hasVowel(text, i)) {
+            let nextIndex = getNextBaseLetterIndex(text, i + 1);
             if (nextIndex !== -1 && text[nextIndex] === 'ك') {
                 let len = 1;
                 if (hasSukun(text, i)) {
@@ -220,23 +220,23 @@ function detectIdghamMutakaribain(text, i) {
 
 function detectMadds(text, index) {
     for (const madd of maddTypes) {
-        if (text[index - 1] && text[index - 1] !== ' ' && text[index] === madd.char && !hasArabicVowel(text, index)) {
+        if (text[index - 1] && text[index - 1] !== ' ' && text[index] === madd.char && !hasVowel(text, index)) {
 
             if (madd.char === ALIF) {
-                let prevIndex = getPreviousArabicBaseLetterIndex(text, index);
-                if (prevIndex !== -1 && text[prevIndex] === 'و' && !hasArabicVowel(text, prevIndex)) {
+                let prevIndex = getPreviousBaseLetterIndex(text, index);
+                if (prevIndex !== -1 && text[prevIndex] === 'و' && !hasVowel(text, prevIndex)) {
                     continue;
                 }
             }
 
-            let prevIndex = getPreviousArabicBaseLetterIndex(text, index);
+            let prevIndex = getPreviousBaseLetterIndex(text, index);
             if (hasSukun(text, prevIndex)) {
                 continue;
             }
 
             let length = index - prevIndex + madd.length;
             let type = madd.type;
-            let nextIndex = getNextArabicBaseLetterIndex(text, index + madd.length);
+            let nextIndex = getNextBaseLetterIndex(text, index + madd.length);
 
             if ((madd.char === SUPERSCRIPT_ALIF || madd.char === SUBSCRIPT_ALIF) && nextIndex !== -1) {
                 const nextChar = text[nextIndex];
@@ -254,7 +254,7 @@ function detectMadds(text, index) {
                         j++;
                     }
                     if (!isHamza && !hasVowel) {
-                        nextIndex = getNextArabicBaseLetterIndex(text, nextIndex + 1);
+                        nextIndex = getNextBaseLetterIndex(text, nextIndex + 1);
                     }
                 }
             }
@@ -268,8 +268,10 @@ function detectMadds(text, index) {
                 }
             }
 
-            if (hasArabicShadda(text, nextIndex)) {
-                if (hasArabicMadda(text, index) || hasArabicMadda(text, prevIndex)) {
+            const shadda = hasShadda(text, nextIndex);
+
+            if (shadda) {
+                if (hasMadda(text, index) || hasMadda(text, prevIndex)) {
                     type = 'tajweed-madd-lazim';
                 }
                 else if (madd.char === ALIF) {
@@ -288,7 +290,7 @@ function detectMadds(text, index) {
                     type = 'tajweed-madd-arid';
                 }
             }
-            else if (hasArabicMadda(text, index)) {
+            else if (hasMadda(text, index)) {
                 if (!isSameWord(text, index, nextIndex)) {
                     type = 'tajweed-madd-munfasil';
                     length++;
@@ -298,17 +300,17 @@ function detectMadds(text, index) {
                     length++;
                 }
             }
-            else if (hasArabicMadda(text, prevIndex) && hasHamzaAfter(text, index)) {
+            else if (hasMadda(text, prevIndex) && hasHamzaAfter(text, index)) {
                 type = 'tajweed-madd-muttasil';
             }
-            else if (hasArabicMadda(text, prevIndex)) {
+            else if (hasMadda(text, prevIndex)) {
                 type = 'tajweed-madd-munfasil';
                 //length++;
             }
 
             else if (text[nextIndex] === ALIF
                 && text[index] !== 'و'
-                && !hasArabicVowel(text, nextIndex)
+                && !hasVowel(text, nextIndex)
             ) { // alif with sukun
                 if (causesIltiqaSakinayn(text, index)) {
                     type = 'silent-letter';
@@ -316,14 +318,15 @@ function detectMadds(text, index) {
                     //length += 2;
                 }
             }
-            else if (text[index] === ALIF && (hasFathataan(text, prevIndex) || text[index -1] !== FATHA)) { // waw with sukun
+            else if (text[index] === ALIF &&
+                (hasFathataan(text, prevIndex) || (text[index -1] === SHADDA ? text[index - 2] !== FATHA : text[index -1] !== FATHA))) { // waw with sukun
                 continue
             }
             else if (hasQasr(text, index)) {
                 type = 'tajweed-qasr';
                 prevIndex++;
             }
-            else if (hasArabicVowel(text, nextIndex + 1)) {
+            else if (hasVowel(text, nextIndex + 1)) {
                 continue;
             }
             else if (text[index] === ALIF && hasSukun(text, nextIndex)) { // alif with sukun
@@ -342,7 +345,7 @@ function detectMadds(text, index) {
                 while (nextCharIndex < text.length && isDiacritic(text[nextCharIndex])) {
                     nextCharIndex++;
                 }
-                if (nextCharIndex < text.length && text[nextCharIndex] === ALIF && !hasArabicVowel(text, nextCharIndex)) {
+                if (nextCharIndex < text.length && text[nextCharIndex] === ALIF && !hasVowel(text, nextCharIndex)) {
                     length += (nextCharIndex - index);
                 }
             }
@@ -376,19 +379,19 @@ function isSameWord(text, index1, index2) {
 
 function detectHurufMuqattaat(text, index) {
     if (
-        !hasArabicVowel(text, index) &&
+        !hasVowel(text, index) &&
         MUQATTAAT.includes(text[index]) &&
-        hasArabicMadda(text, index)
+        hasMadda(text, index)
     ) {
         if (isStartOfSpeech(text, index)) {
             rules.push({index: index, length: 2, type: 'tajweed-madd-lazim'});
             return true;
         }
 
-        let prevIndex = getPreviousArabicBaseLetterIndex(text, index);
+        let prevIndex = getPreviousBaseLetterIndex(text, index);
         if (prevIndex !== -1) {
             const prevChar = text[prevIndex];
-            if (MUQATTAAT.includes(prevChar) && !hasArabicVowel(text, prevIndex)) {
+            if (MUQATTAAT.includes(prevChar) && !hasVowel(text, prevIndex)) {
                 rules.push({index: index, length: 2, type: 'tajweed-madd-lazim'});
                 return true;
             }
@@ -512,7 +515,7 @@ function detectNunSakinah(text, i) {
     }
 
     if (IKHFA_LETTERS.includes(nextLetter)) {
-        if (hasArabicShadda(text, i)) {
+        if (hasShadda(text, i)) {
             triggerGroupLength++;
         }
         return {trigger: {index: triggerStartIndex, type: 'tajweed-ikhfa', length: triggerGroupLength}, target: null};
@@ -585,7 +588,7 @@ function detectSilatHa(text, i) {
         }
 
         if (isArabicLetter(nextChar)) {
-            if (hasArabicShadda(text, j) || !hasHarakat(text, j)) {
+            if (hasShadda(text, j) || !hasHarakat(text, j)) {
                 return null;
             }
         }
@@ -639,15 +642,15 @@ function detectIdghamMithlain(text, i) {
     const curr = text[i];
     if (curr !== MEEM) return false;
 
-    if (hasArabicVowel(text, i) && !hasSukun(text, i)) {
+    if (hasVowel(text, i) && !hasSukun(text, i)) {
         return false;
     }
 
-    if (hasArabicShadda(text, i)) {
+    if (hasShadda(text, i)) {
         return false;
     }
 
-    let nextIndex = getNextArabicBaseLetterIndex(text, i + 1);
+    let nextIndex = getNextBaseLetterIndex(text, i + 1);
     if (nextIndex === -1) {
         return false;
     }
@@ -712,7 +715,7 @@ function isAtStop(text, i) {
     return Object.keys(WAQF_CLASSES).includes(charAtBreak) || charAtBreak === AYAH_END;
 }
 
-function hasArabicVowel(text, index) {
+function hasVowel(text, index) {
     for (let i = index + 1; i < text.length; i++) {
         const c = text[i];
         if (c >= '\u064B' && c <= '\u0652') {
@@ -771,7 +774,7 @@ function hasQasr(text, index) {
     return text[index + 1] === QASR || text[index -1] === QASR;
 }
 
-function hasArabicShadda(text, index) {
+function hasShadda(text, index) {
     if (!text || index < 0 || index >= text.length) {
         return false;
     }
@@ -795,7 +798,7 @@ function hasArabicShadda(text, index) {
     return false;
 }
 
-function hasArabicMadda(text, index) {
+function hasMadda(text, index) {
     if (!text || index < 0 || index >= text.length) {
         return false;
     }
@@ -845,7 +848,7 @@ function hasHamzaAfter(text, index) {
     return false;
 }
 
-function getPreviousArabicBaseLetterIndex(text, index) {
+function getPreviousBaseLetterIndex(text, index) {
     if (!text || index <= 0 || index > text.length) {
         return -1;
     }
@@ -864,7 +867,7 @@ function getPreviousArabicBaseLetterIndex(text, index) {
     return -1;
 }
 
-function getNextArabicBaseLetterIndex(text, index) {
+function getNextBaseLetterIndex(text, index) {
     if (!text || index <= 0 || index > text.length) {
         return -1;
     }
@@ -968,7 +971,7 @@ function causesIltiqaSakinayn(text, index) {
     }
 
     // madd letter must be sākin
-    if (hasArabicVowel(text, index)) {
+    if (hasVowel(text, index)) {
         return false;
     }
 
