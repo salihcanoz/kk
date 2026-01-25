@@ -316,7 +316,7 @@ function detectMadds(text, index) {
                     //length += 2;
                 }
             }
-            else if (text[index] === ALIF && hasFathataan(text, prevIndex)) { // waw with sukun
+            else if (text[index] === ALIF && (hasFathataan(text, prevIndex) || text[index -1] !== FATHA)) { // waw with sukun
                 continue
             }
             else if (hasQasr(text, index)) {
@@ -440,7 +440,6 @@ function detectQalqalah(text, index) {
 
 function detectNunSakinah(text, i) {
     const {isTrigger, triggerLength} = isNunSakinahOrTanween(text, i);
-    //console.log(`Is trigger: ${isTrigger}, length: ${triggerLength}`);
 
     if (!isTrigger) {
         return null;
@@ -654,15 +653,15 @@ function detectIdghamMithlain(text, i) {
     }
 
     if (text[nextIndex] === MEEM) {
-        let j = nextIndex + 1;
-        while (j < text.length && isDiacritic(text[j])) {
-            j++;
-        }
-        let length = j - i;
+        // let j = nextIndex + 1;
+        // while (j < text.length && isDiacritic(text[j])) {
+        //     j++;
+        // }
+        // let length = j - i;
 
         rules.push({
             index: i,
-            length: length,
+            length: 2,
             type: 'tajweed-idgham-mithlain'
         });
         return true;
@@ -1021,8 +1020,6 @@ function isExceptionToIdgham(text, noonIndex, yawawIndex) {
     // Remove all diacritics for comparison
     const word = wordWithDiacritics.replace(/[\u064B-\u065F\u0670\u0653]/g, '');
 
-    //console.log(`Checking exception for word: "${word}" from "${wordWithDiacritics}"`);
-
     // List of exception words (without diacritics)
     // Now includes both with and without the definite article "ال"
     const exceptionWords = [
@@ -1034,8 +1031,6 @@ function isExceptionToIdgham(text, noonIndex, yawawIndex) {
     ];
 
     const isException = exceptionWords.includes(word);
-    //console.log(`Is exception: ${isException}`);
-
     return isException;
 }
 
@@ -1077,7 +1072,7 @@ const QALQALAH = ['ق', 'ط', 'ب', 'ج', 'د'];
 
 const TANWEEN = ['\u064B', '\u064C', '\u064D']; // Fathatan, Dammatan, Kasratan
 
-const YANMOU_LETTERS = ['ي', 'ن', 'م', 'و']; // Added Persian Yeh and Alif Maksura
+const YANMOU_LETTERS = ['ی', 'ي'   , 'ن', 'م', 'و'];
 const IDGHAM_BILA_GHUNNA_LETTERS = ['ل', 'ر'];
 const IKHFA_LETTERS = ['ت', 'ث', 'ج', 'د', 'ذ', 'ز', 'س', 'ش', 'ص', 'ض', 'ط', 'ظ', 'ف', 'ق', 'ك'];
 const IQLAB_LETTERS = ['ب'];
