@@ -157,7 +157,7 @@ function detectSilentHamzatWasl(text, i) {
     // Check for Superscript Alif or Madda
     let j = i + 1;
     while (j < text.length && isDiacritic(text[j])) {
-        if (text[j] === SUPERSCRIPT_ALIF || text[j] === '\u0653') return false;
+        if (text[j] === SUPERSCRIPT_ALIF || text[j] === MADDA) return false;
         j++;
     }
 
@@ -233,6 +233,7 @@ function detectMadds(text, index) {
             if (hasSukun(text, prevIndex)) {
                 continue;
             }
+
             let length = index - prevIndex + madd.length;
             let type = madd.type;
             let nextIndex = getNextArabicBaseLetterIndex(text, index + madd.length);
@@ -244,7 +245,7 @@ function detectMadds(text, index) {
                     let hasVowel = false;
                     let j = nextIndex + 1;
                     while (j < text.length && isDiacritic(text[j])) {
-                        if (text[j] === '\u0654' || text[j] === '\u0655') {
+                        if (text[j] === HAMZA_ABOVE || text[j] === HAMZA_BELOW) {
                             isHamza = true;
                         }
                         if (text[j] >= '\u064B' && text[j] <= '\u0652') {
@@ -294,7 +295,7 @@ function detectMadds(text, index) {
                 }
                 else {
                     type = 'tajweed-madd-muttasil';
-                    length += 2;
+                    length++;
                 }
             }
             else if (hasArabicMadda(text, prevIndex) && hasHamzaAfter(text, index)) {
@@ -302,7 +303,7 @@ function detectMadds(text, index) {
             }
             else if (hasArabicMadda(text, prevIndex)) {
                 type = 'tajweed-madd-munfasil';
-                length++;
+                //length++;
             }
 
             else if (text[nextIndex] === ALIF
@@ -768,7 +769,7 @@ function hasQasr(text, index) {
         return false;
     }
 
-    return text[index + 1] === QASR;
+    return text[index + 1] === QASR || text[index -1] === QASR;
 }
 
 function hasArabicShadda(text, index) {
@@ -800,8 +801,6 @@ function hasArabicMadda(text, index) {
         return false;
     }
 
-    const MADDA = '\u0653';
-
     let i = index + 1;
     while (i < text.length) {
         const char = text[i];
@@ -830,8 +829,12 @@ function hasHamzaAfter(text, index) {
     while (i < text.length) {
         const char = text[i];
 
+        if (char === HAMZA_ABOVE || char === HAMZA_BELOW) {
+            return true;
+        }
+
         // Skip diacritics
-        if (char >= '\u064B' && char <= '\u065F') {
+        if ((char >= '\u064B' && char <= '\u065F') || char === ALIF_MAKSURA ) {
             i++;
             continue;
         }
@@ -1056,6 +1059,10 @@ const LAM = '\u0644';
 const MEEM = '\u0645';
 const NOON = '\u0646';
 
+const MADDA = '\u0653';
+const HAMZA_ABOVE = '\u0654';
+const HAMZA_BELOW = '\u0655';
+
 const AYAH_END = '\u06DD'; // ۝
 
 const maddTypes = [
@@ -1070,7 +1077,7 @@ const QALQALAH = ['ق', 'ط', 'ب', 'ج', 'د'];
 
 const TANWEEN = ['\u064B', '\u064C', '\u064D']; // Fathatan, Dammatan, Kasratan
 
-const YANMOU_LETTERS = ['ي', 'ی', 'ى', 'ن', 'م', 'و']; // Added Persian Yeh and Alif Maksura
+const YANMOU_LETTERS = ['ي', 'ن', 'م', 'و']; // Added Persian Yeh and Alif Maksura
 const IDGHAM_BILA_GHUNNA_LETTERS = ['ل', 'ر'];
 const IKHFA_LETTERS = ['ت', 'ث', 'ج', 'د', 'ذ', 'ز', 'س', 'ش', 'ص', 'ض', 'ط', 'ظ', 'ف', 'ق', 'ك'];
 const IQLAB_LETTERS = ['ب'];
