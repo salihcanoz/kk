@@ -23,6 +23,8 @@ function detectAllRules(text) {
 
     rules = [];
 
+    text = text.replace('\u06d9', '');
+
     for (let i = 0; i < text.length; i++) {
         let found = detectHurufMuqattaat(text, i);
         if (found) {
@@ -72,6 +74,8 @@ function detectAllRules(text) {
         detectGhunna(text, i);
 
         detectSilatHa(text, i);
+
+        detectQasr(text, i);
     }
 }
 
@@ -225,6 +229,15 @@ function detectMadds(text, index) {
             if (madd.char === ALIF) {
                 let prevIndex = getPreviousBaseLetterIndex(text, index);
                 if (prevIndex !== -1 && text[prevIndex] === 'و' && !hasVowel(text, prevIndex)) {
+                    continue;
+                }
+                if (text[index + 1] === SUPERSCRIPT_ALIF) {
+                   continue;
+                }
+            }
+            else if (madd.char === WAW) {
+                let prevIndex = getPreviousBaseLetterIndex(text, index);
+                if (text[prevIndex + 1] !== DAMMA ) {
                     continue;
                 }
             }
@@ -496,7 +509,7 @@ function detectNunSakinah(text, i) {
     let triggerGroupLength = searchIndex - triggerStartIndex;
     const fullLength = (nextLetterIndex - triggerStartIndex);
 
-    if (YANMOU_LETTERS.includes(nextLetter)) {
+    if (YANMOU_LETTERS.includes(nextLetter) && (hasVowel(text, i) || hasTanween(text, i-1))) {
         return {
             trigger: {index: triggerStartIndex, type: 'tajweed-idgham-bi-ghunna', length: fullLength},
             target: null
@@ -597,6 +610,13 @@ function detectSilatHa(text, i) {
     let ruleLength = nextCharIndex - i;
     rules.push({index: i, length: ruleLength, type: 'tajweed-silat-ha'});
     return true;
+}
+
+function detectQasr(text, i) {
+    if (hasQasr(text, i)) {
+        rules.push({index: text.indexOf(QASR), length: 1, type: 'hidden-char'});
+        rules.push({index: i-2, length: 3, type: 'tajweed-qasr'});
+    }
 }
 
 function isNunSakinahOrTanween(text, i) {
@@ -758,7 +778,7 @@ function hasFathataan(text, index) {
 
     let i = index + 1;
     while (i < text.length && isDiacritic(text[i])) {
-        if (text[i] === FATHATAN) {
+        if (text[i] === FATHATAAN) {
             return true;
         }
         i++;
@@ -766,12 +786,46 @@ function hasFathataan(text, index) {
     return false;
 }
 
+function hasKasrataan(text, index) {
+    if (!text || index < 0 || index >= text.length - 1) {
+        return false;
+    }
+
+    let i = index + 1;
+    while (i < text.length && isDiacritic(text[i])) {
+        if (text[i] === KASRATAAN) {
+            return true;
+        }
+        i++;
+    }
+    return false;
+}
+
+function hasDammataan(text, index) {
+    if (!text || index < 0 || index >= text.length - 1) {
+        return false;
+    }
+
+    let i = index + 1;
+    while (i < text.length && isDiacritic(text[i])) {
+        if (text[i] === DAMMATAAN) {
+            return true;
+        }
+        i++;
+    }
+    return false;
+}
+
+function hasTanween(text, index) {
+    return hasFathataan(text, index) || hasKasrataan(text, index) || hasDammataan(text, index);
+}
+
 function hasQasr(text, index) {
     if (!text || index < 0 || index >= text.length - 1) {
         return false;
     }
 
-    return text[index + 1] === QASR || text[index -1] === QASR;
+    return text[index + 1] === QASR || text[index - 1] === QASR;
 }
 
 function hasShadda(text, index) {
@@ -1040,7 +1094,10 @@ function isExceptionToIdgham(text, noonIndex, yawawIndex) {
 //------------------------------------------------------------------------
 
 const FATHA = '\u064E';
-const FATHATAN = '\u064B';
+const FATHATAAN = '\u064B';
+const DAMMATAAN = '\u064C';
+const KASRATAAN = '\u064D';
+
 const SHADDA = '\u0651';
 const SUKUN = '\u0652';
 const QASR = '\u08D1';
@@ -1052,6 +1109,7 @@ const ALIF_MAKSURA = 'ی';
 const SUBSCRIPT_ALIF = '\u0656';
 const SUPERSCRIPT_ALIF = '\u0670';
 const YA = '\u064A';
+const WAW = 'و';
 
 const LAM = '\u0644';
 const MEEM = '\u0645';
@@ -1075,7 +1133,7 @@ const QALQALAH = ['ق', 'ط', 'ب', 'ج', 'د'];
 
 const TANWEEN = ['\u064B', '\u064C', '\u064D']; // Fathatan, Dammatan, Kasratan
 
-const YANMOU_LETTERS = ['ی', 'ي'   , 'ن', 'م', 'و'];
+const YANMOU_LETTERS = ['ی', 'ي', 'ن', 'م', 'و'];
 const IDGHAM_BILA_GHUNNA_LETTERS = ['ل', 'ر'];
 const IKHFA_LETTERS = ['ت', 'ث', 'ج', 'د', 'ذ', 'ز', 'س', 'ش', 'ص', 'ض', 'ط', 'ظ', 'ف', 'ق', 'ك'];
 const IQLAB_LETTERS = ['ب'];

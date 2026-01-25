@@ -466,3 +466,7 @@ body {
 .hidden-char {
     display: none;
 }
+
+.hidden-char::after {
+    display: none;
+}
