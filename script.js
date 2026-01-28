@@ -12,8 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const defaultSettings = {
         language: navigator.language ? navigator.language.substring(0, 2) : 'en',
         currentPage: 0, // Start from page 0
-        fontFamily: "'Amiri', serif",
-        fontSize: 36,
+        fontFamily: "'Lateef', serif",
+        fontSize: 48,
         tajweedMode: 'colors-abbr' // 'none', 'colors', 'colors-abbr'
     };
 
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load fonts from Google Fonts
     const fontLink = document.createElement('link');
     fontLink.rel = 'stylesheet';
-    fontLink.href = 'https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Lateef:wght@400;700&family=Noto+Naskh+Arabic:wght@400;700&family=Scheherazade+New:wght@400;700&display=swap';
+    fontLink.href = 'https://fonts.googleapis.com/css2?family=Lateef:wght@400;700&family=Noto+Naskh+Arabic:wght@400;700&family=Scheherazade+New:wght@400;700&display=swap';
     document.head.appendChild(fontLink);
 
     // --- UI Controls ---
@@ -71,10 +71,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Font Type Dropdown
     const fontSelect = document.createElement('select');
     const fonts = [
-        {name: 'Amiri', value: "'Amiri', serif"},
-        {name: 'Scheherazade', value: "'Scheherazade New', serif"},
+        {name: 'Lateef', value: "'Lateef', serif"},
         {name: 'Noto Naskh', value: "'Noto Naskh Arabic', serif"},
-        {name: 'Lateef', value: "'Lateef', serif"}
+        {name: 'Scheherazade', value: "'Scheherazade New', serif"}
     ];
     fonts.forEach(font => {
         const option = document.createElement('option');

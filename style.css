@@ -256,7 +256,7 @@ body {
 .waqf-sign {
     font-size: 0.75em;
     position: relative;
-    font-family: 'Amiri', 'Traditional Arabic', serif;
+    font-family: 'Lateef', 'Traditional Arabic', serif;
 }
 
 /* Specific colors based on your legend */
@@ -309,7 +309,7 @@ body {
     bottom: -5px; /* Position below the letter, accounting for descenders */
     left: 50%;
     transform: translateX(-50%);
-    font-size: .5rem;
+    font-size: .6rem;
     font-family: sans-serif;
     font-weight: normal;
     opacity: 0;
