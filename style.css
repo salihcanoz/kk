@@ -103,7 +103,7 @@ body {
 }
 
 .quran-content {
-    line-height: 2.5;
+    line-height: 2;
     /* Standard standard ligatures + contextual alternates */
     font-variant-ligatures: common-ligatures contextual;
 
@@ -306,7 +306,7 @@ body {
 
 [class^="tajweed-"]::after {
     position: absolute;
-    bottom: -5px; /* Position below the letter, accounting for descenders */
+    bottom: -.6rem; /* Position below the letter, accounting for descenders */
     left: 50%;
     transform: translateX(-50%);
     font-size: .6rem;
@@ -315,13 +315,12 @@ body {
     opacity: 0;
     transition: opacity 0.3s ease;
     pointer-events: none;
-    line-height: 1;
     white-space: nowrap;
 }
 
 /* Show abbreviations when toggle is on */
 .show-abbreviations [class^="tajweed-"]::after {
-    opacity: 0.7;
+    opacity: 1;
 }
 
 /* Abbreviation content and colors matching their rules */
