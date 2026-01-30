@@ -198,7 +198,7 @@ function detectIdghamMutakaribain(text, i) {
                     len = 2;
                 }
 
-                rules.push({index: i, length: len + 3, type: 'tajweed-idgham-mutakaribain'});
+                rules.push({index: i, length: len, type: 'tajweed-idgham-mutakaribain'});
                 return true;
             }
         }
@@ -360,6 +360,16 @@ function detectMadds(text, index) {
                 }
                 if (nextCharIndex < text.length && text[nextCharIndex] === ALIF && !hasVowel(text, nextCharIndex)) {
                     length += (nextCharIndex - index);
+                }
+            }
+
+            //lam-alif fix
+            if (madd.char === ALIF && text[index-2] === LAM) {
+                if (type === 'tajweed-madd-asli' && text[index + 1] === ' ') {
+                    length++;
+                }
+                else if (type === 'tajweed-madd-arid') {
+                    length++;
                 }
             }
 
@@ -615,7 +625,7 @@ function detectSilatHa(text, i) {
 function detectQasr(text, i) {
     if (hasQasr(text, i)) {
         rules.push({index: text.indexOf(QASR), length: 1, type: 'hidden-char'});
-        rules.push({index: i-2, length: 3, type: 'tajweed-qasr'});
+        rules.push({index: i-2, length: 2, type: 'tajweed-qasr'});
     }
 }
 

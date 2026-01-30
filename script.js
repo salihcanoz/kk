@@ -375,6 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const contentDiv = document.createElement('div');
         contentDiv.className = 'quran-content';
+        contentDiv.setAttribute('lang', 'ur');
         let fullTextHTML = '';
 
         if (settings.tajweedMode === 'colors-abbr') {
