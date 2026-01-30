@@ -136,7 +136,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     tajweedSelect.onchange = () => {
         settings.tajweedMode = tajweedSelect.value;
-        loadMushafPage(settings.currentPage);
+        loadMushafPage(settings.currentPage);        
+        if (settings.tajweedMode === "none") {
+            document.getElementById('tajweed-legend').style.display = "none";
+        }
+        else {            
+            document.getElementById('tajweed-legend').style.display = "block";
+        }
     };
 
     langSelect.onchange = () => {
