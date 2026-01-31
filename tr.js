@@ -28,6 +28,7 @@ const translations = {
     idghamMutakaribain: 'Idgham Mutakaribain',
     idghamMithlain: 'Idgham Mithlain',
     ikhfa: 'Ikhfa: Hiding',
+    qasr: 'Qasr: Shortening',
     sajdah: 'Sajdah: Prostration',
     lazim: 'Lazim: Mandatory Stop',
     jaiz: 'Ja\'iz: Permissible Stop',
@@ -83,7 +84,8 @@ const translations = {
     abbrIdghamBila: 'IdB',
     abbrIdghamMutakaribain: 'IdM',
     abbrIdghamMithlain: 'Idm',
-    abbrIkhfa: 'Ik'
+    abbrIkhfa: 'Ik',
+    abbrQasr: 'Qsr'
   },
   nl: {
     title: 'Tadjwied',
@@ -114,6 +116,7 @@ const translations = {
     idghamMutakaribain: 'Idgham Mutakaribein',
     idghamMithlain: 'Idgham Mithlein',
     ikhfa: 'Ikhfa: Verbergen',
+    qasr: 'Qasr: Verkorten',
     sajdah: 'Sajdah: Prostration',
     lazim: 'Lazim: Verplichte stop',
     jaiz: 'Ja\'iz: Toegestane stop',
@@ -170,6 +173,7 @@ const translations = {
     abbrIdghamMutakaribain: 'IdM',
     abbrIdghamMithlain: 'Idm',
     abbrIkhfa: 'Ik',
+    abbrQasr: 'Qsr'
   },
   tr: {
     title: 'Tecvid',
@@ -200,6 +204,7 @@ const translations = {
     idghamMutakaribain: 'İdgam Mütekaribeyn',
     idghamMithlain: 'İdgam Misleyn',
     ikhfa: 'İhfa: Gizleme',
+    qasr: 'Kasr: Kısa okuma',
     sajdah: 'Secde: Tilavet secdesi',
     lazim: 'Lazım: Zorunlu durak',
     jaiz: 'Caiz: İzinli durak',
@@ -255,5 +260,6 @@ const translations = {
     abbrIdghamBila: 'İbG',
     abbrIdghamMithlain: 'İM',
     abbrIkhfa: 'İhf',
+    abbrQasr: 'Qsr'
   }
 };

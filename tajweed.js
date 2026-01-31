@@ -336,8 +336,7 @@ function detectMadds(text, index) {
                 continue
             }
             else if (hasQasr(text, index)) {
-                type = 'tajweed-qasr';
-                prevIndex++;
+                continue;
             }
             else if (hasVowel(text, nextIndex + 1)) {
                 continue;
@@ -385,6 +384,22 @@ function detectMadds(text, index) {
             type: 'tajweed-madd-asli'
         });
         return true;
+    }
+
+    // Check for Madd Munfasil on Ha with Madda (e.g., مَعَهُٓ اَخَاهُ)
+    if (text[index] === 'ه' && hasMadda(text, index)) {
+        let nextIndex = getNextBaseLetterIndex(text, index + 1);
+        if (nextIndex !== -1 && !isSameWord(text, index, nextIndex)) {
+             // Calculate length including diacritics
+             let j = index + 1;
+             while (j < text.length && isDiacritic(text[j])) {
+                 j++;
+             }
+             let len = j - index;
+             
+             rules.push({index: index, length: len, type: 'tajweed-madd-munfasil'});
+             return true;
+        }
     }
 
     return false;
@@ -623,9 +638,12 @@ function detectSilatHa(text, i) {
 }
 
 function detectQasr(text, i) {
-    if (hasQasr(text, i)) {
-        rules.push({index: text.indexOf(QASR), length: 1, type: 'hidden-char'});
-        rules.push({index: i-2, length: 2, type: 'tajweed-qasr'});
+    if (text[i] === QASR) {
+        rules.push({index: i, length: 1, type: 'hidden-char'});
+        let prevIndex = getPreviousBaseLetterIndex(text, i);
+        if (prevIndex !== -1) {
+            rules.push({index: prevIndex, length: i - prevIndex, type: 'tajweed-qasr'});
+        }
     }
 }
 
