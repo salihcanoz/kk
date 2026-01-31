@@ -103,7 +103,7 @@ body {
 }
 
 .quran-content {
-    line-height: 2;
+    line-height: 2.5;
     /* Standard standard ligatures + contextual alternates */
     font-variant-ligatures: common-ligatures contextual;
 
@@ -241,7 +241,11 @@ body {
 }
 
 .tajweed-qasr {
-    color: #888;
+    color: #bbbbbb;
+}
+
+.tajweed-med {
+    color: #e74c3c;
 }
 
 .tajweed-silat-ha {
@@ -306,10 +310,10 @@ body {
 
 [class^="tajweed-"]::after {
     position: absolute;
-    bottom: -.6rem; /* Position below the letter, accounting for descenders */
+    bottom: -15px; ; /* Position below the letter, accounting for descenders */
     left: 50%;
     transform: translateX(-50%);
-    font-size: .6rem;
+    font-size: 10px;
     font-family: sans-serif;
     font-weight: normal;
     opacity: 0;
@@ -342,6 +346,7 @@ body {
     --abbr-idgham-mithlain: "Idm";
     --abbr-ikhfa: "Ik";
     --abbr-qasr: "Qsr";
+    --abbr-med: "Med";
 }
 
 .tajweed-ghunna::after {
@@ -431,6 +436,11 @@ body {
 
 .tajweed-qasr::after {
     content: var(--abbr-qasr);
+    color: inherit;
+}
+
+.tajweed-med::after {
+    content: var(--abbr-med);
     color: inherit;
 }
 
