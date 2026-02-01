@@ -1050,7 +1050,10 @@ const WAQF_CLASSES = {
     '\u06DB': 'waqf-muanaqah', // Mu'anaqah
     '\u0619': 'waqf-jaiz',     // Small high dotless head of khah
     '\u06D9': 'waqf-continue',  // Small high lam-alif
-    '\u08D6': 'waqf-awla'  // Small high ain
+    '\u0617': 'waqf-continue',  // Small high zay
+    '\u08D6': 'waqf-awla',  // Small high ain
+    '\u08D7': 'waqf-continue',  // Small high qaf
+    '\u08DE': 'waqf-awla'  // qif
 };
 
 function isWordBreak(char) {
