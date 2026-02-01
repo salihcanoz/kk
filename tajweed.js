@@ -34,6 +34,11 @@ function detectAllRules(text) {
             continue;
         }
 
+        found = detectSilentAlifLamInAllah(text, i);
+        if (found) {
+            continue;
+        }
+
         found = detectSilentHamzatWasl(text, i);
         if (found) {
             continue;
@@ -134,6 +139,19 @@ function detectSilentAlifLam(text, i) {
         rules.push({index: i, length: 1, type: 'silent-letter'});
         return true;
     }
+    return false;
+}
+
+function detectSilentAlifLamInAllah(text, i) {
+    if (text[i] !== ALIF || text[i + 1] !== LAM || text[i + 2] !== LAM) {
+        return false;
+    }
+    
+    if (hasShadda(text, i + 2)) {
+        rules.push({index: i, length: 2, type: 'silent-letter'});
+        return true;
+    }
+    
     return false;
 }
 
@@ -253,7 +271,7 @@ function detectMadds(text, index) {
 
             if ((madd.char === SUPERSCRIPT_ALIF || madd.char === SUBSCRIPT_ALIF) && nextIndex !== -1) {
                 const nextChar = text[nextIndex];
-                if (nextChar === ALIF || nextChar === '\u0649' || nextChar === ALIF_MAKSURA || nextChar === YA || nextChar === 'و' || nextChar === '\u063D' || nextChar === '\u06D2') {
+                if (nextChar === ALIF || nextChar === ALIF_MAKSURA2 || nextChar === ALIF_MAKSURA || nextChar === YA || nextChar === 'و' || nextChar === '\u063D' || nextChar === '\u06D2') {
                     let isHamza = false;
                     let hasVowel = false;
                     let j = nextIndex + 1;
@@ -310,6 +328,9 @@ function detectMadds(text, index) {
                 if (!isSameWord(text, index, nextIndex)) {
                     type = 'tajweed-madd-munfasil';
                     length++;
+                    if (text[index+2] === ALIF_MAKSURA2) {
+                        length++;
+                    }
                 }
                 else {
                     type = 'tajweed-madd-muttasil';
@@ -321,9 +342,10 @@ function detectMadds(text, index) {
             }
             else if (hasMadda(text, prevIndex)) {
                 type = 'tajweed-madd-munfasil';
-                //length++;
+                if (text[index + 1] === ALIF && !hasVowel(text, index + 1)) {
+                    length++;
+                }
             }
-
             else if (text[nextIndex] === ALIF
                 && text[index] !== 'و'
                 && !hasVowel(text, nextIndex)
@@ -370,6 +392,12 @@ function detectMadds(text, index) {
                 else if (type === 'tajweed-madd-arid') {
                     length++;
                 }
+            }
+
+            if (madd.char === SUPERSCRIPT_ALIF
+                && type === 'tajweed-madd-asli'
+                 && text[index+1] === ALIF_MAKSURA2) {
+                    length++;
             }
 
             rules.push({index: prevIndex, length: length, type: type});
@@ -1147,6 +1175,7 @@ const KASRA = '\u0650';
 
 const ALIF = '\u0627';
 const ALIF_MAKSURA = 'ی';
+const ALIF_MAKSURA2 = '\u0649';
 const SUBSCRIPT_ALIF = '\u0656';
 const SUPERSCRIPT_ALIF = '\u0670';
 const YA = '\u064A';
