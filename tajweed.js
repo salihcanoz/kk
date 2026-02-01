@@ -271,7 +271,7 @@ function detectMadds(text, index) {
             }
             else if (madd.char === WAW) {
                 let prevIndex = getPreviousBaseLetterIndex(text, index);
-                if (text[prevIndex + 1] !== DAMMA ) {
+                if (text[prevIndex + 1] !== DAMMA || text[prevIndex] === '\u0624') {
                     continue;
                 }
             }
@@ -421,7 +421,9 @@ function detectMadds(text, index) {
         }
     }
 
-    if (isMaddAsliHamzaOnWaw(text, index) && !hasQasr(text, index + 1)) {
+    if (isMaddAsliHamzaOnWaw(text, index)
+        && !hasQasr(text, index + 1)
+        && (text[index+2] !== ALIF )) {
         rules.push({
             index: index,
             length: 2,
@@ -688,7 +690,11 @@ function detectQasr(text, i) {
         rules.push({index: i, length: 1, type: 'hidden-char'});
         let prevIndex = getPreviousBaseLetterIndex(text, i);
         if (prevIndex !== -1) {
-            rules.push({index: prevIndex, length: i - prevIndex, type: 'tajweed-qasr'});
+            let length = i - prevIndex;
+            rules.push({index: prevIndex, length: length, type: 'tajweed-qasr'});
+            if (text[i+1] === ALIF && !hasVowel(text, i+1) ) {
+                rules.push({index: i+1, length: 1, type: 'silent-letter'});
+            }
         }
     }
 }
@@ -1051,6 +1057,7 @@ const WAQF_CLASSES = {
     '\u0619': 'waqf-jaiz',     // Small high dotless head of khah
     '\u06D9': 'waqf-continue',  // Small high lam-alif
     '\u0617': 'waqf-continue',  // Small high zay
+    '\u08D5': 'waqf-continue',  // Small high sad
     '\u08D6': 'waqf-awla',  // Small high ain
     '\u08D7': 'waqf-continue',  // Small high qaf
     '\u08DE': 'waqf-awla'  // qif
