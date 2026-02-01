@@ -341,9 +341,6 @@ function detectMadds(text, index) {
             else if (hasQasr(text, index)) {
                 continue;
             }
-            else if (hasVowel(text, nextIndex + 1)) {
-                continue;
-            }
             else if (text[index] === ALIF && hasSukun(text, nextIndex)) { // alif with sukun
                 type = 'silent-letter';
                 prevIndex++;
