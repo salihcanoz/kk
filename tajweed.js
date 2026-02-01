@@ -23,8 +23,6 @@ function detectAllRules(text) {
 
     rules = [];
 
-    text = text.replace('\u06d9', '');
-
     for (let i = 0; i < text.length; i++) {
         let found = detectHurufMuqattaat(text, i);
         if (found) {
@@ -76,6 +74,8 @@ function detectAllRules(text) {
         detectSilatHa(text, i);
 
         detectQasr(text, i);
+
+        detectMed(text, i);
     }
 }
 
@@ -647,6 +647,16 @@ function detectQasr(text, i) {
     }
 }
 
+function detectMed(text, i) {
+    if (text[i] === MED) {
+        rules.push({index: i, length: 1, type: 'hidden-char'});
+        let prevIndex = getPreviousBaseLetterIndex(text, i);
+        if (prevIndex !== -1) {
+            rules.push({index: prevIndex, length: i - prevIndex, type: 'tajweed-med'});
+        }
+    }
+}
+
 function isNunSakinahOrTanween(text, i) {
     const curr = text[i];
 
@@ -1129,6 +1139,7 @@ const KASRATAAN = '\u064D';
 const SHADDA = '\u0651';
 const SUKUN = '\u0652';
 const QASR = '\u08D1';
+const MED = '\u08D2';
 const DAMMA = '\u064F';
 const KASRA = '\u0650';
 
