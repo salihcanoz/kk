@@ -283,7 +283,10 @@ function detectMadds(text, index) {
 
             const shadda = hasShadda(text, nextIndex);
 
-            if (shadda) {
+            if (nextIndex === -1) {
+                type = 'tajweed-madd-asli';
+            }
+            else if (shadda) {
                 if (hasMadda(text, index) || hasMadda(text, prevIndex)) {
                     type = 'tajweed-madd-lazim';
                 }
@@ -463,10 +466,12 @@ function detectMaddLeen(text, i) {
     const found = letterCount === 1 && isAtStop(text, j);
     if (found) {
         let beginIndex = i - 2;
-        const length = 4;
+        let length = 4;
         if (prev === SHADDA) {
             beginIndex--;
+            length++;
         }
+
         rules.push({index: beginIndex, length: length, type: 'tajweed-madd-liin'});
     }
 
