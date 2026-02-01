@@ -81,6 +81,8 @@ function detectAllRules(text) {
         detectQasr(text, i);
 
         detectMed(text, i);
+
+        detectWaqf(text, i);
     }
 }
 
@@ -96,15 +98,12 @@ function buildHtmlFromRules(text) {
         }
 
         output += text.slice(currentIndex, rule.index);
-        if (rule.type.startsWith('waqf-')) {
-            output += ' ';
-        }
         output += `<span class="${rule.type}">${text.slice(rule.index, rule.index + rule.length)}</span>`;
         currentIndex = rule.index + rule.length;
     }
 
     output += text.slice(currentIndex);
-    return output;
+    return output.trimEnd();
 }
 
 function detectSilentAlifLam(text, i) {
@@ -241,6 +240,23 @@ function detectIdghamMutakaribain(text, i) {
 }
 
 function detectMadds(text, index) {
+    // Check for silent alif maksura due to iltiqaa as-sakinain first
+    if ((text[index] === ALIF_MAKSURA || text[index] === ALIF_MAKSURA2) && !hasVowel(text, index)) {
+        if (causesIltiqaSakinayn(text, index)) {
+            rules.push({index: index, length: 1, type: 'silent-letter'});
+            return true;
+        }
+    }
+
+    // Check for silent alif after waw with sukun
+    if (text[index] === ALIF && !hasVowel(text, index)) {
+        let prevIndex = getPreviousBaseLetterIndex(text, index);
+        if (prevIndex !== -1 && text[prevIndex] === WAW && hasSukun(text, prevIndex)) {
+            rules.push({index: index, length: 1, type: 'silent-letter'});
+            return true;
+        }
+    }
+
     for (const madd of maddTypes) {
         if (text[index - 1] && text[index - 1] !== ' ' && text[index] === madd.char && !hasVowel(text, index)) {
 
@@ -687,6 +703,13 @@ function detectMed(text, i) {
     }
 }
 
+function detectWaqf(text, i) {
+    const char = text[i];
+    if (WAQF_CLASSES[char]) {
+        rules.push({index: i, length: 1, type: WAQF_CLASSES[char]});
+    }
+}
+
 function isNunSakinahOrTanween(text, i) {
     const curr = text[i];
 
@@ -1026,7 +1049,8 @@ const WAQF_CLASSES = {
     '\u06D6': 'waqf-continue', // Sala
     '\u06DB': 'waqf-muanaqah', // Mu'anaqah
     '\u0619': 'waqf-jaiz',     // Small high dotless head of khah
-    '\u06D9': 'waqf-continue'  // Small high lam-alif (ۙ)
+    '\u06D9': 'waqf-continue',  // Small high lam-alif
+    '\u08D6': 'waqf-awla'  // Small high ain
 };
 
 function isWordBreak(char) {
@@ -1087,8 +1111,8 @@ function startsWithAl(text, index) {
 }
 
 function causesIltiqaSakinayn(text, index) {
-    // only relevant for madd letters
-    if (text[index] !== 'و' && text[index] !== 'ي' && text[index] !== ALIF) {
+    // only relevant for madd letters and alif maksura
+    if (text[index] !== 'و' && text[index] !== 'ي' && text[index] !== ALIF && text[index] !== ALIF_MAKSURA && text[index] !== ALIF_MAKSURA2) {
         return false;
     }
 

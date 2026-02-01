@@ -265,11 +265,19 @@ body {
 
 /* Specific colors based on your legend */
 .waqf-lazim, .waqf-awla, .waqf-jaiz, .waqf-muanaqah {
+    font-size: 1em;
+    position: relative;
     color: red; /* Stopping signs in Red */
+    padding-right: 10px;
+    font-family: "Traditional Arabic";
 }
 
 .waqf-continue {
-    color: green; /* Sila (Better to continue) in Green */
+    font-size: 1em;
+    position: relative;
+    color: green; /* Stopping signs in Red */
+    padding-right: 10px;
+    font-family: "Traditional Arabic";
 }
 
 .show-abbreviations {
@@ -278,22 +286,27 @@ body {
 
 /* Specific colors for each waqf type */
 .waqf-lazim {
+    position: relative;
     color: #D9534F; /* Red - Mandatory Stop */
 }
 
 .waqf-jaiz {
+    position: relative;
     color: #D9534F; /* Red - Permissible Stop */
 }
 
 .waqf-continue {
+    position: relative;
     color: #27ae60; /* Green - Better to Continue */
 }
 
 .waqf-awla {
+    position: relative;
     color: #D9534F; /* Red - Better to Stop */
 }
 
 .waqf-muanaqah {
+    position: relative;
     color: #D9534F; /* Red - Stop at one spot */
 }
 
