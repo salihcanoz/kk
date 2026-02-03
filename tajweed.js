@@ -1148,7 +1148,7 @@ function isVowelWithoutSukun(char) {
 }
 
 function isDiacritic(char) {
-    return /[\u064B-\u065F\u0670\u0653]/.test(char);
+    return /[\u064B-\u0653\u0656-\u065F\u0670]/.test(char);
 }
 
 function isExceptionToIdgham(text, noonIndex, yawawIndex) {
@@ -1241,3 +1241,6 @@ const YANMOU_LETTERS = ['ی', 'ي', 'ن', 'م', 'و'];
 const IDGHAM_BILA_GHUNNA_LETTERS = ['ل', 'ر'];
 const IKHFA_LETTERS = ['ت', 'ث', 'ج', 'د', 'ذ', 'ز', 'س', 'ش', 'ص', 'ض', 'ط', 'ظ', 'ف', 'ق', 'ك'];
 const IQLAB_LETTERS = ['ب'];
+
+
+alert(isDiacritic('\u0654'))
