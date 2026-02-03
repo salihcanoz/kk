@@ -1241,6 +1241,3 @@ const YANMOU_LETTERS = ['ی', 'ي', 'ن', 'م', 'و'];
 const IDGHAM_BILA_GHUNNA_LETTERS = ['ل', 'ر'];
 const IKHFA_LETTERS = ['ت', 'ث', 'ج', 'د', 'ذ', 'ز', 'س', 'ش', 'ص', 'ض', 'ط', 'ظ', 'ف', 'ق', 'ك'];
 const IQLAB_LETTERS = ['ب'];
-
-
-alert(isDiacritic('\u0654'))
