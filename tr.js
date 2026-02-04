@@ -265,7 +265,7 @@ const translations = {
     abbrIdghamBila: 'İbG',
     abbrIdghamMithlain: 'İM',
     abbrIkhfa: 'İhf',
-    abbrQasr: 'Qsr',
+    abbrQasr: 'Ksr',
     abbrMed: 'Med'
   }
 };

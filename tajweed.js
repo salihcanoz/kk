@@ -260,14 +260,14 @@ function detectMadds(text, index) {
     for (const madd of maddTypes) {
         if (text[index - 1] && text[index - 1] !== ' ' && text[index] === madd.char && !hasVowel(text, index)) {
 
-            if (madd.char === ALIF) {
+            if (madd.char === ALIF) {                
                 let prevIndex = getPreviousBaseLetterIndex(text, index);
                 if (prevIndex !== -1 && text[prevIndex] === 'و' && !hasVowel(text, prevIndex)) {
                     continue;
                 }
                 if (text[index + 1] === SUPERSCRIPT_ALIF) {
                    continue;
-                }
+                }                              
             }
             else if (madd.char === WAW) {
                 let prevIndex = getPreviousBaseLetterIndex(text, index);
@@ -536,10 +536,10 @@ function detectNunSakinah(text, i) {
 
     let searchIndex = i + triggerLength;
 
-    // For tanween, check if followed by alif maksura (possibly with diacritics in between)
+    // For tanween, check if followed by alif maksura (possibly with diacritics/hamza in between)
     if (TANWEEN.includes(text[i])) {
         let j = i + triggerLength;
-        while (j < text.length && isDiacritic(text[j])) {
+        while (j < text.length && (isDiacritic(text[j]) || text[j] === 'ء' || text[j] === 'ٔ' || text[j] === 'ٕ')) {
             j++;
         }
         if (text[j] === 'ا' || text[j] === 'ى') {
