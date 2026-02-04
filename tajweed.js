@@ -111,7 +111,7 @@ function detectSilentAlifLam(text, i) {
         return false;
     }
 
-    if (!isWordStart(text, i)) {
+    if (!isWordStart(text, i) && !isPrefixedAlifLamStart(text, i)) {
         return false;
     }
 
@@ -139,6 +139,41 @@ function detectSilentAlifLam(text, i) {
         return true;
     }
     return false;
+}
+
+function isPrefixedAlifLamStart(text, index) {
+    if (!isAlifLamAfterPrefix(text, index)) {
+        return false;
+    }
+
+    const prevIndex = getPreviousBaseLetterIndex(text, index);
+    if (prevIndex === -1) {
+        return false;
+    }
+
+    return hasVowelWithoutSukun(text, prevIndex);
+}
+
+function isAlifLamAfterPrefix(text, index) {
+    const prevIndex = getPreviousBaseLetterIndex(text, index);
+    if (prevIndex === -1) return false;
+
+    const prev = text[prevIndex];
+    if (!ALIF_LAM_PREFIXES.includes(prev)) return false;
+
+    return isWordStart(text, prevIndex);
+}
+
+function isHamzatWaslAlifLam(text, index) {
+    if (text[index] !== ALIF || text[index + 1] !== LAM) {
+        return false;
+    }
+
+    if (hasHamzaAfter(text, index)) {
+        return false;
+    }
+
+    return isWordStart(text, index) || isAlifLamAfterPrefix(text, index);
 }
 
 function detectSilentAlifLamInAllah(text, i) {
@@ -248,10 +283,10 @@ function detectMadds(text, index) {
         }
     }
 
-    // Check for silent alif after waw with sukun
+    // Check for silent alif after waw (including implicit sukun on waw)
     if (text[index] === ALIF && !hasVowel(text, index)) {
         let prevIndex = getPreviousBaseLetterIndex(text, index);
-        if (prevIndex !== -1 && text[prevIndex] === WAW && hasSukun(text, prevIndex)) {
+        if (prevIndex !== -1 && text[prevIndex] === WAW && (hasSukun(text, prevIndex) || !hasVowel(text, prevIndex)) && isWordEndAfter(text, index)) {
             rules.push({index: index, length: 1, type: 'silent-letter'});
             return true;
         }
@@ -260,7 +295,10 @@ function detectMadds(text, index) {
     for (const madd of maddTypes) {
         if (text[index - 1] && text[index - 1] !== ' ' && text[index] === madd.char && !hasVowel(text, index)) {
 
-            if (madd.char === ALIF) {                
+            if (madd.char === ALIF) {
+                if (isHamzatWaslAlifLam(text, index)) {
+                    continue;
+                }
                 let prevIndex = getPreviousBaseLetterIndex(text, index);
                 if (prevIndex !== -1 && text[prevIndex] === 'و' && !hasVowel(text, prevIndex)) {
                     continue;
@@ -284,6 +322,7 @@ function detectMadds(text, index) {
             let length = index - prevIndex + madd.length;
             let type = madd.type;
             let nextIndex = getNextBaseLetterIndex(text, index + madd.length);
+
 
             if ((madd.char === SUPERSCRIPT_ALIF || madd.char === SUBSCRIPT_ALIF) && nextIndex !== -1) {
                 const nextChar = text[nextIndex];
@@ -385,9 +424,11 @@ function detectMadds(text, index) {
                 length--;
             }
             else if (causesIltiqaSakinayn(text, index)) {
-                type = 'silent-letter';
-                prevIndex++;
-                //length += 2;
+                if (text[index] === ALIF || text[index] === ALIF_MAKSURA || text[index] === ALIF_MAKSURA2) {
+                    type = 'silent-letter';
+                    prevIndex++;
+                    //length += 2;
+                }
             }
 
             if (madd.char === 'و' && (type === 'tajweed-madd-asli' || type === 'tajweed-madd-arid')) {
@@ -845,6 +886,19 @@ function hasVowel(text, index) {
     return false;
 }
 
+function hasVowelWithoutSukun(text, index) {
+    for (let i = index + 1; i < text.length; i++) {
+        const c = text[i];
+        if (!isDiacritic(c)) {
+            break;
+        }
+        if (c === FATHA || c === DAMMA || c === KASRA || c === FATHATAAN || c === DAMMATAAN || c === KASRATAAN) {
+            return true;
+        }
+    }
+    return false;
+}
+
 function hasSukun(text, index) {
     if (!text || index < 0 || index >= text.length - 1) {
         return false;
@@ -1067,6 +1121,23 @@ function isWordBreak(char) {
     return /\s/.test(char) || Object.keys(WAQF_CLASSES).includes(char) || char === AYAH_END;
 }
 
+function isWordEndAfter(text, index) {
+    if (!text || index < 0 || index >= text.length) {
+        return false;
+    }
+
+    let i = index + 1;
+    while (i < text.length && isDiacritic(text[i])) {
+        i++;
+    }
+
+    if (i >= text.length) {
+        return true;
+    }
+
+    return isWordBreak(text[i]);
+}
+
 function isWordStart(text, index) {
     if (!text || index < 0 || index >= text.length) {
         return false;
@@ -1214,6 +1285,7 @@ const SUBSCRIPT_ALIF = '\u0656';
 const SUPERSCRIPT_ALIF = '\u0670';
 const YA = '\u064A';
 const WAW = 'و';
+const ALIF_LAM_PREFIXES = [WAW, 'ف', 'ب', 'ك', 'ل', 'س', 'ک'];
 
 const LAM = '\u0644';
 const MEEM = '\u0645';
