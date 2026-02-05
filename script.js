@@ -289,6 +289,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.documentElement.style.setProperty('--abbr-ikhfa', `"${t.abbrIkhfa || 'Ik'}"`);
         document.documentElement.style.setProperty('--abbr-qasr', `"${t.abbrQasr || 'Qsr'}"`);
         document.documentElement.style.setProperty('--abbr-med', `"${t.abbrMed || 'Med'}"`);
+        document.documentElement.style.setProperty('--abbr-tashiil', `"${t.abbrTashiil || 'Tashiil'}"`);
+        document.documentElement.style.setProperty('--abbr-sakta', `"${t.abbrSakta || 'Sakta'}"`);
+        document.documentElement.style.setProperty('--abbr-ishmam', `"${t.abbrIshmam || 'Ishmam'}"`);
     }
 
     // Change font size while respecting min/max limits.

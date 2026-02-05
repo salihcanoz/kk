@@ -92,6 +92,12 @@ function detectAllRules(text) {
 
         detectMed(text, i);
 
+        detectTashiil(text, i);
+
+        detectSakta(text, i);
+
+        detectIshmam(text, i);
+
         detectWaqf(text, i);
     }
 }
@@ -787,6 +793,36 @@ function detectMed(text, i) {
     }
 }
 
+function detectTashiil(text, i) {
+    if (text[i] === TASHIIL) {
+        addRule(i, 1, 'hidden-char');
+        const prevIndex = getPreviousBaseLetterIndex(text, i);
+        if (prevIndex !== -1) {
+            addRule(prevIndex, i - prevIndex, 'tajweed-tashiil');
+        }
+    }
+}
+
+function detectSakta(text, i) {
+    if (text[i] === SAKTA) {
+        addRule(i, 1, 'hidden-char');
+        const prevIndex = getPreviousBaseLetterIndex(text, i);
+        if (prevIndex !== -1) {
+            addRule(prevIndex, i - prevIndex, 'tajweed-sakta');
+        }
+    }
+}
+
+function detectIshmam(text, i) {
+    if (text[i] === ISHMAM) {
+        addRule(i, 1, 'hidden-char');
+        const prevIndex = getPreviousBaseLetterIndex(text, i);
+        if (prevIndex !== -1) {
+            addRule(prevIndex, i - prevIndex, 'tajweed-ishmam');
+        }
+    }
+}
+
 function detectWaqf(text, i) {
     const char = text[i];
     if (WAQF_CLASSES[char]) {
@@ -1349,6 +1385,10 @@ const SHADDA = '\u0651';
 const SUKUN = '\u0652';
 const QASR = '\u08D1';
 const MED = '\u08D2';
+const SAKTA = '\u06DC';
+const ISHMAM = '\u06EB';
+const TASHIIL = '\u06EC';
+
 const DAMMA = '\u064F';
 const KASRA = '\u0650';
 

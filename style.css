@@ -329,6 +329,18 @@ body {
     color: #e74c3c;
 }
 
+.tajweed-tashiil {
+    color: inherit;
+}
+
+.tajweed-sakta {
+    color: inherit;
+}
+
+.tajweed-ishmam {
+    color: inherit;
+}
+
 .tajweed-silat-ha {
     color: #7ea24b;
 }
@@ -444,6 +456,9 @@ body {
     --abbr-ikhfa: "Ik";
     --abbr-qasr: "Qsr";
     --abbr-med: "Med";
+    --abbr-tashiil: "Tashiil";
+    --abbr-sakta: "Sakta";
+    --abbr-ishmam: "Ishmam";
 }
 
 .tajweed-ghunna::after {
@@ -538,6 +553,21 @@ body {
 
 .tajweed-med::after {
     content: var(--abbr-med);
+    color: inherit;
+}
+
+.tajweed-tashiil::after {
+    content: var(--abbr-tashiil);
+    color: inherit;
+}
+
+.tajweed-sakta::after {
+    content: var(--abbr-sakta);
+    color: inherit;
+}
+
+.tajweed-ishmam::after {
+    content: var(--abbr-ishmam);
     color: inherit;
 }
 

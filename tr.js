@@ -30,6 +30,9 @@ const translations = {
     ikhfa: 'Ikhfa: Hiding',
     qasr: 'Qasr: Shortening',
     med: 'Med',
+    tashiil: 'Tashiel (Easy)',
+    sakta: 'Sakta (Interruption)',
+    ishmam: 'Ishmam',
     sajdah: 'Sajdah: Prostration',
     lazim: 'Lazim: Mandatory Stop',
     jaiz: 'Ja\'iz: Permissible Stop',
@@ -87,7 +90,10 @@ const translations = {
     abbrIdghamMithlain: 'Idm',
     abbrIkhfa: 'Ik',
     abbrQasr: 'Qsr',
-    abbrMed: 'Med'
+    abbrMed: 'Med',
+    abbrTashiil: 'Tashiil',
+    abbrSakta: 'Sakta',
+    abbrIshmam: 'Ishmam'
   },
   nl: {
     title: 'Tadjwied',
@@ -120,6 +126,9 @@ const translations = {
     ikhfa: 'Ikhfa: Verbergen',
     qasr: 'Qasr: Verkorten',
     med: 'Med',
+    tashiil: 'Tashiel (Gemakkelijk)',
+    sakta: 'Sakta (Stilte)',
+    ishmam: 'Ishmam',
     sajdah: 'Sajdah: Prostration',
     lazim: 'Lazim: Verplichte stop',
     jaiz: 'Ja\'iz: Toegestane stop',
@@ -177,7 +186,10 @@ const translations = {
     abbrIdghamMithlain: 'Idm',
     abbrIkhfa: 'Ik',
     abbrQasr: 'Qsr',
-    abbrMed: 'Med'
+    abbrMed: 'Med',
+    abbrTashiil: 'Tashiel',
+    abbrSakta : 'Sakta',
+    abbrIshmam: 'Isjmam'
   },
   tr: {
     title: 'Tecvid',
@@ -210,6 +222,9 @@ const translations = {
     ikhfa: 'İhfa: Gizleme',
     qasr: 'Kasr: Kısa okuma',
     med: 'Med',
+    tashiil: 'Tashil (Kolay)',
+    sakta:'Sekte',
+    ishmam: 'İşmam',
     sajdah: 'Secde: Tilavet secdesi',
     lazim: 'Lazım: Zorunlu durak',
     jaiz: 'Caiz: İzinli durak',
@@ -266,6 +281,9 @@ const translations = {
     abbrIdghamMithlain: 'İM',
     abbrIkhfa: 'İhf',
     abbrQasr: 'Ksr',
-    abbrMed: 'Med'
+    abbrMed: 'Med',
+    abbrTashiil: 'Tashil',
+    abbrSakta: 'Sekte',
+    abbrIshmam: 'İşmam'
   }
 };
