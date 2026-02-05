@@ -309,7 +309,12 @@ function detectMadds(text, index) {
             }
             else if (madd.char === WAW) {
                 let prevIndex = getPreviousBaseLetterIndex(text, index);
-                if (isWawJamaah(text, index) && !hasMadda(text, index) && !hasMadda(text, prevIndex)) {
+                if (
+                    isWawJamaah(text, index) &&
+                    !hasMadda(text, index) &&
+                    !hasMadda(text, prevIndex) &&
+                    nextWordStartsWithHamzatWasl(text, index)
+                ) {
                     continue;
                 }
                 if (text[prevIndex + 1] !== DAMMA || text[prevIndex] === '\u0624') {
@@ -1165,6 +1170,38 @@ function isWawJamaah(text, index) {
     }
 
     return isWordEndAfter(text, nextIndex);
+}
+
+function nextWordStartsWithHamzatWasl(text, wawIndex) {
+    const alifIndex = getNextBaseLetterIndex(text, wawIndex + 1);
+    if (alifIndex === -1 || text[alifIndex] !== ALIF) {
+        return false;
+    }
+
+    let i = alifIndex + 1;
+    while (i < text.length && isDiacritic(text[i])) {
+        i++;
+    }
+
+    // Must be at word boundary after the alif of waw jamaah
+    if (i < text.length && !isWordBreak(text[i])) {
+        return false;
+    }
+
+    let j = i;
+    while (j < text.length && isWordBreak(text[j])) {
+        j++;
+    }
+
+    if (j >= text.length) {
+        return false;
+    }
+
+    if (text[j] === ALIF) {
+        return true;
+    }
+
+    return startsWithAl(text, j);
 }
 
 function isWordStart(text, index) {
