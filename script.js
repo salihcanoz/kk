@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Cache DOM references for faster access and cleaner code.
     const juzSelect = document.getElementById('juzSelect');
     const surahSelect = document.getElementById('surahSelect');
     const pageSelect = document.getElementById('pageSelect');
@@ -7,6 +8,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const nextBtn = document.getElementById('nextBtn');
     const pageInfo = document.getElementById('pageInfo');
     const appTitle = document.getElementById('appTitle');
+
+    // --- Constants ---
+    const FONT_SIZE_MIN = 30;
+    const FONT_SIZE_MAX = 150;
+    const RTL_LANGS = new Set(['ar', 'fa', 'ur', 'he']);
+    const LANG_OPTIONS = [
+        {code: 'tr', name: '\u{1F1F9}\u{1F1F7} Türkçe'},
+        {code: 'nl', name: '\u{1F1F3}\u{1F1F1} Nederlands'},
+        {code: 'en', name: '\u{1F1EC}\u{1F1E7} English'}
+    ];
+    const FONT_OPTIONS = [
+        {name: 'Lateef', value: "'Lateef', serif"},
+        {name: 'Noto Naskh', value: "'Noto Naskh Arabic', serif"},
+        {name: 'Scheherazade', value: "'Scheherazade New', serif"}
+    ];
+    const TAJWEED_MODES = [
+        {value: 'none', key: 'tajweedNone', default: 'No tajweed'},
+        {value: 'colors', key: 'tajweedColors', default: 'Colors'},
+        {value: 'colors-abbr', key: 'tajweedColorsAndAbbr', default: 'Colors and Abbrevations'}
+    ];
 
     // --- Settings ---
     const defaultSettings = {
@@ -19,10 +40,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let settings = {...defaultSettings};
 
+    // Persist user preferences to localStorage.
     function saveSettings() {
         localStorage.setItem('quranReaderSettings', JSON.stringify(settings));
     }
 
+    // Restore saved preferences if they exist.
     function loadSettings() {
         const savedSettings = localStorage.getItem('quranReaderSettings');
         if (savedSettings) {
@@ -32,9 +55,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Initialization ---
     loadSettings();
-    // Use the translations object from tr.js if available, otherwise fallback or define here.
-    // Assuming tr.js defines a global 'translations' object.
-    let t = (typeof translations !== 'undefined' && translations[settings.language]) ? translations[settings.language] : (typeof translations !== 'undefined' ? translations.en : {});
+
+    // Use the translations object from tr.js if available, otherwise fallback to English.
+    function getTranslationsForLanguage(lang) {
+        if (typeof translations === 'undefined') return {};
+        return translations[lang] || translations.en || {};
+    }
+
+    let t = getTranslationsForLanguage(settings.language);
 
     // Load fonts from Google Fonts
     const fontLink = document.createElement('link');
@@ -42,18 +70,13 @@ document.addEventListener('DOMContentLoaded', () => {
     fontLink.href = 'https://fonts.googleapis.com/css2?family=Lateef:wght@400;700&family=Noto+Naskh+Arabic:wght@400;700&family=Scheherazade+New:wght@400;700&display=swap';
     document.head.appendChild(fontLink);
 
-    // --- UI Controls ---
+    // --- UI Controls (navbar) ---
     const settingsContainer = document.createElement('div');
     settingsContainer.className = 'settings-container';
 
     // Language Dropdown
     const langSelect = document.createElement('select');
-    const languages = [
-        {code: 'tr', name: '\u{1F1F9}\u{1F1F7} Türkçe'},
-        {code: 'nl', name: '\u{1F1F3}\u{1F1F1} Nederlands'},
-        {code: 'en', name: '\u{1F1EC}\u{1F1E7} English'}
-    ];
-    languages.forEach(lang => {
+    LANG_OPTIONS.forEach(lang => {
         const option = document.createElement('option');
         option.value = lang.code;
         option.textContent = lang.name;
@@ -70,12 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Font Type Dropdown
     const fontSelect = document.createElement('select');
-    const fonts = [
-        {name: 'Lateef', value: "'Lateef', serif"},
-        {name: 'Noto Naskh', value: "'Noto Naskh Arabic', serif"},
-        {name: 'Scheherazade', value: "'Scheherazade New', serif"}
-    ];
-    fonts.forEach(font => {
+    FONT_OPTIONS.forEach(font => {
         const option = document.createElement('option');
         option.value = font.value;
         option.textContent = font.name;
@@ -86,12 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Tajweed Display Mode Dropdown
     const tajweedSelect = document.createElement('select');
     tajweedSelect.id = 'tajweedMode';
-    const tajweedModes = [
-        {value: 'none', key: 'tajweedNone', default: 'No tajweed'},
-        {value: 'colors', key: 'tajweedColors', default: 'Colors'},
-        {value: 'colors-abbr', key: 'tajweedColorsAndAbbr', default: 'Colors and Abbrevations'}
-    ];
-    tajweedModes.forEach(mode => {
+    TAJWEED_MODES.forEach(mode => {
         const option = document.createElement('option');
         option.value = mode.value;
         option.textContent = (t && t[mode.key]) ? t[mode.key] : mode.default;
@@ -112,47 +125,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Event Listeners ---
-    decreaseFontBtn.onclick = () => {
-        if (settings.fontSize > 30) {
-            settings.fontSize *= 0.8;
-            display.style.fontSize = settings.fontSize + 'px';
-            saveSettings();
-        }
-    };
-
-    increaseFontBtn.onclick = () => {
-        if (settings.fontSize < 150) {
-            settings.fontSize *= 1.2;
-            display.style.fontSize = settings.fontSize + 'px';
-            saveSettings();
-        }
-    };
+    decreaseFontBtn.onclick = () => adjustFontSize(0.8);
+    increaseFontBtn.onclick = () => adjustFontSize(1.2);
 
     fontSelect.onchange = () => {
         settings.fontFamily = fontSelect.value;
-        display.style.fontFamily = settings.fontFamily;
+        applyDisplaySettings();
         saveSettings();
     };
 
     tajweedSelect.onchange = () => {
         settings.tajweedMode = tajweedSelect.value;
-        loadMushafPage(settings.currentPage);        
-        if (settings.tajweedMode === "none") {
-            document.getElementById('tajweed-legend').style.display = "none";
-        }
-        else {            
-            document.getElementById('tajweed-legend').style.display = "block";
-        }
+        applyDisplaySettings();
+        setLegendVisibility();
+        loadMushafPage(settings.currentPage);
     };
 
-    langSelect.onchange = () => {
-        settings.language = langSelect.value;
-        if (typeof translations !== 'undefined') {
-            t = translations[settings.language];
-        }
-        saveSettings();
-        updateUIText();
-    };
+    langSelect.onchange = () => setLanguage(langSelect.value);
 
     // --- Swipe Gestures for Mobile ---
     let touchStartX = 0;
@@ -171,15 +160,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const swipeThreshold = 150; // Minimum distance for a swipe
         if (touchEndX < touchStartX - swipeThreshold) {
             // Swiped left (RTL: Previous Page)
-            if (settings.currentPage > 0) {
-                loadMushafPage(settings.currentPage - 1);
-            }
+            goToPage(settings.currentPage - 1);
         }
         if (touchEndX > touchStartX + swipeThreshold) {
             // Swiped right (RTL: Next Page)
-            if (settings.currentPage < totalMushafPages - 1) {
-                loadMushafPage(settings.currentPage + 1);
-            }
+            goToPage(settings.currentPage + 1);
         }
     }
 
@@ -187,15 +172,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('keydown', (event) => {
         if (event.key === 'ArrowLeft') {
             // Left arrow key (RTL: Next Page)
-            if (settings.currentPage < totalMushafPages - 1) {
-                loadMushafPage(settings.currentPage + 1);
-            }
+            goToPage(settings.currentPage + 1);
         }
         else if (event.key === 'ArrowRight') {
             // Right arrow key (RTL: Previous Page)
-            if (settings.currentPage > 0) {
-                loadMushafPage(settings.currentPage - 1);
-            }
+            goToPage(settings.currentPage - 1);
         }
     });
 
@@ -237,7 +218,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (typeof quranRawData !== 'undefined') {
         processQuranData();
-        populateSurahDropdown();
         updateUIText();
     }
     else {
@@ -245,6 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
         display.innerHTML = `<p style="text-align:center; color: red;">Error loading Quran data. Please ensure q.js is loaded and defines 'quranRawData'.</p>`;
     }
 
+    // Build a page -> verses index for fast lookup while rendering.
     function processQuranData() {
         quranByPage = {};
         if (!quranRawData || !quranRawData.surahs) return;
@@ -264,14 +245,87 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function updateUIText() {
-        // Apply loaded settings to UI
+    // Keep font and tajweed display settings in sync with the UI.
+    function applyDisplaySettings() {
         display.style.fontFamily = settings.fontFamily;
-        display.style.fontSize = settings.fontSize + 'px';
-        display.classList.remove('show-abbreviations');
-        if (settings.tajweedMode === 'colors-abbr') {
-            display.classList.add('show-abbreviations');
-        }
+        display.style.fontSize = `${settings.fontSize}px`;
+        display.classList.toggle('show-abbreviations', settings.tajweedMode === 'colors-abbr');
+    }
+
+    // Show/hide legend based on tajweed mode.
+    function setLegendVisibility() {
+        if (!legend) return;
+        legend.style.display = settings.tajweedMode === 'none' ? 'none' : 'block';
+    }
+
+    // Refresh tajweed dropdown labels when language changes.
+    function updateTajweedSelectLabels() {
+        if (!tajweedSelect) return;
+        TAJWEED_MODES.forEach(mode => {
+            const option = Array.from(tajweedSelect.options).find((item) => item.value === mode.value);
+            if (option) {
+                option.textContent = (t && t[mode.key]) ? t[mode.key] : mode.default;
+            }
+        });
+    }
+
+    // Update CSS variables used for abbreviation overlays.
+    function updateAbbreviationVariables() {
+        if (!t) return;
+        document.documentElement.style.setProperty('--abbr-ghunna', `"${t.abbrGhunna || 'Gh'}"`);
+        document.documentElement.style.setProperty('--abbr-madd-muttasil', `"${t.abbrMaddMuttasil || 'MM'}"`);
+        document.documentElement.style.setProperty('--abbr-madd-munfasil', `"${t.abbrMaddMunfasil || 'Mn'}"`);
+        document.documentElement.style.setProperty('--abbr-madd-arid', `"${t.abbrMaddArid || 'A'}"`);
+        document.documentElement.style.setProperty('--abbr-madd-liin', `"${t.abbrMaddLiin || 'ML'}"`);
+        document.documentElement.style.setProperty('--abbr-silat-ha', `"${t.abbrSilatHa || 'S'}"`);
+        document.documentElement.style.setProperty('--abbr-madd-lazim', `"${t.abbrMaddLazim || 'Lz'}"`);
+        document.documentElement.style.setProperty('--abbr-madd-asli', `"${t.abbrMaddAsli || 'MA'}"`);
+        document.documentElement.style.setProperty('--abbr-qalqalah', `"${t.abbrQalqalah || 'Q'}"`);
+        document.documentElement.style.setProperty('--abbr-iqlab', `"${t.abbrIqlab || 'Iq'}"`);
+        document.documentElement.style.setProperty('--abbr-idgham-ghunna', `"${t.abbrIdghamGhunna || 'IdG'}"`);
+        document.documentElement.style.setProperty('--abbr-idgham-bila', `"${t.abbrIdghamBila || 'IdB'}"`);
+        document.documentElement.style.setProperty('--abbr-idgham-mutakaribain', `"${t.abbrIdghamMutakaribain || 'IdM'}"`);
+        document.documentElement.style.setProperty('--abbr-idgham-mithlain', `"${t.abbrIdghamMithlain || 'Idm'}"`);
+        document.documentElement.style.setProperty('--abbr-ikhfa', `"${t.abbrIkhfa || 'Ik'}"`);
+        document.documentElement.style.setProperty('--abbr-qasr', `"${t.abbrQasr || 'Qsr'}"`);
+        document.documentElement.style.setProperty('--abbr-med', `"${t.abbrMed || 'Med'}"`);
+    }
+
+    // Change font size while respecting min/max limits.
+    function adjustFontSize(multiplier) {
+        const nextSize = settings.fontSize * multiplier;
+        if (nextSize < FONT_SIZE_MIN || nextSize > FONT_SIZE_MAX) return;
+        settings.fontSize = nextSize;
+        applyDisplaySettings();
+        saveSettings();
+    }
+
+    // Update UI language and refresh the UI text.
+    function setLanguage(lang) {
+        settings.language = lang;
+        t = getTranslationsForLanguage(lang);
+        saveSettings();
+        updateUIText();
+    }
+
+    // Centralized page navigation with bounds checking.
+    function goToPage(pageIndex) {
+        if (pageIndex < 0 || pageIndex >= totalMushafPages) return;
+        loadMushafPage(pageIndex);
+    }
+
+    // Keep <html lang/dir> accurate for accessibility.
+    function updateDocumentLanguage() {
+        const lang = settings.language || 'en';
+        document.documentElement.lang = lang;
+        document.documentElement.dir = RTL_LANGS.has(lang) ? 'rtl' : 'ltr';
+    }
+
+    // Apply translations and re-render UI text/labels.
+    function updateUIText() {
+        updateDocumentLanguage();
+        applyDisplaySettings();
+        setLegendVisibility();
 
         // Update translatable text
         if (t) {
@@ -283,51 +337,16 @@ document.addEventListener('DOMContentLoaded', () => {
             increaseFontBtn.title = t.increaseFont;
             prevBtn.textContent = t.nextPage;
             nextBtn.textContent = t.prevPage;
-
-            const tajweedSelect = document.getElementById('tajweedMode');
-            const tajweedModes = [
-                {value: 'none', key: 'tajweedNone', default: 'No tajweed'},
-                {value: 'colors', key: 'tajweedColors', default: 'Colors'},
-                {value: 'colors-abbr', key: 'tajweedColorsAndAbbr', default: 'Colors and Abbrevations'}
-            ];
-            if (tajweedSelect) {
-                for (let i = 0; i < tajweedSelect.options.length; i++) {
-                    const option = tajweedSelect.options[i];
-                    const mode = tajweedModes.find(m => m.value === option.value);
-                    if (mode) {
-                        option.textContent = t[mode.key] || mode.default;
-                    }
-                }
-            }
         }
 
+        updateTajweedSelectLabels();
         populateSurahDropdown();
         populateJuzDropdown();
         populatePageDropdown();
 
         updateLegend();
         loadMushafPage(settings.currentPage);
-
-        // Update CSS variables for abbreviations
-        if (t) {
-            document.documentElement.style.setProperty('--abbr-ghunna', `"${t.abbrGhunna || 'Gh'}"`);
-            document.documentElement.style.setProperty('--abbr-madd-muttasil', `"${t.abbrMaddMuttasil || 'MM'}"`);
-            document.documentElement.style.setProperty('--abbr-madd-munfasil', `"${t.abbrMaddMunfasil || 'Mn'}"`);
-            document.documentElement.style.setProperty('--abbr-madd-arid', `"${t.abbrMaddArid || 'A'}"`);
-            document.documentElement.style.setProperty('--abbr-madd-liin', `"${t.abbrMaddLiin || 'ML'}"`);
-            document.documentElement.style.setProperty('--abbr-silat-ha', `"${t.abbrSilatHa || 'S'}"`);
-            document.documentElement.style.setProperty('--abbr-madd-lazim', `"${t.abbrMaddLazim || 'Lz'}"`);
-            document.documentElement.style.setProperty('--abbr-madd-asli', `"${t.abbrMaddAsli || 'MA'}"`);
-            document.documentElement.style.setProperty('--abbr-qalqalah', `"${t.abbrQalqalah || 'Q'}"`);
-            document.documentElement.style.setProperty('--abbr-iqlab', `"${t.abbrIqlab || 'Iq'}"`);
-            document.documentElement.style.setProperty('--abbr-idgham-ghunna', `"${t.abbrIdghamGhunna || 'IdG'}"`);
-            document.documentElement.style.setProperty('--abbr-idgham-bila', `"${t.abbrIdghamBila || 'IdB'}"`);
-            document.documentElement.style.setProperty('--abbr-idgham-mutakaribain', `"${t.abbrIdghamMutakaribain || 'IdM'}"`);
-            document.documentElement.style.setProperty('--abbr-idgham-mithlain', `"${t.abbrIdghamMutakaribain || 'Idm'}"`);
-            document.documentElement.style.setProperty('--abbr-ikhfa', `"${t.abbrIkhfa || 'Ik'}"`);
-            document.documentElement.style.setProperty('--abbr-qasr', `"${t.abbrQasr || 'Qsr'}"`);
-            document.documentElement.style.setProperty('--abbr-med', `"${t.abbrMed || 'Med'}"`);
-        }
+        updateAbbreviationVariables();
     }
 
     function populateSurahDropdown() {
@@ -376,6 +395,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return Math.floor((page - 1) / 20) + 1;
     }
 
+    // Render the selected page (0-based index).
     function loadMushafPage(pageIndex) {
         display.innerHTML = '';
         const pageNum = pageIndex + 1;
@@ -385,13 +405,6 @@ document.addEventListener('DOMContentLoaded', () => {
         contentDiv.className = 'quran-content';
         contentDiv.setAttribute('lang', 'ur');
         let fullTextHTML = '';
-
-        if (settings.tajweedMode === 'colors-abbr') {
-            display.classList.add('show-abbreviations');
-        }
-        else {
-            display.classList.remove('show-abbreviations');
-        }
 
         if (verses.length > 0) {
             let currentSurah = -1;
@@ -412,7 +425,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (settings.tajweedMode !== 'none') {
                         coloredBasmalah = applyTajweed(BASMALAH);
                     }
-                    fullTextHTML += `<div class="basmalah" style="text-align: center; margin-bottom: 10px; width: 100%;">${coloredBasmalah}</div>`;
+                    fullTextHTML += `<div class="basmalah">${coloredBasmalah}</div>`;
                 }
 
                 let processedText = text;
@@ -422,13 +435,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 let verseHtml = `${processedText} <span class="verse-number">${verse.i}</span> `;
                 if (text.includes('۩')) {
-                    verseHtml = `<span class="sajdah-verse" style="background-color: #faf7e5;">${verseHtml}</span>`;
+                    verseHtml = `<span class="sajdah-verse">${verseHtml}</span>`;
                 }
                 fullTextHTML += verseHtml;
             });
         }
         else {
-            fullTextHTML = '<p style="text-align:center;">No verses found for this page.</p>';
+            fullTextHTML = '<p class="no-verses">No verses found for this page.</p>';
         }
 
         contentDiv.innerHTML = fullTextHTML;
@@ -461,32 +474,32 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateLegend() {
         if (!t) return;
         legend.innerHTML = `
-        <h6 style="margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">${t.legendTitle}</h6>
-        <ul style="list-style: none; padding: 0; margin: 0; font-size: .9rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px;">
-            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #16a085; margin-right: 5px;">■</span> <div>${t.ghunna}</div></li>
-            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #A64AC9; margin-right: 5px;">■</span> <div>${t.maddMuttasil}</div></li>
-            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #A64AC9; margin-right: 5px;">■</span> <div>${t.maddMunfasil}</div></li>
-            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #1ABC9C; margin-right: 5px;">■</span> <div>${t.maddArid}</div></li>
-            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #F39C12; margin-right: 5px;">■</span> <div>${t.maddLiin}</div></li>
-            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #7ea24b; margin-right: 5px;">■</span> <div>${t.silatHa}</div></li>
-            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #e74c3c; margin-right: 5px;">■</span> <div>${t.maddAsli}</div></li>
-            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #2980b9; margin-right: 5px;">■</span> <div>${t.qalqalah}</div></li>
-            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #8e44ad; margin-right: 5px;">■</span> <div>${t.iqlab}</div></li>
-            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #00BFFF; margin-right: 5px;">■</span> <div>${t.idghamGhunna}</div></li>
-            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #5DADE2; margin-right: 5px;">■</span> <div>${t.idghamBila}</div></li>
-            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #5DADE2; margin-right: 5px;">■</span> <div>${t.idghamMutakaribain}</div></li>
-            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #5DADE2; margin-right: 5px;">■</span> <div>${t.idghamMithlain}</div></li>
-            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #d0a386; margin-right: 5px;">■</span> <div>${t.ikhfa}</div></li>
-            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #888; margin-right: 5px;">■</span> <div>${t.qasr}</div></li>
-            <li style="display: flex; align-items: center"><span class="tajweed" style="font-size: 2rem; color: #e74c3c; margin-right: 5px;">■</span> <div>${t.med}</div></li>
+        <h6 class="legend-title">${t.legendTitle}</h6>
+        <ul class="legend-list">
+            <li class="legend-item"><span class="legend-swatch legend-ghunna">■</span> <div>${t.ghunna}</div></li>
+            <li class="legend-item"><span class="legend-swatch legend-madd-muttasil">■</span> <div>${t.maddMuttasil}</div></li>
+            <li class="legend-item"><span class="legend-swatch legend-madd-munfasil">■</span> <div>${t.maddMunfasil}</div></li>
+            <li class="legend-item"><span class="legend-swatch legend-madd-arid">■</span> <div>${t.maddArid}</div></li>
+            <li class="legend-item"><span class="legend-swatch legend-madd-liin">■</span> <div>${t.maddLiin}</div></li>
+            <li class="legend-item"><span class="legend-swatch legend-silat-ha">■</span> <div>${t.silatHa}</div></li>
+            <li class="legend-item"><span class="legend-swatch legend-madd-asli">■</span> <div>${t.maddAsli}</div></li>
+            <li class="legend-item"><span class="legend-swatch legend-qalqalah">■</span> <div>${t.qalqalah}</div></li>
+            <li class="legend-item"><span class="legend-swatch legend-iqlab">■</span> <div>${t.iqlab}</div></li>
+            <li class="legend-item"><span class="legend-swatch legend-idgham-ghunna">■</span> <div>${t.idghamGhunna}</div></li>
+            <li class="legend-item"><span class="legend-swatch legend-idgham-bila">■</span> <div>${t.idghamBila}</div></li>
+            <li class="legend-item"><span class="legend-swatch legend-idgham-mutakaribain">■</span> <div>${t.idghamMutakaribain}</div></li>
+            <li class="legend-item"><span class="legend-swatch legend-idgham-mithlain">■</span> <div>${t.idghamMithlain}</div></li>
+            <li class="legend-item"><span class="legend-swatch legend-ikhfa">■</span> <div>${t.ikhfa}</div></li>
+            <li class="legend-item"><span class="legend-swatch legend-qasr">■</span> <div>${t.qasr}</div></li>
+            <li class="legend-item"><span class="legend-swatch legend-med">■</span> <div>${t.med}</div></li>
         </ul>
-        <h6 style="margin-top: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">${t.pauseMarksTitle}</h6>
-        <ul style="list-style: none; padding: 0; margin: 0; font-size: .8rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px;">
-            <li style="display: flex; "><span style="color: #D9534F; margin-right: 5px;">۩</span> <div>${t.sajdah}</div></li>
-            <li style="display: flex; "><span style="color: #D9534F; margin-right: 5px;">ج</span> <div>${t.jaiz}</div></li>
-            <li style="display: flex; "><span style="color: #27ae60; margin-right: 5px;">صلى</span> <div>${t.waslAwla}</div></li>
-            <li style="display: flex; "><span style="color: #D9534F; margin-right: 5px;">قلى</span> <div>${t.waqfAwla}</div></li>
-            <li style="display: flex; "><span style="color: #D9534F; margin-right: 5px;">∴</span> <div>${t.muanaqah}</div></li>
+        <h6 class="legend-title legend-title--spaced">${t.pauseMarksTitle}</h6>
+        <ul class="legend-list legend-list--small">
+            <li class="legend-item"><span class="legend-mark legend-mark--sajdah">۩</span> <div>${t.sajdah}</div></li>
+            <li class="legend-item"><span class="legend-mark legend-mark--jaiz">ج</span> <div>${t.jaiz}</div></li>
+            <li class="legend-item"><span class="legend-mark legend-mark--wasl">صلى</span> <div>${t.waslAwla}</div></li>
+            <li class="legend-item"><span class="legend-mark legend-mark--waqf">قلى</span> <div>${t.waqfAwla}</div></li>
+            <li class="legend-item"><span class="legend-mark legend-mark--muanaqah">∴</span> <div>${t.muanaqah}</div></li>
         </ul>
     `;
     }
@@ -494,29 +507,25 @@ document.addEventListener('DOMContentLoaded', () => {
     juzSelect.addEventListener('change', (e) => {
         const selectedJuz = parseInt(e.target.value);
         const page = (selectedJuz === 1) ? 0 : (selectedJuz - 1) * 20 + 1;
-        loadMushafPage(page);
+        goToPage(page);
     });
 
     pageSelect.addEventListener('change', (e) => {
         const page = parseInt(e.target.value);
-        loadMushafPage(page);
+        goToPage(page);
     });
 
     surahSelect.addEventListener('change', (e) => {
         const selectedSurahId = parseInt(e.target.value);
         const page = findFirstPageOfSurah(selectedSurahId);
-        loadMushafPage(page);
+        goToPage(page);
     });
 
     prevBtn.addEventListener('click', () => {
-        if (settings.currentPage < totalMushafPages - 1) {
-            loadMushafPage(settings.currentPage + 1);
-        }
+        goToPage(settings.currentPage + 1);
     });
 
     nextBtn.addEventListener('click', () => {
-        if (settings.currentPage > 0) {
-            loadMushafPage(settings.currentPage - 1);
-        }
+        goToPage(settings.currentPage - 1);
     });
 });

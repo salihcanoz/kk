@@ -126,6 +126,24 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
+.verse-text {
+    cursor: help;
+}
+
+.basmalah {
+    text-align: center;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+.sajdah-verse {
+    background-color: #faf7e5;
+}
+
+.no-verses {
+    text-align: center;
+}
+
 .verse-number {
     display: inline-block;
     font-size: 16px;
@@ -174,6 +192,69 @@ body {
     /*font-weight: bold;*/
     font-size: 0.7rem;
 }
+
+/* Tajweed Legend */
+.legend-title {
+    margin-top: 0;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+}
+
+.legend-title--spaced {
+    margin-top: 15px;
+}
+
+.legend-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 0.9rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+}
+
+.legend-list--small {
+    font-size: 0.8rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+}
+
+.legend-swatch {
+    font-size: 2rem;
+    margin-right: 5px;
+}
+
+.legend-mark {
+    margin-right: 5px;
+}
+
+.legend-ghunna { color: #16a085; }
+.legend-madd-muttasil { color: #A64AC9; }
+.legend-madd-munfasil { color: #A64AC9; }
+.legend-madd-arid { color: #1ABC9C; }
+.legend-madd-liin { color: #F39C12; }
+.legend-silat-ha { color: #7ea24b; }
+.legend-madd-asli { color: #e74c3c; }
+.legend-qalqalah { color: #2980b9; }
+.legend-iqlab { color: #8e44ad; }
+.legend-idgham-ghunna { color: #00BFFF; }
+.legend-idgham-bila { color: #5DADE2; }
+.legend-idgham-mutakaribain { color: #5DADE2; }
+.legend-idgham-mithlain { color: #5DADE2; }
+.legend-ikhfa { color: #d0a386; }
+.legend-qasr { color: #888; }
+.legend-med { color: #e74c3c; }
+
+.legend-mark--sajdah { color: #D9534F; }
+.legend-mark--jaiz { color: #D9534F; }
+.legend-mark--wasl { color: #27ae60; }
+.legend-mark--waqf { color: #D9534F; }
+.legend-mark--muanaqah { color: #D9534F; }
 
 /* --- Tajweed Rule Colors --- */
 .tajweed-ghunna {

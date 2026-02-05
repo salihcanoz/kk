@@ -166,7 +166,7 @@ const translations = {
     abbrMaddMunfasil: 'Mn',
     abbrMaddArid: 'A',
     abbrMaddLiin: 'ML',
-    abbSilatHa: 'S',
+    abbrSilatHa: 'S',
     abbrMaddLazim: 'Lz',
     abbrMaddAsli: 'MA',
     abbrQalqalah: 'Q',
