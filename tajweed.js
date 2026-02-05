@@ -275,6 +275,14 @@ function detectIdghamMutakaribain(text, i) {
 }
 
 function detectMadds(text, index) {
+    // Hamza above/below followed by alif (e.g., سَیِّــَٔاتُ)
+    if ((text[index] === HAMZA_ABOVE || text[index] === HAMZA_BELOW) &&
+        text[index + 1] === ALIF &&
+        !hasVowel(text, index + 1)
+    ) {
+        rules.push({index: index, length: 2, type: 'tajweed-madd-asli'});
+        return true;
+    }
     // Check for silent alif maksura due to iltiqaa as-sakinain first
     if ((text[index] === ALIF_MAKSURA || text[index] === ALIF_MAKSURA2) && !hasVowel(text, index)) {
         if (causesIltiqaSakinayn(text, index)) {
