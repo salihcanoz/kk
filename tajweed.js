@@ -309,6 +309,9 @@ function detectMadds(text, index) {
             }
             else if (madd.char === WAW) {
                 let prevIndex = getPreviousBaseLetterIndex(text, index);
+                if (isWawJamaah(text, index) && !hasMadda(text, index) && !hasMadda(text, prevIndex)) {
+                    continue;
+                }
                 if (text[prevIndex + 1] !== DAMMA || text[prevIndex] === '\u0624') {
                     continue;
                 }
@@ -1136,6 +1139,32 @@ function isWordEndAfter(text, index) {
     }
 
     return isWordBreak(text[i]);
+}
+
+function isWawJamaah(text, index) {
+    if (!text || index < 0 || index >= text.length) {
+        return false;
+    }
+
+    if (text[index] !== WAW) {
+        return false;
+    }
+
+    const prevIndex = getPreviousBaseLetterIndex(text, index);
+    if (prevIndex === -1 || !hasVowelWithoutSukun(text, prevIndex)) {
+        return false;
+    }
+
+    const nextIndex = getNextBaseLetterIndex(text, index + 1);
+    if (nextIndex === -1 || text[nextIndex] !== ALIF) {
+        return false;
+    }
+
+    if (hasVowel(text, nextIndex)) {
+        return false;
+    }
+
+    return isWordEndAfter(text, nextIndex);
 }
 
 function isWordStart(text, index) {

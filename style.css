@@ -260,7 +260,7 @@ body {
 .waqf-sign {
     font-size: 0.75em;
     position: relative;
-    font-family: 'Lateef', 'Traditional Arabic', serif;
+    font-family: 'Scheherazade', 'Lateef', 'Traditional Arabic', serif;
 }
 
 /* Specific colors based on your legend */
@@ -270,7 +270,7 @@ body {
     color: red; /* Stopping signs in Red */
     padding-right: 10px;
     margin: 10px;
-    font-family: "Lateef", "Traditional Arabic", serif;
+    font-family: 'Scheherazade', 'Lateef', 'Traditional Arabic', serif;
 
 }
 
@@ -280,7 +280,7 @@ body {
     color: green; /* Stopping signs in Red */
     padding-right: 10px;
     margin: 10px;
-    font-family: "Traditional Arabic";
+    font-family: 'Scheherazade', 'Lateef', 'Traditional Arabic', serif;
 }
 
 .show-abbreviations {
