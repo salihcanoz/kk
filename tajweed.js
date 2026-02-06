@@ -308,6 +308,9 @@ function detectMadds(text, index) {
         text[index + 1] === ALIF &&
         !hasVowel(text, index + 1)
     ) {
+        if (hasTanweenBefore(text, index)) {
+            return true;
+        }
         if (hasMarkAfter(text, index + 1, SMALL_HIGH_NOON)) {
             return true;
         }
@@ -404,6 +407,7 @@ function detectMadds(text, index) {
             let length = index - prevIndex + madd.length;
             let type = madd.type;
             let nextIndex = getNextBaseLetterIndex(text, index + madd.length);
+            const immediateNextIndex = nextIndex;
 
 
             if ((madd.char === SUPERSCRIPT_ALIF || madd.char === SUBSCRIPT_ALIF) && nextIndex !== -1) {
@@ -539,8 +543,75 @@ function detectMadds(text, index) {
 
             if (madd.char === SUPERSCRIPT_ALIF
                 && type === 'tajweed-madd-asli'
-                 && text[index+1] === ALIF_MAKSURA2) {
-                    length++;
+                && immediateNextIndex !== -1
+                && isSameWord(text, index, immediateNextIndex)
+                && (text[immediateNextIndex] === YA || text[immediateNextIndex] === ALIF_MAKSURA || text[immediateNextIndex] === ALIF_MAKSURA2)) {
+                let end = immediateNextIndex + 1;
+                while (end < text.length && isDiacritic(text[end])) {
+                    end++;
+                }
+                length = end - prevIndex;
+            }
+            if (type === 'tajweed-madd-arid') {
+                let candidate = nextIndex;
+                if (candidate !== -1 && isWordBreak(text[candidate])) {
+                    candidate = getPreviousBaseLetterIndex(text, candidate);
+                }
+                if (candidate !== -1
+                    && candidate > prevIndex
+                    && (text[candidate] === ALIF_MAKSURA || text[candidate] === ALIF_MAKSURA2)) {
+                    let end = candidate + 1;
+                    while (end < text.length && isDiacritic(text[end])) {
+                        end++;
+                    }
+                    length = end - prevIndex;
+                }
+            }
+            if (madd.char === SUBSCRIPT_ALIF) {
+                let hamzaIndex = -1;
+                for (let j = index + 1; j < text.length && !isWordBreak(text[j]); j++) {
+                    if (text[j] === HAMZA_ABOVE || text[j] === HAMZA_BELOW) {
+                        hamzaIndex = j;
+                        break;
+                    }
+                    if (!isDiacritic(text[j]) && text[j] !== '\u0640') {
+                        break;
+                    }
+                }
+                if (hamzaIndex !== -1) {
+                    const yaIndex = getNextBaseLetterIndex(text, hamzaIndex + 1);
+                    if (yaIndex !== -1
+                        && isSameWord(text, index, yaIndex)
+                        && (text[yaIndex] === YA || text[yaIndex] === ALIF_MAKSURA || text[yaIndex] === ALIF_MAKSURA2)) {
+                        let end = yaIndex + 1;
+                        while (end < text.length && isDiacritic(text[end])) {
+                            end++;
+                        }
+                        let startIndex = hamzaIndex;
+                        // Prefer the last tatweel before the hamza to keep the hamza visible without pulling in the base letter.
+                        let lastTatweel = -1;
+                        for (let j = hamzaIndex - 1; j >= 0 && !isWordBreak(text[j]); j--) {
+                            if (text[j] === '\u0640') {
+                                lastTatweel = j;
+                            }
+                            if (!isDiacritic(text[j]) && text[j] !== '\u0640') {
+                                break;
+                            }
+                        }
+                        if (lastTatweel !== -1) {
+                            startIndex = lastTatweel;
+                        }
+                        else {
+                            // Fall back to the nearest base letter so the hamza has a carrier.
+                            const carrier = getPreviousBaseLetterIndex(text, hamzaIndex);
+                            if (carrier !== -1) {
+                                startIndex = carrier;
+                            }
+                        }
+                        prevIndex = startIndex;
+                        length = end - prevIndex;
+                    }
+                }
             }
 
             addRule(prevIndex, length, type);
@@ -571,6 +642,22 @@ function detectMadds(text, index) {
         }
     }
 
+    return false;
+}
+
+function hasTanweenBefore(text, index) {
+    let i = index - 1;
+    while (i >= 0 && !isWordBreak(text[i])) {
+        const ch = text[i];
+        if (TANWEEN.includes(ch)) {
+            return true;
+        }
+        if (isDiacritic(ch) || ch === '\u0640') {
+            i--;
+            continue;
+        }
+        break;
+    }
     return false;
 }
 
@@ -694,16 +781,29 @@ function detectNunSakinah(text, i) {
     }
 
     let triggerStartIndex = i;
+    let qasrIndex = -1;
     if (TANWEEN.includes(text[i])) {
         let k = i - 1;
         while (k >= 0 && isDiacritic(text[k])) {
             k--;
         }
         triggerStartIndex = k;
+        if (hasMarkAfter(text, i, QASR)) {
+            triggerStartIndex = i;
+        }
+        for (let j = i + 1; j < text.length && isDiacritic(text[j]); j++) {
+            if (text[j] === QASR) {
+                qasrIndex = j;
+                break;
+            }
+        }
     }
 
     let triggerGroupLength = searchIndex - triggerStartIndex;
-    const fullLength = (nextLetterIndex - triggerStartIndex);
+    let fullLength = (nextLetterIndex - triggerStartIndex);
+    if (qasrIndex !== -1 && qasrIndex > triggerStartIndex && qasrIndex < nextLetterIndex) {
+        fullLength = qasrIndex - triggerStartIndex;
+    }
 
     if (YANMOU_LETTERS.includes(nextLetter) && (hasVowel(text, i) || hasTanween(text, i-1))) {
         return {
@@ -813,7 +913,11 @@ function detectQasr(text, i) {
         addRule(i, 1, 'hidden-char');
         let prevIndex = getPreviousBaseLetterIndex(text, i);
         if (prevIndex !== -1) {
-            let length = i - prevIndex;
+            let end = prevIndex + 1;
+            while (end < i && isDiacritic(text[end]) && !TANWEEN.includes(text[end])) {
+                end++;
+            }
+            let length = end - prevIndex;
             addRule(prevIndex, length, 'tajweed-qasr');
             if (text[i+1] === ALIF && !hasVowel(text, i+1) ) {
                 addRule(i + 1, 1, 'silent-letter');
@@ -1402,7 +1506,7 @@ function isVowelWithoutSukun(char) {
 }
 
 function isDiacritic(char) {
-    return /[\u064B-\u0653\u0656-\u065F\u0670\u08D9]/.test(char);
+    return /[\u064B-\u0653\u0656-\u065F\u0670\u08D1\u08D9]/.test(char);
 }
 
 function isExceptionToIdgham(text, noonIndex, yawawIndex) {
