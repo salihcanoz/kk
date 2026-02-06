@@ -146,10 +146,10 @@ body {
 
 .verse-number {
     display: inline-block;
-    background-color: #2b4e4b;
+    background-color: #2b4e4b66;
     color: white;
     font-size: 14px;
-    border: 1px solid #552b4e4b;
+    border: 1px solid #2b4e4b66;
     border-radius: 50%;
     min-width: 25px;
     height: 25px;
@@ -251,7 +251,6 @@ body {
 .legend-ikhfa { color: #d0a386; }
 .legend-qasr { color: #888; }
 .legend-med { color: #e74c3c; }
-
 .legend-mark--sajdah { color: #D9534F; }
 .legend-mark--jaiz { color: #D9534F; }
 .legend-mark--wasl { color: #27ae60; }
