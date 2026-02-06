@@ -103,7 +103,7 @@ body {
 }
 
 .quran-content {
-    line-height: 2.5;
+    line-height: 2.2;
     /* Standard standard ligatures + contextual alternates */
     font-variant-ligatures: common-ligatures contextual;
 
@@ -146,16 +146,18 @@ body {
 
 .verse-number {
     display: inline-block;
-    font-size: 16px;
-    color: #2c3e50;
-    border: 1px solid #2c3e50;
+    background-color: #2b4e4b;
+    color: white;
+    font-size: 14px;
+    border: 1px solid #552b4e4b;
     border-radius: 50%;
-    min-width: 30px;
-    height: 30px;
+    min-width: 25px;
+    height: 25px;
     text-align: center;
-    line-height: 28px;
-    margin: 0 8px;
+    line-height: 23px;
+    margin: 0 0 0 10px;
     font-family: sans-serif;
+    font-weight: bold;
     vertical-align: middle;
 }
 
@@ -361,8 +363,7 @@ body {
     font-size: 1em;
     position: relative;
     color: red; /* Stopping signs in Red */
-    margin-right: 15px;
-    margin-left: 5x;
+    margin: 0 15px 0 -5px;
     font-family: 'Scheherazade', 'Lateef', 'Traditional Arabic', serif;
 }
 
@@ -378,8 +379,6 @@ body {
     font-size: 1em;
     position: relative;
     color: green; /* Stopping signs in Red */
-    margin-right: 15px;
-    margin-left: 5x;
     font-family: 'Scheherazade', 'Lateef', 'Traditional Arabic', serif;
 }
 
