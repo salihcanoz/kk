@@ -357,12 +357,19 @@ body {
 }
 
 /* Specific colors based on your legend */
-.waqf-lazim, .waqf-awla, .waqf-jaiz, .waqf-muanaqah {
+.waqf-lazim, .waqf-awla, .waqf-jaiz {
     font-size: 1em;
     position: relative;
     color: red; /* Stopping signs in Red */
-    padding-right: 10px;
-    margin: 10px;
+    margin-right: 15px;
+    margin-left: 5x;
+    font-family: 'Scheherazade', 'Lateef', 'Traditional Arabic', serif;
+}
+
+ .waqf-muanaqah {
+    font-size: 1em;
+    position: relative;
+    color: red; /* Stopping signs in Red */
     font-family: 'Scheherazade', 'Lateef', 'Traditional Arabic', serif;
 
 }
@@ -371,13 +378,9 @@ body {
     font-size: 1em;
     position: relative;
     color: green; /* Stopping signs in Red */
-    padding-right: 10px;
-    margin: 10px;
+    margin-right: 15px;
+    margin-left: 5x;
     font-family: 'Scheherazade', 'Lateef', 'Traditional Arabic', serif;
-}
-
-.show-abbreviations {
-    opacity: 1;
 }
 
 /* Specific colors for each waqf type */

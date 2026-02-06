@@ -131,6 +131,10 @@ function detectSilentAlifLam(text, i) {
     if (!isLinkedAlifLamStart(text, i)) {
         return false;
     }
+    // If the lam carries a vowel/tanween, this is not the definite article.
+    if (hasHarakat(text, i + 1)) {
+        return false;
+    }
 
     let nextCharIndex = i + 2;
     while (nextCharIndex < text.length && isDiacritic(text[nextCharIndex])) {
@@ -206,6 +210,9 @@ function isHamzatWaslAlifLam(text, index) {
     }
 
     if (hasHamzaAfter(text, index)) {
+        return false;
+    }
+    if (hasHarakat(text, index + 1)) {
         return false;
     }
 
@@ -301,7 +308,39 @@ function detectMadds(text, index) {
         text[index + 1] === ALIF &&
         !hasVowel(text, index + 1)
     ) {
-        addRule(index, 2, 'tajweed-madd-asli');
+        if (hasMarkAfter(text, index + 1, SMALL_HIGH_NOON)) {
+            return true;
+        }
+        let start = index;
+        let length = 2;
+        let carrier = index - 1;
+        while (carrier >= 0 && isDiacritic(text[carrier])) {
+            carrier--;
+        }
+        if (carrier >= 0 && !isWordBreak(text[carrier])) {
+            start = carrier;
+            length = (index + 2) - start;
+        }
+        else {
+            const prev = text[index - 1];
+            if (prev && (isVowelWithoutSukun(prev) || TANWEEN.includes(prev))) {
+                start = index - 1;
+                length = 3;
+            }
+        }
+        addRule(start, length, 'tajweed-madd-asli');
+        return true;
+    }
+    // Alif followed by small high noon (tanween sign) should not be marked as madd.
+    if (text[index] === ALIF && hasMarkAfter(text, index, SMALL_HIGH_NOON)) {
+        return true;
+    }
+    // If a word-ending alif meets a following plain hamzat wasl, don't mark madd.
+    if (text[index] === ALIF &&
+        !hasVowel(text, index) &&
+        isWordEndAfter(text, index) &&
+        nextWordStartsWithPlainHamzatWasl(text, index)
+    ) {
         return true;
     }
     // Check for silent alif maksura due to iltiqaa as-sakinain first
@@ -322,7 +361,7 @@ function detectMadds(text, index) {
     }
 
     for (const madd of maddTypes) {
-        if (text[index - 1] && text[index - 1] !== ' ' && text[index] === madd.char && !hasVowel(text, index)) {
+        if (text[index - 1] && !isWordBreak(text[index - 1]) && text[index] === madd.char && !hasVowel(text, index)) {
 
             if (madd.char === ALIF) {
                 if (isHamzatWaslAlifLam(text, index)) {
@@ -1133,12 +1172,13 @@ const WAQF_CLASSES = {
     '\u06D6': 'waqf-continue', // Sala
     '\u06DB': 'waqf-muanaqah', // Mu'anaqah
     '\u0619': 'waqf-jaiz',     // Small high dotless head of khah
-    '\u06D9': 'waqf-continue',  // Small high lam-alif
-    '\u0617': 'waqf-continue',  // Small high zay
-    '\u08D5': 'waqf-continue',  // Small high sad
-    '\u08D6': 'waqf-awla',  // Small high ain
-    '\u08D7': 'waqf-continue',  // Small high qaf
-    '\u08DE': 'waqf-awla'  // qif
+    '\u06D9': 'waqf-continue', // Small high lam-alif
+    '\u0617': 'waqf-continue', // Small high zay
+    '\u08D5': 'waqf-continue', // Small high sad
+    '\u08D6': 'waqf-awla',     // Small high ain
+    '\u08D7': 'waqf-continue', // Small high qaf
+    '\u08DE': 'waqf-awla',     // qif
+    
 };
 
 function isWordBreak(char) {
@@ -1251,16 +1291,12 @@ function isWordStart(text, index) {
         const prev = text[i];
 
         // Skip Arabic combining marks
-        if (prev >= '\u064B' && prev <= '\u065F') {
+        if (isDiacritic(prev) || prev === '\u0640') {
             continue;
         }
 
-        // Word starts after space, waqf sign, or ayah end
-        if (
-            prev === ' ' ||
-            prev === AYAH_END ||
-            Object.keys(WAQF_CLASSES).includes(prev)
-        ) {
+        // Word starts after any word break (spaces, waqf signs, ayah end, etc.)
+        if (isWordBreak(prev)) {
             return true;
         }
 
@@ -1284,6 +1320,43 @@ function isHamzatWaslAt(text, index) {
         return true;
     }
     return isHamzatWaslAlifLam(text, index);
+}
+
+function isPlainHamzatWaslAt(text, index) {
+    if (!text || index < 0 || index >= text.length) {
+        return false;
+    }
+    if (text[index] !== ALIF) {
+        return false;
+    }
+    if (!isWordStart(text, index)) {
+        return false;
+    }
+    if (hasHarakat(text, index)) {
+        return false;
+    }
+    if (hasHamzaAfter(text, index)) {
+        return false;
+    }
+    return true;
+}
+
+function nextWordStartsWithPlainHamzatWasl(text, index) {
+    let i = index + 1;
+    while (i < text.length && isDiacritic(text[i])) {
+        i++;
+    }
+    while (i < text.length && isWordBreak(text[i])) {
+        i++;
+    }
+    if (i >= text.length) {
+        return false;
+    }
+    const nextBase = getNextBaseLetterIndex(text, i + 1);
+    if (nextBase !== -1 && text[nextBase] === LAM) {
+        return false;
+    }
+    return isPlainHamzatWaslAt(text, i);
 }
 
 function startsWithAl(text, index) {
@@ -1329,7 +1402,7 @@ function isVowelWithoutSukun(char) {
 }
 
 function isDiacritic(char) {
-    return /[\u064B-\u0653\u0656-\u065F\u0670]/.test(char);
+    return /[\u064B-\u0653\u0656-\u065F\u0670\u08D9]/.test(char);
 }
 
 function isExceptionToIdgham(text, noonIndex, yawawIndex) {
@@ -1388,6 +1461,7 @@ const MED = '\u08D2';
 const SAKTA = '\u06DC';
 const ISHMAM = '\u06EB';
 const TASHIIL = '\u06EC';
+const SMALL_HIGH_NOON = '\u08D9';
 
 const DAMMA = '\u064F';
 const KASRA = '\u0650';
