@@ -1,413 +1,609 @@
 /* Basic Reset */
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 body {
-  background-color: #2b4e4b;
-  color: #333;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #2b4e4b;
+    color: #333;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Flexbox Navbar */
+/* --- Navbar --- */
 .navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 5%;
-  background-color: #2c3e50;
-  color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background-color: #2b4e4b;
+    color: #2c3e50;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: relative; /* Changed from sticky to relative */
+    top: 0;
+    z-index: 1000;
+    flex-wrap: wrap; /* For responsiveness */
+    gap: 1rem;
 }
 
-.logo {
-  font-size: 1.5rem;
-  font-weight: bold;
+.navbar .logo {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #fff;
 }
 
-#surahSelect, #juzSelect, #pageSelect {
-  padding: 8px;
-  border-radius: 4px;
-  font-size: .8rem;
-  margin: 0 2px;
+.navbar nav,
+.navbar .settings-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap; /* Allow controls to wrap on smaller screens */
 }
 
-/* Settings Controls */
-.settings-container {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+/* Common style for all selects and buttons in navbar */
+.navbar select,
+.navbar button {
+    background-color: #f0f4f8;
+    color: #2c3e50;
+    border: 1px solid #d9e2ec;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
 }
 
-.settings-container button, .settings-container select {
-  padding: 6px 12px;
-  border-radius: 4px;
-  border: none;
-  font-size: 0.8rem;
-  cursor: pointer;
-  background-color: #34495e;
-  color: white;
+.navbar select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%232c3e50' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    padding-right: 2.5rem; /* Make space for arrow */
+}
+
+.navbar select:hover,
+.navbar button:hover {
+    background-color: #e4e9f0;
+    border-color: #c8d3e0;
+}
+
+.navbar select:focus,
+.navbar button:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.2);
+    border-color: #3498db;
+}
+
+/* Specific button styles */
+.navbar button {
+    font-weight: 600;
 }
 
 /* Main Container */
 .container {
-  max-width: 1000px;
-  margin: 2rem auto;
-  padding: 0 20px;
+    max-width: 100%;
+    margin: .5rem;
+    padding: 0;
 }
 
 /* Quran Text Styling */
 .quran-text {
-  background: white;
-  padding: 40px;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  direction: rtl; /* Right-to-left for Arabic */
-  text-align: justify; /* Justify for continuous flow */
-  min-height: 400px; /* Ensure a consistent height */
-  border: 1rem #34495e double;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    direction: rtl; /* Right-to-left for Arabic */
+    text-align: justify; /* Justify for continuous flow */
+    min-height: 400px; /* Ensure a consistent height */
+    border: 1rem #34495e double;
 }
 
 .quran-content {
-  line-height: 2.5;
-  /* Standard standard ligatures + contextual alternates */
-  font-variant-ligatures: common-ligatures contextual;
+    line-height: 2.2;
+    /* Standard standard ligatures + contextual alternates */
+    font-variant-ligatures: common-ligatures contextual;
 
-  /* Force specific Arabic OpenType features */
-  /* 'mkmk' = Mark to Mark positioning (CRITICAL for stacked diacritics) */
-  /* 'ccmp' = Glyph Composition/Decomposition */
-  font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "mkmk" 1, "ccmp" 1,  "rlig" 1, "mark" 1;
+    /* Force specific Arabic OpenType features */
+    /* 'mkmk' = Mark to Mark positioning (CRITICAL for stacked diacritics) */
+    /* 'ccmp' = Glyph Composition/Decomposition */
+    font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "mkmk" 1, "ccmp" 1, "rlig" 1, "mark" 1, "cv01" 1;
 
-  /* Ensure the browser doesn't try to synthesize bold/italic, which breaks shaping */
-  font-synthesis: none;
+    /* Ensure the browser doesn't try to synthesize bold/italic, which breaks shaping */
+    font-synthesis: none;
 
-  /* Force high-quality text rendering */
-  text-rendering: optimizeLegibility;
+    /* Force high-quality text rendering */
+    text-rendering: optimizeLegibility;
 
-  /* 2. Language & Direction (Crucial for shaping) */
-  direction: rtl;
-  unicode-bidi: isolate;
+    /* 2. Language & Direction (Crucial for shaping) */
+    direction: rtl;
+    unicode-bidi: isolate;
 
-  /* 4. Rendering Stability */
-  -webkit-font-smoothing: antialiased;
+    /* 4. Rendering Stability */
+    -webkit-font-smoothing: antialiased;
+}
+
+.verse-text {
+    cursor: help;
+}
+
+.basmalah {
+    text-align: center;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+.sajdah-verse {
+    background-color: #faf7e5;
+}
+
+.no-verses {
+    text-align: center;
 }
 
 .verse-number {
-  display: inline-block;
-  font-size: 16px;
-  color: #2c3e50;
-  border: 1px solid #2c3e50;
-  border-radius: 50%;
-  min-width: 30px;
-  height: 30px;
-  text-align: center;
-  line-height: 28px;
-  margin: 0 8px;
-  font-family: sans-serif;
-  vertical-align: middle;
+    display: inline-block;
+    background-color: #2b4e4b66;
+    color: white;
+    font-size: 14px;
+    border: 1px solid #2b4e4b66;
+    border-radius: 50%;
+    min-width: 25px;
+    height: 25px;
+    text-align: center;
+    line-height: 23px;
+    margin: 0 0 0 10px;
+    font-family: sans-serif;
+    font-weight: bold;
+    vertical-align: middle;
 }
 
 .surah-header {
-  font-size: 1.0rem;
-  color: #2c3e50;
-  font-style: italic;
+    font-size: 1.0rem;
+    color: #2c3e50;
+    font-style: italic;
 }
 
 /* Pagination Controls */
 .pagination {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: .5rem;
 }
 
 .pagination button {
-  padding: 10px 20px;
-  border: none;
-  background-color: #3498db;
-  color: white;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1rem;
+    padding: 10px 20px;
+    border: none;
+    background-color: #fff;
+    color: #2b4e4b;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
 }
 
 .pagination button:disabled {
-  background-color: #bdc3c7;
-  cursor: not-allowed;
+    background-color: #bdc3c7;
+    cursor: not-allowed;
 }
 
 #pageInfo {
-  /*font-weight: bold;*/
-  font-size: 0.7rem;
+    /*font-weight: bold;*/
+    font-size: 0.7rem;
 }
+
+/* Tajweed Legend */
+.legend-title {
+    margin-top: 0;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+}
+
+.legend-title--spaced {
+    margin-top: 15px;
+}
+
+.legend-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 0.9rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+}
+
+.legend-list--small {
+    font-size: 0.8rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+}
+
+.legend-swatch {
+    font-size: 2rem;
+    margin-right: 5px;
+}
+
+.legend-mark {
+    margin-right: 5px;
+}
+
+.legend-ghunna { color: #16a085; }
+.legend-madd-muttasil { color: #A64AC9; }
+.legend-madd-munfasil { color: #A64AC9; }
+.legend-madd-arid { color: #1ABC9C; }
+.legend-madd-liin { color: #F39C12; }
+.legend-silat-ha { color: #7ea24b; }
+.legend-madd-asli { color: #e74c3c; }
+.legend-qalqalah { color: #2980b9; }
+.legend-iqlab { color: #8e44ad; }
+.legend-idgham-ghunna { color: #00BFFF; }
+.legend-idgham-bila { color: #5DADE2; }
+.legend-idgham-mutakaribain { color: #5DADE2; }
+.legend-idgham-mithlain { color: #5DADE2; }
+.legend-ikhfa { color: #d0a386; }
+.legend-qasr { color: #888; }
+.legend-med { color: #e74c3c; }
+.legend-mark--sajdah { color: #D9534F; }
+.legend-mark--jaiz { color: #D9534F; }
+.legend-mark--wasl { color: #27ae60; }
+.legend-mark--waqf { color: #D9534F; }
+.legend-mark--muanaqah { color: #D9534F; }
 
 /* --- Tajweed Rule Colors --- */
 .tajweed-ghunna {
-  color: #16a085; /* Green - Nasalization */
+    color: #16a085; /* Green - Nasalization */
 }
 
 .tajweed-ghunna-ikhfa-shafawi {
-  color: #16a085; /* Green - Nasalization */
+    color: #16a085; /* Green - Nasalization */
 }
 
 .tajweed-ghunna-idgam-mithlayn {
-  color: #16a085; /* Green - Nasalization */
+    color: #16a085; /* Green - Nasalization */
 }
 
 .tajweed-madd-muttasil {
-  color: #A64AC9; /* Purple - Connected Elongation */
+    color: #A64AC9; /* Purple - Connected Elongation */
 }
 
 .tajweed-madd-munfasil {
-  color: #E91E63; /* Pink - Separated Elongation */
+    color: #A64AC9; /* Pink - Separated Elongation */
 }
 
 .tajweed-madd-arid {
-  color: #1ABC9C; /* Teal - Temporary Elongation */
+    color: #1ABC9C; /* Teal - Temporary Elongation */
 }
 
 .tajweed-madd-asli {
-  color: #e74c3c; /* Lighter Red - Natural Elongation */
+    color: #e74c3c; /* Lighter Red - Natural Elongation */
 }
 
 .tajweed-madd-liin {
-  color: #F39C12; /* Orange - Soft Elongation */
+    color: #F39C12; /* Orange - Soft Elongation */
 }
 
 .tajweed-madd-lazim {
-  color: #c0392b;
+    color: #c0392b;
 }
 
 .tajweed-qalqalah {
-  color: #2980b9; /* Blue - Echoing */
+    color: #2980b9; /* Blue - Echoing */
 }
 
 .tajweed-ikhfa {
-  color: #d35400; /* Orange - Hiding */
+    color: #d0a386; /* Orange - Hiding */
 }
 
 .tajweed-idgham-bi-ghunna {
-  color: #00BFFF; /* DeepSkyBlue - Merging with nasalization */
+    color: #00BFFF; /* DeepSkyBlue - Merging with nasalization */
 }
 
 .tajweed-idgham-bila-ghunna {
-  color: #5DADE2; /* Lighter Blue - Merging without nasalization */
+    color: #5DADE2; /* Lighter Blue - Merging without nasalization */
+}
+
+.tajweed-idgham-mutakaribain {
+    color: #5DADE2;
+}
+
+.tajweed-idgham-mithlain {
+    color: #5DADE2;
 }
 
 .tajweed-iqlab {
-  color: #8e44ad; /* Purple - Conversion */
+    color: #8e44ad; /* Purple - Conversion */
 }
 
 .tajweed-qasr {
-  color: #b4b4b9;
+    color: #888;
 }
 
-.tajweed-silah {
-  color: #7ea24b;
+.tajweed-med {
+    color: #e74c3c;
 }
 
-.tajweed-madd-silah {
-  color: #9932CC;
+.tajweed-tashiil {
+    color: inherit;
+}
+
+.tajweed-sakta {
+    color: inherit;
+}
+
+.tajweed-ishmam {
+    color: inherit;
+}
+
+.tajweed-silat-ha {
+    color: #7ea24b;
 }
 
 .tajweed-ikhfa-shafawi {
-  color: #e67e22; /* Orange */
+    color: #e67e22; /* Orange */
 }
 
 /* --- Waqf & Sajdah Signs --- */
 .waqf-sign {
-  font-size: 0.75em;
-  position: relative;
-  font-family: 'Amiri', 'Traditional Arabic', serif;
+    font-size: 0.75em;
+    position: relative;
+    font-family: 'Scheherazade', 'Lateef', 'Traditional Arabic', serif;
 }
 
 /* Specific colors based on your legend */
-.waqf-lazim, .waqf-awla, .waqf-jaiz, .waqf-muanaqah {
-  color: red; /* Stopping signs in Red */
+.waqf-lazim, .waqf-awla, .waqf-jaiz {
+    font-size: 1em;
+    position: relative;
+    color: red; /* Stopping signs in Red */
+    margin: 0 15px 0 5px;
+    font-family: 'Scheherazade', 'Lateef', 'Traditional Arabic', serif;
+}
+
+ .waqf-muanaqah {
+    font-size: 1em;
+    position: relative;
+    color: red; /* Stopping signs in Red */
+    font-family: 'Scheherazade', 'Lateef', 'Traditional Arabic', serif;
+
 }
 
 .waqf-continue {
-  color: green; /* Sila (Better to continue) in Green */
-}
-
-.show-abbreviations {
-  opacity: 1;
+    font-size: 1em;
+    position: relative;
+    color: green; /* Stopping signs in Red */
+    font-family: 'Scheherazade', 'Lateef', 'Traditional Arabic', serif;
 }
 
 /* Specific colors for each waqf type */
 .waqf-lazim {
-  color: #D9534F; /* Red - Mandatory Stop */
+    position: relative;
+    color: #D9534F; /* Red - Mandatory Stop */
 }
 
 .waqf-jaiz {
-  color: #D9534F; /* Red - Permissible Stop */
+    position: relative;
+    color: #D9534F; /* Red - Permissible Stop */
 }
 
 .waqf-continue {
-  color: #27ae60; /* Green - Better to Continue */
+    position: relative;
+    color: #27ae60; /* Green - Better to Continue */
 }
 
 .waqf-awla {
-  color: #D9534F; /* Red - Better to Stop */
+    position: relative;
+    color: #D9534F; /* Red - Better to Stop */
 }
 
 .waqf-muanaqah {
-  color: #D9534F; /* Red - Stop at one spot */
+    position: relative;
+    color: #D9534F; /* Red - Stop at one spot */
 }
 
 .sajdah-sign {
-  color: #D9534F; /* Same red for consistency */
-  font-weight: bold;
-  vertical-align: middle;
+    color: #D9534F; /* Same red for consistency */
+    font-weight: bold;
+    vertical-align: middle;
 }
 
 /* --- Tajweed Abbreviations in Text (Toggled by JS) --- */
 [class^="tajweed-"] {
-  position: relative;
+    position: relative;
 }
 
 [class^="tajweed-"]::after {
-  position: absolute;
-  bottom: -5px; /* Position below the letter, accounting for descenders */
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: .5rem;
-  font-family: sans-serif;
-  font-weight: normal;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-  line-height: 1;
-  white-space: nowrap;
+    position: absolute;
+    bottom: -15px; ; /* Position below the letter, accounting for descenders */
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    font-family: sans-serif;
+    font-weight: normal;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    white-space: nowrap;
 }
 
 /* Show abbreviations when toggle is on */
 .show-abbreviations [class^="tajweed-"]::after {
-  opacity: 0.7;
+    opacity: 1;
 }
 
 /* Abbreviation content and colors matching their rules */
 /* Using CSS variables for dynamic content */
 :root {
-  --abbr-ghunna: "Gh";
-  --abbr-madd-muttasil: "MM";
-  --abbr-madd-munfasil: "Mn";
-  --abbr-madd-arid: "A";
-  --abbr-madd-liin: "ML";
-  --abbr-madd-silah: "S";
-  --abbr-madd-lazim: "Lz";
-  --abbr-madd-asli: "MA";
-  --abbr-qalqalah: "Q";
-  --abbr-iqlab: "Iq";
-  --abbr-idgham-ghunna: "IdG";
-  --abbr-idgham-bila: "IdB";
-  --abbr-ikhfa: "Ik";
-  --abbr-qasr: "Qsr";
+    --abbr-ghunna: "Gh";
+    --abbr-madd-muttasil: "MM";
+    --abbr-madd-munfasil: "Mn";
+    --abbr-madd-arid: "A";
+    --abbr-madd-liin: "ML";
+    --abbr-silat-ha: "S";
+    --abbr-madd-lazim: "Lz";
+    --abbr-madd-asli: "MA";
+    --abbr-qalqalah: "Q";
+    --abbr-iqlab: "Iq";
+    --abbr-idgham-ghunna: "IdG";
+    --abbr-idgham-bila: "IdB";
+    --abbr-idgham-mutakaribain: "IdM";
+    --abbr-idgham-mithlain: "Idm";
+    --abbr-ikhfa: "Ik";
+    --abbr-qasr: "Qsr";
+    --abbr-med: "Med";
+    --abbr-tashiil: "Tashiil";
+    --abbr-sakta: "Sakta";
+    --abbr-ishmam: "Ishmam";
 }
 
 .tajweed-ghunna::after {
-  content: var(--abbr-ghunna);
-  color: #16a085;
+    content: var(--abbr-ghunna);
+    color: #16a085;
 }
 
 .tajweed-ghunna-ikhfa-shafawi::after {
-  content: attr(data-label);
-  color: #16a085;
+    content: attr(data-label);
+    color: #16a085;
 }
 
 .tajweed-ghunna-idgam-mithlayn::after {
-  content: attr(data-label);
-  color: #16a085;
+    content: attr(data-label);
+    color: #16a085;
 }
 
 .tajweed-madd-muttasil::after {
-  content: var(--abbr-madd-muttasil);
-  color: #A64AC9;
+    content: var(--abbr-madd-muttasil);
+    color: #A64AC9;
 }
+
 .tajweed-madd-munfasil::after {
-  content: var(--abbr-madd-munfasil);
-  color: #E91E63;
+    content: var(--abbr-madd-munfasil);
+    color: #A64AC9;
 }
+
 .tajweed-madd-arid::after {
-  content: var(--abbr-madd-arid);
-  color: #1ABC9C;
+    content: var(--abbr-madd-arid);
+    color: #1ABC9C;
 }
+
 .tajweed-madd-liin::after {
-  content: var(--abbr-madd-liin);
-  color: #F39C12;
+    content: var(--abbr-madd-liin);
+    color: #F39C12;
 }
-.tajweed-madd-silah::after {
-  content: var(--abbr-madd-silah);
-  color: #9932CC;
+
+.tajweed-silat-ha::after {
+    content: var(--abbr-silat-ha);
+    color: #7ea24b;
 }
 
 .tajweed-madd-lazim::after {
-  content: var(--abbr-madd-lazim);
-  color: #c0392b;
+    content: var(--abbr-madd-lazim);
+    color: #c0392b;
 }
+
 .tajweed-madd-asli::after {
-  content: var(--abbr-madd-asli);
-  color: #e74c3c;
+    content: var(--abbr-madd-asli);
+    color: #e74c3c;
 }
+
 .tajweed-qalqalah::after {
-  content: var(--abbr-qalqalah);
-  color: #2980b9;
+    content: var(--abbr-qalqalah);
+    color: #2980b9;
 }
+
 .tajweed-iqlab::after {
-  content: var(--abbr-iqlab);
-  color: #8e44ad;
+    content: var(--abbr-iqlab);
+    color: #8e44ad;
 }
+
 .tajweed-idgham-bi-ghunna::after {
-  content: var(--abbr-idgham-ghunna);
-  color: #00BFFF;
+    content: var(--abbr-idgham-ghunna);
+    color: #00BFFF;
 }
+
 .tajweed-idgham-bila-ghunna::after {
-  content: var(--abbr-idgham-bila);
-  color: #5DADE2;
+    content: var(--abbr-idgham-bila);
+    color: #5DADE2;
 }
+
+.tajweed-idgham-mutakaribain::after {
+    content: var(--abbr-idgham-mutakaribain);
+    color: #5DADE2;
+}
+
+.tajweed-idgham-mithlain::after {
+    content: var(--abbr-idgham-mithlain);
+    color: #5DADE2;
+}
+
 .tajweed-ikhfa::after {
-  content: var(--abbr-ikhfa);
-  color: #d35400;
+    content: var(--abbr-ikhfa);
+    color: #d0a386;
 }
 
 .tajweed-qasr::after {
-  content: var(--abbr-qasr);
-  color: inherit;
+    content: var(--abbr-qasr);
+    color: inherit;
 }
 
-.tajweed-silah::after {
-  content: attr(data-label);
+.tajweed-med::after {
+    content: var(--abbr-med);
+    color: inherit;
+}
+
+.tajweed-tashiil::after {
+    content: var(--abbr-tashiil);
+    color: inherit;
+}
+
+.tajweed-sakta::after {
+    content: var(--abbr-sakta);
+    color: inherit;
+}
+
+.tajweed-ishmam::after {
+    content: var(--abbr-ishmam);
+    color: inherit;
 }
 
 .tajweed-ikhfa-shafawi::after {
-  content: attr(data-label);
-  color: orange;
+    content: attr(data-label);
+    color: orange;
 }
 
 #abbrLabel {
-  margin-Left : 5px;
-  cursor: pointer;
-  font-size: .8rem;
+    margin-Left: 5px;
+    cursor: pointer;
+    font-size: .8rem;
 }
 
 .silent-letter {
-  color: #b4b4b9 !important;
+    color: #b4b4b9 !important;
 }
 
 /* If a silent letter ever ends up with an abbreviation pseudo-element, suppress it */
 .silent-letter::after {
-  content: none !important;
+    content: none !important;
 }
 
 #tajweed-legend {
-  margin-top: 20px;
-  padding: 15px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background-color: #f9f9f9;
+    margin: .5rem;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
 }
 
 .hidden-char {
+    display: none;
+}
+
+.hidden-char::after {
     display: none;
 }
