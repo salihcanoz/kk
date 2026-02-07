@@ -541,16 +541,28 @@ function detectMadds(text, index) {
                 }
             }
 
+            let maddAsliExtension = null;
             if (madd.char === SUPERSCRIPT_ALIF
                 && type === 'tajweed-madd-asli'
                 && immediateNextIndex !== -1
                 && isSameWord(text, index, immediateNextIndex)
                 && (text[immediateNextIndex] === YA || text[immediateNextIndex] === ALIF_MAKSURA || text[immediateNextIndex] === ALIF_MAKSURA2)) {
-                let end = immediateNextIndex + 1;
-                while (end < text.length && isDiacritic(text[end])) {
-                    end++;
+                let allowExtend = true;
+                const afterYa = getNextBaseLetterIndex(text, immediateNextIndex + 1);
+                if (afterYa !== -1 && text[afterYa] === ALIF && !hasVowel(text, afterYa)) {
+                    allowExtend = false;
                 }
-                length = end - prevIndex;
+                if (allowExtend) {
+                    let end = immediateNextIndex + 1;
+                    while (end < text.length && isDiacritic(text[end])) {
+                        end++;
+                    }
+                    maddAsliExtension = {
+                        index: immediateNextIndex,
+                        length: end - immediateNextIndex,
+                        type: 'tajweed-madd-asli'
+                    };
+                }
             }
             if (type === 'tajweed-madd-arid') {
                 let candidate = nextIndex;
@@ -615,6 +627,9 @@ function detectMadds(text, index) {
             }
 
             addRule(prevIndex, length, type);
+            if (maddAsliExtension) {
+                addRule(maddAsliExtension.index, maddAsliExtension.length, maddAsliExtension.type);
+            }
             return true
         }
     }
@@ -757,6 +772,9 @@ function detectNunSakinah(text, i) {
         const char = text[nextLetterIndex];
         if (isArabicLetter(char)) {
             break;
+        }
+        if (char === SAKTA) {
+            return null; // Sakta breaks assimilation rules
         }
         if (Object.keys(WAQF_CLASSES).includes(char) || char === AYAH_END) {
             return null;
