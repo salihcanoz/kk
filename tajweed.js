@@ -619,12 +619,7 @@ function detectMadds(text, index) {
         }
     }
 
-    if (isMaddAsliHamzaOnWaw(text, index)
-        && !hasQasr(text, index + 1)
-        && (text[index+2] !== ALIF )) {
-        addRule(index, 2, 'tajweed-madd-asli');
-        return true;
-    }
+    // Hamza-on-waw is not a madd letter; do not mark it as madd asli.
 
     // Check for Madd Munfasil on Ha with Madda (e.g., مَعَهُٓ اَخَاهُ)
     if (text[index] === 'ه' && hasMadda(text, index)) {

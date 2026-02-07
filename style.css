@@ -362,7 +362,7 @@ body {
     font-size: 1em;
     position: relative;
     color: red; /* Stopping signs in Red */
-    margin: 0 15px 0 -5px;
+    margin: 0 15px 0 5px;
     font-family: 'Scheherazade', 'Lateef', 'Traditional Arabic', serif;
 }
 
