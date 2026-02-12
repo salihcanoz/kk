@@ -565,6 +565,11 @@ function detectMadds(text, index) {
                 if ((nextChar === YA || nextChar === ALIF_MAKSURA || nextChar === ALIF_MAKSURA2)
                     && type === 'tajweed-madd-asli'
                 ) {
+                    // Do not force a following letter with explicit harakah (e.g. آيَة) into madd-asli.
+                    if (hasHarakat(text, immediateNextIndex)) {
+                        // keep default behavior; no extension rule added
+                    }
+                    else {
                     let allowExtend = true;
                     const afterYa = getNextBaseLetterIndex(text, immediateNextIndex + 1);
                     if (afterYa !== -1 && text[afterYa] === ALIF && !hasVowel(text, afterYa)) {
@@ -580,6 +585,7 @@ function detectMadds(text, index) {
                             length: end - immediateNextIndex,
                             type: 'tajweed-madd-asli'
                         };
+                    }
                     }
                 }
                 else {
