@@ -393,6 +393,10 @@ function detectMadds(text, index) {
             }
             else if (madd.char === WAW) {
                 let prevIndex = getPreviousBaseLetterIndex(text, index);
+                if (isAttachedPlainHamzatWaslAfterMaddWaw(text, index)) {
+                    addRule(index, 2, 'silent-letter');
+                    return true;
+                }
                 if (
                     isWawJamaah(text, index) &&
                     !hasMadda(text, index) &&
@@ -1558,6 +1562,28 @@ function nextWordStartsWithAnyAlif(text, index) {
         return false;
     }
     return text[i] === ALIF || text[i] === '\u0671' || text[i] === 'أ' || text[i] === 'إ';
+}
+
+function isAttachedPlainHamzatWaslAfterMaddWaw(text, wawIndex) {
+    if (!text || text[wawIndex] !== WAW || hasVowel(text, wawIndex)) {
+        return false;
+    }
+
+    const alifIndex = getNextBaseLetterIndex(text, wawIndex + 1);
+    if (alifIndex === -1 || !isSameWord(text, wawIndex, alifIndex) || text[alifIndex] !== ALIF) {
+        return false;
+    }
+
+    if (hasHarakat(text, alifIndex) || hasHamzaAfter(text, alifIndex)) {
+        return false;
+    }
+
+    const nextIndex = getNextBaseLetterIndex(text, alifIndex + 1);
+    if (nextIndex === -1 || !isSameWord(text, alifIndex, nextIndex)) {
+        return false;
+    }
+
+    return text[nextIndex] === LAM || hasSukun(text, nextIndex) || !hasHarakat(text, nextIndex);
 }
 
 function startsWithAl(text, index) {
