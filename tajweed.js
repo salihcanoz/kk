@@ -133,6 +133,12 @@ function detectSilentAlifLam(text, i) {
     }
     // If the lam carries a vowel/tanween, this is not the definite article.
     if (hasHarakat(text, i + 1)) {
+        // Words like "الَّذِي": lam is mushaddad, but the leading alif is still
+        // hamzat wasl and becomes silent in connected recitation.
+        if (!isStartOfSpeech(text, i) && hasShadda(text, i + 1)) {
+            addRule(i, 1, 'silent-letter');
+            return true;
+        }
         return false;
     }
 
@@ -344,6 +350,13 @@ function detectMadds(text, index) {
         isWordEndAfter(text, index) &&
         nextWordStartsWithPlainHamzatWasl(text, index)
     ) {
+        const prevIndex = getPreviousBaseLetterIndex(text, index);
+        if (prevIndex !== -1
+            && text[prevIndex] === WAW
+            && (hasSukun(text, prevIndex) || !hasVowel(text, prevIndex))
+        ) {
+            addRule(index, 1, 'silent-letter');
+        }
         return true;
     }
     // Check for silent alif maksura due to iltiqaa as-sakinain first
@@ -386,7 +399,8 @@ function detectMadds(text, index) {
                     !hasMadda(text, prevIndex) &&
                     nextWordStartsWithHamzatWasl(text, index)
                 ) {
-                    continue;
+                    addRule(index, 1, 'silent-letter');
+                    return true;
                 }
                 if (text[prevIndex + 1] !== DAMMA || text[prevIndex] === '\u0624') {
                     continue;
@@ -543,25 +557,75 @@ function detectMadds(text, index) {
 
             let maddAsliExtension = null;
             if (madd.char === SUPERSCRIPT_ALIF
-                && type === 'tajweed-madd-asli'
+                && (type === 'tajweed-madd-asli' || type === 'tajweed-madd-arid' || type === 'tajweed-madd-muttasil')
                 && immediateNextIndex !== -1
                 && isSameWord(text, index, immediateNextIndex)
-                && (text[immediateNextIndex] === YA || text[immediateNextIndex] === ALIF_MAKSURA || text[immediateNextIndex] === ALIF_MAKSURA2)) {
-                let allowExtend = true;
-                const afterYa = getNextBaseLetterIndex(text, immediateNextIndex + 1);
-                if (afterYa !== -1 && text[afterYa] === ALIF && !hasVowel(text, afterYa)) {
-                    allowExtend = false;
-                }
-                if (allowExtend) {
-                    let end = immediateNextIndex + 1;
-                    while (end < text.length && isDiacritic(text[end])) {
-                        end++;
+            ) {
+                const nextChar = text[immediateNextIndex];
+                if ((nextChar === YA || nextChar === ALIF_MAKSURA || nextChar === ALIF_MAKSURA2)
+                    && type === 'tajweed-madd-asli'
+                ) {
+                    let allowExtend = true;
+                    const afterYa = getNextBaseLetterIndex(text, immediateNextIndex + 1);
+                    if (afterYa !== -1 && text[afterYa] === ALIF && !hasVowel(text, afterYa)) {
+                        allowExtend = false;
                     }
-                    maddAsliExtension = {
-                        index: immediateNextIndex,
-                        length: end - immediateNextIndex,
-                        type: 'tajweed-madd-asli'
-                    };
+                    if (allowExtend) {
+                        let end = immediateNextIndex + 1;
+                        while (end < text.length && isDiacritic(text[end])) {
+                            end++;
+                        }
+                        maddAsliExtension = {
+                            index: immediateNextIndex,
+                            length: end - immediateNextIndex,
+                            type: 'tajweed-madd-asli'
+                        };
+                    }
+                }
+                else {
+                    let wawIndex = immediateNextIndex;
+                    while (wawIndex !== -1 && isSameWord(text, index, wawIndex)) {
+                        if (text[wawIndex] !== WAW || hasVowel(text, wawIndex)) {
+                            wawIndex = getNextBaseLetterIndex(text, wawIndex + 1);
+                            continue;
+                        }
+
+                        const afterWaw = getNextBaseLetterIndex(text, wawIndex + 1);
+                        if (afterWaw !== -1
+                            && isSameWord(text, wawIndex, afterWaw)
+                            && text[afterWaw] === ALIF
+                            && !hasVowel(text, afterWaw)
+                            && isWordEndAfter(text, afterWaw)
+                            && !nextWordStartsWithPlainHamzatWasl(text, afterWaw)
+                        ) {
+                            let end = afterWaw + 1;
+                            while (end < text.length && isDiacritic(text[end])) {
+                                end++;
+                            }
+                            // Keep one madd-asli rule by extending the primary span
+                            // to cover trailing silent waw+alif.
+                            length = Math.max(length, end - prevIndex);
+                            if (type === 'tajweed-madd-muttasil' && nextWordStartsWithAnyAlif(text, afterWaw)) {
+                                type = 'tajweed-madd-munfasil';
+                            }
+                            break;
+                        }
+                        if (afterWaw !== -1
+                            && isSameWord(text, wawIndex, afterWaw)
+                            && text[afterWaw] === 'ة'
+                        ) {
+                            let end = wawIndex + 1;
+                            while (end < text.length && isDiacritic(text[end])) {
+                                end++;
+                            }
+                            // Uthmani orthography words like "الصَّلٰوةَ" keep a silent waw
+                            // after superscript alif; include that waw in the same madd span.
+                            length = Math.max(length, end - prevIndex);
+                            break;
+                        }
+
+                        wawIndex = getNextBaseLetterIndex(text, wawIndex + 1);
+                    }
                 }
             }
             if (type === 'tajweed-madd-arid') {
@@ -1474,6 +1538,20 @@ function nextWordStartsWithPlainHamzatWasl(text, index) {
         return false;
     }
     return isPlainHamzatWaslAt(text, i);
+}
+
+function nextWordStartsWithAnyAlif(text, index) {
+    let i = index + 1;
+    while (i < text.length && isDiacritic(text[i])) {
+        i++;
+    }
+    while (i < text.length && isWordBreak(text[i])) {
+        i++;
+    }
+    if (i >= text.length) {
+        return false;
+    }
+    return text[i] === ALIF || text[i] === '\u0671' || text[i] === 'أ' || text[i] === 'إ';
 }
 
 function startsWithAl(text, index) {
