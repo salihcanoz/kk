@@ -281,7 +281,7 @@ function isStartOfSpeech(text, index) {
             continue;
         }
 
-        return Object.keys(WAQF_CLASSES).includes(char) || char === AYAH_END;
+        return isRedWaqfSign(char) || char === AYAH_END;
     }
     return true;
 }
@@ -451,10 +451,16 @@ function detectMadds(text, index) {
 
             // Calculate where the next letter ends (skipping its diacritics) to check for stop
             let checkStopIndex = nextIndex;
+            const nextIsStopMarker = nextIndex !== -1 && (isRedWaqfSign(text[nextIndex]) || text[nextIndex] === AYAH_END);
             if (nextIndex !== -1) {
-                checkStopIndex = nextIndex + 1;
-                while (checkStopIndex < text.length && isDiacritic(text[checkStopIndex])) {
-                    checkStopIndex++;
+                if (nextIsStopMarker) {
+                    checkStopIndex = nextIndex;
+                }
+                else {
+                    checkStopIndex = nextIndex + 1;
+                    while (checkStopIndex < text.length && isDiacritic(text[checkStopIndex])) {
+                        checkStopIndex++;
+                    }
                 }
             }
 
@@ -475,7 +481,12 @@ function detectMadds(text, index) {
                     continue;
                 }
             }
-            else if (isSameWord(text, index, nextIndex) && isAtStop(text, checkStopIndex)) {
+            else if (!hasMadda(text, index)
+                && !hasMadda(text, prevIndex)
+                && isSameWord(text, index, nextIndex)
+                && !nextIsStopMarker
+                && isAtStop(text, checkStopIndex)
+            ) {
                 if (hasFathataan(text, nextIndex) && text[nextIndex] !== 'ة') {
                     // Not Arid
                 }
@@ -559,7 +570,6 @@ function detectMadds(text, index) {
                 }
             }
 
-            let maddAsliExtension = null;
             if (madd.char === SUPERSCRIPT_ALIF
                 && (type === 'tajweed-madd-asli' || type === 'tajweed-madd-arid' || type === 'tajweed-madd-muttasil')
                 && immediateNextIndex !== -1
@@ -567,7 +577,7 @@ function detectMadds(text, index) {
             ) {
                 const nextChar = text[immediateNextIndex];
                 if ((nextChar === YA || nextChar === ALIF_MAKSURA || nextChar === ALIF_MAKSURA2)
-                    && type === 'tajweed-madd-asli'
+                    && (type === 'tajweed-madd-asli' || type === 'tajweed-madd-arid')
                 ) {
                     // Do not force a following letter with explicit harakah (e.g. آيَة) into madd-asli.
                     if (hasHarakat(text, immediateNextIndex)) {
@@ -576,19 +586,21 @@ function detectMadds(text, index) {
                     else {
                     let allowExtend = true;
                     const afterYa = getNextBaseLetterIndex(text, immediateNextIndex + 1);
-                    if (afterYa !== -1 && text[afterYa] === ALIF && !hasVowel(text, afterYa)) {
+                    if (afterYa !== -1
+                        && isSameWord(text, immediateNextIndex, afterYa)
+                        && text[afterYa] === ALIF
+                        && !hasVowel(text, afterYa)
+                    ) {
                         allowExtend = false;
                     }
                     if (allowExtend) {
+                        // Keep one combined madd span and include following ya/alif maksura
+                        // when it has no explicit harakah (e.g. التَّوْرٰیةِ, عَلٰى).
                         let end = immediateNextIndex + 1;
                         while (end < text.length && isDiacritic(text[end])) {
                             end++;
                         }
-                        maddAsliExtension = {
-                            index: immediateNextIndex,
-                            length: end - immediateNextIndex,
-                            type: 'tajweed-madd-asli'
-                        };
+                        length = Math.max(length, end - prevIndex);
                     }
                     }
                 }
@@ -704,9 +716,6 @@ function detectMadds(text, index) {
             }
 
             addRule(prevIndex, length, type);
-            if (maddAsliExtension) {
-                addRule(maddAsliExtension.index, maddAsliExtension.length, maddAsliExtension.type);
-            }
             return true
         }
     }
@@ -1166,7 +1175,7 @@ function isAtStop(text, i) {
         return true; // End of text is a stop
     }
     const charAtBreak = text[j];
-    return Object.keys(WAQF_CLASSES).includes(charAtBreak) || charAtBreak === AYAH_END;
+    return isRedWaqfSign(charAtBreak) || charAtBreak === AYAH_END;
 }
 
 function hasVowel(text, index) {
@@ -1375,8 +1384,16 @@ const WAQF_CLASSES = {
     
 };
 
+const RED_WAQF_TYPES = new Set(['waqf-lazim', 'waqf-awla', 'waqf-jaiz', 'waqf-muanaqah']);
+
+function isRedWaqfSign(char) {
+    const cls = WAQF_CLASSES[char];
+    return !!cls && RED_WAQF_TYPES.has(cls);
+}
+
 function isWordBreak(char) {
-    return /\s/.test(char) || Object.keys(WAQF_CLASSES).includes(char) || char === AYAH_END;
+    if (!char) return false;
+    return /\s/.test(char) || /\p{P}/u.test(char) || Object.keys(WAQF_CLASSES).includes(char) || char === AYAH_END;
 }
 
 function getWordBeforeIndex(text, index) {
@@ -1582,7 +1599,10 @@ function isAttachedPlainHamzatWaslAfterMaddWaw(text, wawIndex) {
     }
 
     const nextIndex = getNextBaseLetterIndex(text, alifIndex + 1);
-    if (nextIndex === -1 || !isSameWord(text, alifIndex, nextIndex)) {
+    if (nextIndex === -1
+        || !isSameWord(text, alifIndex, nextIndex)
+        || !isArabicLetter(text[nextIndex])
+    ) {
         return false;
     }
 
@@ -1592,8 +1612,8 @@ function isAttachedPlainHamzatWaslAfterMaddWaw(text, wawIndex) {
 function startsWithAl(text, index) {
     let i = index;
 
-    // Skip any whitespace (space, narrow no-break space, etc.)
-    while (i < text.length && /\s/.test(text[i])) i++;
+    // Skip whitespace and punctuation separators between words.
+    while (i < text.length && (/\s/.test(text[i]) || /\p{P}/u.test(text[i]))) i++;
 
     return (
         text[i] === ALIF &&
