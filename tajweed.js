@@ -607,6 +607,9 @@ function detectMadds(text, index) {
                             && !hasVowel(text, afterWaw)
                             && isWordEndAfter(text, afterWaw)
                             && !nextWordStartsWithPlainHamzatWasl(text, afterWaw)
+                            && !(type === 'tajweed-madd-asli'
+                                && isWawJamaah(text, wawIndex)
+                                && nextWordStartsWithHamzatWasl(text, wawIndex))
                         ) {
                             let end = afterWaw + 1;
                             while (end < text.length && isDiacritic(text[end])) {
@@ -1589,8 +1592,8 @@ function isAttachedPlainHamzatWaslAfterMaddWaw(text, wawIndex) {
 function startsWithAl(text, index) {
     let i = index;
 
-    // skip spaces
-    while (i < text.length && text[i] === ' ') i++;
+    // Skip any whitespace (space, narrow no-break space, etc.)
+    while (i < text.length && /\s/.test(text[i])) i++;
 
     return (
         text[i] === ALIF &&
