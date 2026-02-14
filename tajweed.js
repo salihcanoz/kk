@@ -1,4 +1,5 @@
 let rules = [];
+let enabledRuleMap = null;
 
 // Small helper to keep rule creation consistent.
 function addRule(index, length, type) {
@@ -11,7 +12,7 @@ function addRuleObject(rule) {
     }
 }
 
-function applyTajweed(text) {
+function applyTajweed(text, options = {}) {
     if (typeof text !== 'string') {
         console.error('applyTajweed: invalid input type, expected string');
         return text || '';
@@ -19,8 +20,25 @@ function applyTajweed(text) {
 
     if (text.length === 0) return '';
 
-    detectAllRules(text);
-    return buildHtmlFromRules(text);
+    const previousEnabledRuleMap = enabledRuleMap;
+    enabledRuleMap = options && typeof options.enabledRules === 'object' ? options.enabledRules : null;
+    try {
+        detectAllRules(text);
+        return buildHtmlFromRules(text);
+    }
+    finally {
+        enabledRuleMap = previousEnabledRuleMap;
+    }
+}
+
+function isRuleEnabled(ruleType) {
+    if (!enabledRuleMap || typeof enabledRuleMap !== 'object') {
+        return true;
+    }
+    if (!Object.prototype.hasOwnProperty.call(enabledRuleMap, ruleType)) {
+        return true;
+    }
+    return enabledRuleMap[ruleType] !== false;
 }
 
 function detectAllRules(text) {
@@ -110,6 +128,9 @@ function buildHtmlFromRules(text) {
     let currentIndex = 0;
 
     for (const rule of rules) {
+        if (!isRuleEnabled(rule.type)) {
+            continue;
+        }
         if (rule.index < currentIndex) {
             continue;
         }

@@ -137,7 +137,20 @@ body {
 }
 
 .sajdah-verse {
-    background-color: #faf7e5;
+    background-color: #effafa;
+}
+
+.verse-block {
+    display: inline;
+    border-radius: 6px;
+    cursor: pointer;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    transition: background-color 0.15s ease;
+}
+
+.verse-block.is-selected {
+    background-color: #fffde8;
 }
 
 .no-verses {
@@ -203,9 +216,6 @@ body {
     margin-bottom: 10px;
 }
 
-.legend-title--spaced {
-    margin-top: 15px;
-}
 
 .legend-list {
     list-style: none;
@@ -217,13 +227,21 @@ body {
     gap: 10px;
 }
 
-.legend-list--small {
-    font-size: 0.8rem;
-}
-
 .legend-item {
     display: flex;
     align-items: center;
+}
+
+.legend-item--toggle {
+    gap: 6px;
+}
+
+.legend-rule-toggle {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    flex-shrink: 0;
+    accent-color: currentColor;
 }
 
 .legend-swatch {
@@ -231,9 +249,6 @@ body {
     margin-right: 5px;
 }
 
-.legend-mark {
-    margin-right: 5px;
-}
 
 .legend-ghunna { color: #16a085; }
 .legend-madd-muttasil { color: #A64AC9; }
@@ -251,11 +266,7 @@ body {
 .legend-ikhfa { color: #d0a386; }
 .legend-qasr { color: #888; }
 .legend-med { color: #e74c3c; }
-.legend-mark--sajdah { color: #D9534F; }
-.legend-mark--jaiz { color: #D9534F; }
-.legend-mark--wasl { color: #27ae60; }
-.legend-mark--waqf { color: #D9534F; }
-.legend-mark--muanaqah { color: #D9534F; }
+
 
 /* --- Tajweed Rule Colors --- */
 .tajweed-ghunna {

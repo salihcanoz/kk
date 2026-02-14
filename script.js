@@ -28,6 +28,28 @@ document.addEventListener('DOMContentLoaded', () => {
         {value: 'colors', key: 'tajweedColors', default: 'Colors'},
         {value: 'colors-abbr', key: 'tajweedColorsAndAbbr', default: 'Colors and Abbrevations'}
     ];
+    const RULE_TOGGLE_ITEMS = [        
+        {className: 'tajweed-madd-asli', legendClass: 'legend-madd-asli', labelKey: 'maddAsli', defaultLabel: 'Madd Asli'},
+        {className: 'tajweed-madd-muttasil', legendClass: 'legend-madd-muttasil', labelKey: 'maddMuttasil', defaultLabel: 'Madd Muttasil'},
+        {className: 'tajweed-madd-munfasil', legendClass: 'legend-madd-munfasil', labelKey: 'maddMunfasil', defaultLabel: 'Madd Munfasil'},
+        {className: 'tajweed-madd-arid', legendClass: 'legend-madd-arid', labelKey: 'maddArid', defaultLabel: "Madd 'Arid"},
+        {className: 'tajweed-madd-liin', legendClass: 'legend-madd-liin', labelKey: 'maddLiin', defaultLabel: 'Madd Liin'},
+        {className: 'tajweed-med', legendClass: 'legend-med', labelKey: 'med', defaultLabel: 'Med'},
+        {className: 'tajweed-silat-ha', legendClass: 'legend-silat-ha', labelKey: 'silatHa', defaultLabel: 'Silat Ha'},        
+        {className: 'tajweed-iqlab', legendClass: 'legend-iqlab', labelKey: 'iqlab', defaultLabel: 'Iqlab'},
+        {className: 'tajweed-idgham-bi-ghunna', legendClass: 'legend-idgham-ghunna', labelKey: 'idghamGhunna', defaultLabel: 'Idgham bi Ghunna'},
+        {className: 'tajweed-idgham-bila-ghunna', legendClass: 'legend-idgham-bila', labelKey: 'idghamBila', defaultLabel: 'Idgham bila Ghunna'},
+        {className: 'tajweed-idgham-mutakaribain', legendClass: 'legend-idgham-mutakaribain', labelKey: 'idghamMutakaribain', defaultLabel: 'Idgham Mutakaribain'},
+        {className: 'tajweed-idgham-mithlain', legendClass: 'legend-idgham-mithlain', labelKey: 'idghamMithlain', defaultLabel: 'Idgham Mithlain'},
+        {className: 'tajweed-ikhfa', legendClass: 'legend-ikhfa', labelKey: 'ikhfa', defaultLabel: 'Ikhfa'},
+        {className: 'tajweed-qalqalah', legendClass: 'legend-qalqalah', labelKey: 'qalqalah', defaultLabel: 'Qalqalah'},
+        {className: 'tajweed-ghunna', legendClass: 'legend-ghunna', labelKey: 'ghunna', defaultLabel: 'Ghunna'},
+        {className: 'tajweed-qasr', legendClass: 'legend-qasr', labelKey: 'qasr', defaultLabel: 'Qasr'}
+    ];
+    const DEFAULT_ENABLED_RULES = RULE_TOGGLE_ITEMS.reduce((acc, item) => {
+        acc[item.className] = true;
+        return acc;
+    }, {});
 
     // --- Settings ---
     const defaultSettings = {
@@ -35,7 +57,8 @@ document.addEventListener('DOMContentLoaded', () => {
         currentPage: 0, // Start from page 0
         fontFamily: "'Lateef', serif",
         fontSize: 48,
-        tajweedMode: 'colors-abbr' // 'none', 'colors', 'colors-abbr'
+        tajweedMode: 'colors-abbr', // 'none', 'colors', 'colors-abbr'
+        enabledRules: {...DEFAULT_ENABLED_RULES}
     };
 
     let settings = {...defaultSettings};
@@ -53,8 +76,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function normalizeEnabledRules(enabledRules) {
+        const normalized = {...DEFAULT_ENABLED_RULES};
+        if (enabledRules && typeof enabledRules === 'object') {
+            RULE_TOGGLE_ITEMS.forEach((item) => {
+                if (enabledRules[item.className] === false) {
+                    normalized[item.className] = false;
+                }
+            });
+        }
+        return normalized;
+    }
+
     // --- Initialization ---
     loadSettings();
+    settings.enabledRules = normalizeEnabledRules(settings.enabledRules);
 
     // Use the translations object from tr.js if available, otherwise fallback to English.
     function getTranslationsForLanguage(lang) {
@@ -155,6 +191,21 @@ document.addEventListener('DOMContentLoaded', () => {
         touchEndX = event.changedTouches[0].screenX;
         handleSwipe();
     }, false);
+
+    // Tap/click any word to highlight its whole verse.
+    display.addEventListener('click', function (event) {
+        const verseElement = event.target.closest('.verse-block');
+        if (!verseElement || !display.contains(verseElement)) {
+            return;
+        }
+
+        const currentSelected = display.querySelector('.verse-block.is-selected');
+        if (currentSelected && currentSelected !== verseElement) {
+            currentSelected.classList.remove('is-selected');
+        }
+
+        verseElement.classList.toggle('is-selected');
+    });
 
     function handleSwipe() {
         const swipeThreshold = 150; // Minimum distance for a swipe
@@ -426,21 +477,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (verse.i === 1 && verse.surah !== 1 && verse.surah !== 9) {
                     let coloredBasmalah = BASMALAH;
                     if (settings.tajweedMode !== 'none') {
-                        coloredBasmalah = applyTajweed(BASMALAH);
+                        coloredBasmalah = applyTajweed(BASMALAH, {enabledRules: settings.enabledRules});
                     }
                     fullTextHTML += `<div class="basmalah">${coloredBasmalah}</div>`;
                 }
 
                 let processedText = text;
                 if (settings.tajweedMode !== 'none') {
-                    processedText = applyTajweed(text);
+                    processedText = applyTajweed(text, {enabledRules: settings.enabledRules});
                 }
 
-                let verseHtml = `${processedText} <span class="verse-number">${verse.i}</span> `;
+                const verseClasses = ['verse-block'];
                 if (text.includes('۩')) {
-                    verseHtml = `<span class="sajdah-verse">${verseHtml}</span>`;
+                    verseClasses.push('sajdah-verse');
                 }
-                fullTextHTML += verseHtml;
+                fullTextHTML += `<span class="${verseClasses.join(' ')}">${processedText} <span class="verse-number">${verse.i}</span></span> `;
             });
         }
         else {
@@ -476,35 +527,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateLegend() {
         if (!t) return;
-        legend.innerHTML = `
-        <h6 class="legend-title">${t.legendTitle}</h6>
-        <ul class="legend-list">
-            <li class="legend-item"><span class="legend-swatch legend-ghunna">■</span> <div>${t.ghunna}</div></li>
-            <li class="legend-item"><span class="legend-swatch legend-madd-muttasil">■</span> <div>${t.maddMuttasil}</div></li>
-            <li class="legend-item"><span class="legend-swatch legend-madd-munfasil">■</span> <div>${t.maddMunfasil}</div></li>
-            <li class="legend-item"><span class="legend-swatch legend-madd-arid">■</span> <div>${t.maddArid}</div></li>
-            <li class="legend-item"><span class="legend-swatch legend-madd-liin">■</span> <div>${t.maddLiin}</div></li>
-            <li class="legend-item"><span class="legend-swatch legend-silat-ha">■</span> <div>${t.silatHa}</div></li>
-            <li class="legend-item"><span class="legend-swatch legend-madd-asli">■</span> <div>${t.maddAsli}</div></li>
-            <li class="legend-item"><span class="legend-swatch legend-qalqalah">■</span> <div>${t.qalqalah}</div></li>
-            <li class="legend-item"><span class="legend-swatch legend-iqlab">■</span> <div>${t.iqlab}</div></li>
-            <li class="legend-item"><span class="legend-swatch legend-idgham-ghunna">■</span> <div>${t.idghamGhunna}</div></li>
-            <li class="legend-item"><span class="legend-swatch legend-idgham-bila">■</span> <div>${t.idghamBila}</div></li>
-            <li class="legend-item"><span class="legend-swatch legend-idgham-mutakaribain">■</span> <div>${t.idghamMutakaribain}</div></li>
-            <li class="legend-item"><span class="legend-swatch legend-idgham-mithlain">■</span> <div>${t.idghamMithlain}</div></li>
-            <li class="legend-item"><span class="legend-swatch legend-ikhfa">■</span> <div>${t.ikhfa}</div></li>
-            <li class="legend-item"><span class="legend-swatch legend-qasr">■</span> <div>${t.qasr}</div></li>
-            <li class="legend-item"><span class="legend-swatch legend-med">■</span> <div>${t.med}</div></li>
-        </ul>
-        <h6 class="legend-title legend-title--spaced">${t.pauseMarksTitle}</h6>
+        const legendTitle = t.legendTitle || '';
+        const pauseMarksTitle = t.pauseMarksTitle || '';
+        const pauseLegendItems = [
+            {symbol: '۩', className: 'legend-mark--sajdah', label: t.sajdah},
+            {symbol: 'ج', className: 'legend-mark--jaiz', label: t.jaiz},
+            {symbol: 'صلى', className: 'legend-mark--wasl', label: t.waslAwla},
+            {symbol: 'قلى', className: 'legend-mark--waqf', label: t.waqfAwla},
+            {symbol: '∴', className: 'legend-mark--muanaqah', label: t.muanaqah}
+        ].filter((item) => !!item.label);
+        const ruleLegendItems = RULE_TOGGLE_ITEMS.map((item) => {
+            const checked = settings.enabledRules[item.className] !== false;
+            const label = t[item.labelKey] || item.defaultLabel;
+            return `<li class="legend-item legend-item--toggle ${item.legendClass}">
+                <input type="checkbox" class="legend-rule-toggle ${item.legendClass}" data-rule-type="${item.className}" ${checked ? 'checked' : ''}>
+                <div>${label}</div>
+            </li>`;
+        }).join('');
+        const pauseLegendSection = pauseLegendItems.length > 0
+            ? `
+        ${pauseMarksTitle ? `<h6 class="legend-title legend-title--spaced">${pauseMarksTitle}</h6>` : ''}
         <ul class="legend-list legend-list--small">
-            <li class="legend-item"><span class="legend-mark legend-mark--sajdah">۩</span> <div>${t.sajdah}</div></li>
-            <li class="legend-item"><span class="legend-mark legend-mark--jaiz">ج</span> <div>${t.jaiz}</div></li>
-            <li class="legend-item"><span class="legend-mark legend-mark--wasl">صلى</span> <div>${t.waslAwla}</div></li>
-            <li class="legend-item"><span class="legend-mark legend-mark--waqf">قلى</span> <div>${t.waqfAwla}</div></li>
-            <li class="legend-item"><span class="legend-mark legend-mark--muanaqah">∴</span> <div>${t.muanaqah}</div></li>
+            ${pauseLegendItems.map((item) => `<li class="legend-item"><span class="legend-mark ${item.className}">${item.symbol}</span> <div>${item.label}</div></li>`).join('')}
+        </ul>`
+            : '';
+
+        legend.innerHTML = `
+        <h6 class="legend-title">${legendTitle}</h6>
+        <ul class="legend-list">
+            ${ruleLegendItems}
         </ul>
+        ${pauseLegendSection}
     `;
+
+        const checkboxes = legend.querySelectorAll('.legend-rule-toggle');
+        checkboxes.forEach((checkbox) => {
+            checkbox.addEventListener('change', (event) => {
+                const input = event.target;
+                const ruleType = input.getAttribute('data-rule-type');
+                if (!ruleType) return;
+                settings.enabledRules[ruleType] = input.checked;
+                saveSettings();
+                loadMushafPage(settings.currentPage);
+            });
+        });
     }
 
     juzSelect.addEventListener('change', (e) => {
