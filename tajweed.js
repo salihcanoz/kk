@@ -350,13 +350,7 @@ function detectMadds(text, index) {
         isWordEndAfter(text, index) &&
         nextWordStartsWithPlainHamzatWasl(text, index)
     ) {
-        const prevIndex = getPreviousBaseLetterIndex(text, index);
-        if (prevIndex !== -1
-            && text[prevIndex] === WAW
-            && (hasSukun(text, prevIndex) || !hasVowel(text, prevIndex))
-        ) {
-            addRule(index, 1, 'silent-letter');
-        }
+        addRule(index, 1, 'silent-letter');
         return true;
     }
     // Check for silent alif maksura due to iltiqaa as-sakinain first
