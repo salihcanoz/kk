@@ -16,7 +16,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const LANG_OPTIONS = [
         {code: 'tr', name: '\u{1F1F9}\u{1F1F7} Türkçe'},
         {code: 'nl', name: '\u{1F1F3}\u{1F1F1} Nederlands'},
-        {code: 'en', name: '\u{1F1EC}\u{1F1E7} English'}
+        {code: 'en', name: '\u{1F1EC}\u{1F1E7} English'},
+        {code: 'de', name: '\u{1F1E9}\u{1F1EA} Deutsch'},
+        {code: 'fr', name: '\u{1F1EB}\u{1F1F7} Français'},
+        {code: 'es', name: '\u{1F1EA}\u{1F1F8} Español'},
+        {code: 'bs', name: '\u{1F1E7}\u{1F1E6} Bosanski'},
+        {code: 'el', name: '\u{1F1EC}\u{1F1F7} Ελληνικά'},
+        {code: 'bg', name: '\u{1F1E7}\u{1F1EC} Български'},
+        {code: 'sq', name: '\u{1F1E6}\u{1F1F1} Shqip'},
+        {code: 'ru', name: '\u{1F1F7}\u{1F1FA} Русский'}
     ];
     const FONT_OPTIONS = [
         {name: 'Lateef', value: "'Lateef', serif"},
@@ -527,15 +535,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateLegend() {
         if (!t) return;
-        const legendTitle = t.legendTitle || '';
-        const pauseMarksTitle = t.pauseMarksTitle || '';
-        const pauseLegendItems = [
-            {symbol: '۩', className: 'legend-mark--sajdah', label: t.sajdah},
-            {symbol: 'ج', className: 'legend-mark--jaiz', label: t.jaiz},
-            {symbol: 'صلى', className: 'legend-mark--wasl', label: t.waslAwla},
-            {symbol: 'قلى', className: 'legend-mark--waqf', label: t.waqfAwla},
-            {symbol: '∴', className: 'legend-mark--muanaqah', label: t.muanaqah}
-        ].filter((item) => !!item.label);
+        const legendTitle = t.legendTitle || '';        
         const ruleLegendItems = RULE_TOGGLE_ITEMS.map((item) => {
             const checked = settings.enabledRules[item.className] !== false;
             const label = t[item.labelKey] || item.defaultLabel;
@@ -543,21 +543,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 <input type="checkbox" class="legend-rule-toggle ${item.legendClass}" data-rule-type="${item.className}" ${checked ? 'checked' : ''}>
                 <div>${label}</div>
             </li>`;
-        }).join('');
-        const pauseLegendSection = pauseLegendItems.length > 0
-            ? `
-        ${pauseMarksTitle ? `<h6 class="legend-title legend-title--spaced">${pauseMarksTitle}</h6>` : ''}
-        <ul class="legend-list legend-list--small">
-            ${pauseLegendItems.map((item) => `<li class="legend-item"><span class="legend-mark ${item.className}">${item.symbol}</span> <div>${item.label}</div></li>`).join('')}
-        </ul>`
-            : '';
+        }).join('');        
 
         legend.innerHTML = `
         <h6 class="legend-title">${legendTitle}</h6>
         <ul class="legend-list">
             ${ruleLegendItems}
-        </ul>
-        ${pauseLegendSection}
+        </ul>        
     `;
 
         const checkboxes = legend.querySelectorAll('.legend-rule-toggle');
