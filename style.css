@@ -100,6 +100,7 @@ body {
     text-align: justify; /* Justify for continuous flow */
     min-height: 400px; /* Ensure a consistent height */
     border: 1rem #34495e double;
+    cursor: pointer;
 }
 
 .quran-content {
