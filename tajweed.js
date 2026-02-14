@@ -1290,6 +1290,15 @@ function hasShadda(text, index) {
 }
 
 function hasMadda(text, index) {
+    if (!text || index < 0 || index >= text.length) {
+        return false;
+    }
+
+    // Precomposed ALIF WITH MADDA ABOVE (U+0622) should be treated as madda.
+    if (text[index] === '\u0622') {
+        return true;
+    }
+
     return hasMarkInBasicRange(text, index, MADDA);
 }
 
