@@ -330,6 +330,33 @@ function detectIdghamPair(text, index, currentChar, nextChar) {
 }
 
 function detectMadds(text, index) {
+    // Uthmani form with superscript alif on a stretched carrier + hamza
+    // (e.g. اَلْــٰٔنَ): keep it as madd-asli even though the previous base
+    // letter may carry sukun.
+    if (text[index] === SUPERSCRIPT_ALIF) {
+        const prevBase = getPreviousBaseLetterIndex(text, index);
+        const prevChar = text[index - 1];
+        const nextChar = text[index + 1];
+        const hasAdjacentHamza = prevChar === HAMZA_ABOVE
+            || prevChar === HAMZA_BELOW
+            || nextChar === HAMZA_ABOVE
+            || nextChar === HAMZA_BELOW;
+
+        if (hasAdjacentHamza && prevBase !== -1 && hasSukun(text, prevBase)) {
+            let start = index;
+            let length = 1;
+            if (prevChar === HAMZA_ABOVE || prevChar === HAMZA_BELOW) {
+                start = index - 1;
+                length = 2;
+            }
+            else if (nextChar === HAMZA_ABOVE || nextChar === HAMZA_BELOW) {
+                length = 2;
+            }
+            addRule(start, length, 'tajweed-madd-asli');
+            return true;
+        }
+    }
+
     // Hamza above/below followed by alif (e.g., سَیِّــَٔاتُ)
     if ((text[index] === HAMZA_ABOVE || text[index] === HAMZA_BELOW) &&
         text[index + 1] === ALIF &&
@@ -438,6 +465,12 @@ function detectMadds(text, index) {
             }
 
             let length = index - prevIndex + madd.length;
+            if (madd.char === SUBSCRIPT_ALIF) {
+                // Do not automatically include the next base letter for subscript alif.
+                // Include only up to the mark itself by default; specific continuations
+                // (like ...ذٖی) are handled below.
+                length = index - prevIndex + 1;
+            }
             let type = madd.type;
             let nextIndex = getNextBaseLetterIndex(text, index + madd.length);
             const immediateNextIndex = nextIndex;
@@ -684,6 +717,21 @@ function detectMadds(text, index) {
                 }
             }
             if (madd.char === SUBSCRIPT_ALIF) {
+                // Include trailing ya/alif-maksura when subscript alif is followed by it
+                // in the same word (e.g. ذٖی), but never include unrelated letters (e.g. ...یّٖنَ).
+                const afterSubscript = getNextBaseLetterIndex(text, index + 1);
+                if (afterSubscript !== -1
+                    && isSameWord(text, index, afterSubscript)
+                    && (text[afterSubscript] === YA || text[afterSubscript] === ALIF_MAKSURA || text[afterSubscript] === ALIF_MAKSURA2)
+                    && !hasHarakat(text, afterSubscript)
+                ) {
+                    let end = afterSubscript + 1;
+                    while (end < text.length && isDiacritic(text[end])) {
+                        end++;
+                    }
+                    length = Math.max(length, end - prevIndex);
+                }
+
                 let hamzaIndex = -1;
                 for (let j = index + 1; j < text.length && !isWordBreak(text[j]); j++) {
                     if (text[j] === HAMZA_ABOVE || text[j] === HAMZA_BELOW) {
