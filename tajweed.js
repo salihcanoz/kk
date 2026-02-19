@@ -836,18 +836,22 @@ function detectHurufMuqattaat(text, index) {
         MUQATTAAT.includes(text[index]) &&
         hasMadda(text, index)
     ) {
-        if (isStartOfSpeech(text, index)) {
-            addRule(index, 2, 'tajweed-madd-lazim');
-            return true;
+        // Huruf muqattaat madd-lazim applies only to runs that begin at start of speech.
+        let runStart = index;
+        let prevIndex = getPreviousBaseLetterIndex(text, runStart);
+        while (
+            prevIndex !== -1 &&
+            MUQATTAAT.includes(text[prevIndex]) &&
+            !hasVowel(text, prevIndex) &&
+            isSameWord(text, prevIndex, runStart)
+        ) {
+            runStart = prevIndex;
+            prevIndex = getPreviousBaseLetterIndex(text, runStart);
         }
 
-        let prevIndex = getPreviousBaseLetterIndex(text, index);
-        if (prevIndex !== -1) {
-            const prevChar = text[prevIndex];
-            if (MUQATTAAT.includes(prevChar) && !hasVowel(text, prevIndex)) {
-                addRule(index, 2, 'tajweed-madd-lazim');
-                return true;
-            }
+        if (isStartOfSpeech(text, runStart)) {
+            addRule(index, 2, 'tajweed-madd-lazim');
+            return true;
         }
     }
 
