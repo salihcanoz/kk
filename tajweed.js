@@ -352,6 +352,23 @@ function detectMadds(text, index) {
             else if (nextChar === HAMZA_ABOVE || nextChar === HAMZA_BELOW) {
                 length = 2;
             }
+            // Combining marks (superscript alif / hamza) need their visual carrier
+            // in the same span to inherit color correctly.
+            if (isDiacritic(text[start])) {
+                let probe = start - 1;
+                while (probe >= 0 && text[probe] === '\u0640') {
+                    probe--;
+                }
+                const tatweelStart = probe + 1;
+                if (tatweelStart < start) {
+                    length += (start - tatweelStart);
+                    start = tatweelStart;
+                }
+                else if (probe >= 0 && !isWordBreak(text[probe])) {
+                    length += (start - probe);
+                    start = probe;
+                }
+            }
             addRule(start, length, 'tajweed-madd-asli');
             return true;
         }
