@@ -269,6 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const totalMushafPages = 605;
+    const BASMALAH = "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحٖیمِ";
 
     // Create legend element
     const legend = document.createElement('div');
@@ -480,7 +481,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 let text = verse.t.normalize("NFC");
-                const BASMALAH = "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحٖیمِ";
 
                 if (verse.i === 1 && verse.surah !== 1 && verse.surah !== 9) {
                     let coloredBasmalah = BASMALAH;

@@ -189,19 +189,6 @@ function detectSilentAlifLam(text, i) {
     return false;
 }
 
-function isPrefixedAlifLamStart(text, index) {
-    if (!isAlifLamAfterPrefix(text, index)) {
-        return false;
-    }
-
-    const prevIndex = getPreviousBaseLetterIndex(text, index);
-    if (prevIndex === -1) {
-        return false;
-    }
-
-    return hasVowelWithoutSukun(text, prevIndex);
-}
-
 function isLinkedAlifLamStart(text, index) {
     return isWordStart(text, index) || isAlifLamAfterPrefix(text, index) || isAlifLamAfterDhu(text, index);
 }
@@ -1220,36 +1207,6 @@ function detectIdghamMithlain(text, i) {
     return false;
 }
 
-function isMaddAsliHamzaOnWaw(text, index) {
-    if (!text || index < 0 || index >= text.length) {
-        return false;
-    }
-
-    const char = text[index];
-
-    // Hamza on Waw
-    if (char !== 'ؤ') {
-        return false;
-    }
-
-    // Look for the vowel on the hamza
-    for (let i = index + 1; i < text.length; i++) {
-        const diacritic = text[i];
-
-        // Dammah → madd asli
-        if (diacritic === '\u064F') { // DAMMA
-            return true;
-        }
-
-        // Stop if we hit a non-diacritic
-        if (diacritic < '\u064B' || diacritic > '\u065F') {
-            break;
-        }
-    }
-
-    return false;
-}
-
 function isAtStop(text, i) {
     let j = i;
     while (j < text.length && text[j] === ' ') {
@@ -1610,10 +1567,6 @@ function isWordStart(text, index) {
 
     // Reached start of string → start of word
     return true;
-}
-
-function isHamzatWasl(char) {
-    return char === '\u0671'; // Alif Wasla
 }
 
 function isHamzatWaslAt(text, index) {
