@@ -12,6 +12,10 @@ function addRuleObject(rule) {
     }
 }
 
+function isHiddenTajweedMark(char) {
+    return char === QASR || char === MED || char === TASHIIL || char === SAKTA || char === ISHMAM;
+}
+
 function applyTajweed(text, options = {}) {
     if (typeof text !== 'string') {
         console.error('applyTajweed: invalid input type, expected string');
@@ -1009,6 +1013,11 @@ function detectSilatHa(text, i) {
         return null;
     }
 
+    // Qasr takes priority over Silat Ha when both target the same ه.
+    if (hasMarkAfter(text, i, QASR)) {
+        return null;
+    }
+
     // Check if Ha has Fatha
     let checkIndex = i + 1;
     while (checkIndex < text.length && isDiacritic(text[checkIndex])) {
@@ -1019,7 +1028,11 @@ function detectSilatHa(text, i) {
     }
 
     let nextCharIndex = i + 1;
-    while (nextCharIndex < text.length && isDiacritic(text[nextCharIndex])) {
+    while (
+        nextCharIndex < text.length &&
+        isDiacritic(text[nextCharIndex]) &&
+        !isHiddenTajweedMark(text[nextCharIndex])
+    ) {
         nextCharIndex++;
     }
 
