@@ -437,7 +437,7 @@ function detectMadds(text, index) {
                 if (prevIndex !== -1 && text[prevIndex] === 'و' && !hasVowel(text, prevIndex)) {
                     continue;
                 }
-                if (text[index + 1] === SUPERSCRIPT_ALIF) {
+                if (text[index + 1] === SUPERSCRIPT_ALIF || text[index + 1] === SUBSCRIPT_ALIF) {
                    continue;
                 }                              
             }
