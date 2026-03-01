@@ -54,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
         {className: 'tajweed-ghunna', legendClass: 'legend-ghunna', labelKey: 'ghunna', defaultLabel: 'Ghunna'},
         {className: 'tajweed-qasr', legendClass: 'legend-qasr', labelKey: 'qasr', defaultLabel: 'Qasr'}
     ];
+    const RULE_CLASS_SET = new Set(RULE_TOGGLE_ITEMS.map((item) => item.className));
     const DEFAULT_ENABLED_RULES = RULE_TOGGLE_ITEMS.reduce((acc, item) => {
         acc[item.className] = true;
         return acc;
@@ -241,6 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Quran Data & Logic ---
     let quranByPage = {};
+    let pageRuleTypesCache = {};
     // Fallback Surah Names if translations are missing
     const defaultSurahNames = {
         "1": "الفاتحة", "2": "البقرة", "3": "آل عمران", "4": "النساء", "5": "المائدة",
@@ -288,6 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Build a page -> verses index for fast lookup while rendering.
     function processQuranData() {
         quranByPage = {};
+        pageRuleTypesCache = {};
         if (!quranRawData || !quranRawData.surahs) return;
 
         quranRawData.surahs.forEach(surah => {
@@ -407,7 +410,6 @@ document.addEventListener('DOMContentLoaded', () => {
         populateJuzDropdown();
         populatePageDropdown();
 
-        updateLegend();
         loadMushafPage(settings.currentPage);
         updateAbbreviationVariables();
     }
@@ -458,11 +460,52 @@ document.addEventListener('DOMContentLoaded', () => {
         return Math.floor((page - 1) / 20) + 1;
     }
 
+    function collectRuleTypesFromHtml(html, targetSet) {
+        const classRegex = /class="([^"]+)"/g;
+        let match;
+        while ((match = classRegex.exec(html)) !== null) {
+            const classNames = match[1].split(/\s+/);
+            classNames.forEach((className) => {
+                if (RULE_CLASS_SET.has(className)) {
+                    targetSet.add(className);
+                }
+            });
+        }
+    }
+
+    function computeRuleTypesForPage(verses) {
+        const foundRuleTypes = new Set();
+        if (typeof applyTajweed !== 'function') return foundRuleTypes;
+        verses.forEach((verse) => {
+            const verseText = typeof verse.t === 'string' ? verse.t : '';
+            if (!verseText) return;
+
+            const fullRuleHtml = applyTajweed(verseText);
+            collectRuleTypesFromHtml(fullRuleHtml, foundRuleTypes);
+
+            if (verse.i === 1 && verse.surah !== 1 && verse.surah !== 9) {
+                const basmalahRuleHtml = applyTajweed(BASMALAH);
+                collectRuleTypesFromHtml(basmalahRuleHtml, foundRuleTypes);
+            }
+        });
+        return foundRuleTypes;
+    }
+
+    function getRuleTypesForPage(pageNum, verses) {
+        if (!pageRuleTypesCache[pageNum]) {
+            pageRuleTypesCache[pageNum] = computeRuleTypesForPage(verses);
+        }
+        return pageRuleTypesCache[pageNum];
+    }
+
     // Render the selected page (0-based index).
     function loadMushafPage(pageIndex) {
         display.innerHTML = '';
         const pageNum = pageIndex + 1;
         const verses = quranByPage[pageNum] || [];
+        const pageRuleTypes = settings.tajweedMode === 'none'
+            ? new Set()
+            : getRuleTypesForPage(pageNum, verses);
 
         const contentDiv = document.createElement('div');
         contentDiv.className = 'quran-content';
@@ -480,7 +523,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     currentSurah = verse.surah;
                 }
 
-                let text = verse.t.normalize("NFC");
+                let text = verse.t;
 
                 if (verse.i === 1 && verse.surah !== 1 && verse.surah !== 9) {
                     let coloredBasmalah = BASMALAH;
@@ -520,6 +563,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         juzSelect.value = juz;
         pageSelect.value = settings.currentPage;
+        updateLegend(pageRuleTypes);
         window.scrollTo(0, 0);
         saveSettings();
     }
@@ -533,10 +577,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return 0;
     }
 
-    function updateLegend() {
+    function updateLegend(pageRuleTypes) {
         if (!t) return;
         const legendTitle = t.legendTitle || '';        
-        const ruleLegendItems = RULE_TOGGLE_ITEMS.map((item) => {
+        const visibleLegendItems = pageRuleTypes
+            ? RULE_TOGGLE_ITEMS.filter((item) => pageRuleTypes.has(item.className))
+            : RULE_TOGGLE_ITEMS;
+        const ruleLegendItems = visibleLegendItems.map((item) => {
             const checked = settings.enabledRules[item.className] !== false;
             const label = t[item.labelKey] || item.defaultLabel;
             return `<li class="legend-item legend-item--toggle ${item.legendClass}">

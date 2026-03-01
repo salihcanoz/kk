@@ -349,7 +349,7 @@ const translations = {
     "qalqalah": "Kalkale: Yankılı ses",
     "iqlab": "İklab: Döndürme",
     "silatHa": "Medd-i Sıla: Bağlayıcı uzatma",
-    "idghamGhunna": "İdgam bi Gunne",
+    "idghamGhunna": "İdgam meal Gunne",
     "idghamBila": "İdgam bila Gunne",
     "idghamMutakaribain": "İdgam Mütekaribeyn",
     "idghamMithlain": "İdgam Misleyn",

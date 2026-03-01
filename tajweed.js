@@ -213,13 +213,27 @@ function normalizeArabicWord(word) {
 }
 
 function isAlifLamAfterPrefix(text, index) {
-    const prevIndex = getPreviousBaseLetterIndex(text, index);
-    if (prevIndex === -1) return false;
+    let prefixIndex = getPreviousBaseLetterIndex(text, index);
+    if (prefixIndex === -1) return false;
+    if (!ALIF_LAM_PREFIXES.includes(text[prefixIndex])) return false;
 
-    const prev = text[prevIndex];
-    if (!ALIF_LAM_PREFIXES.includes(prev)) return false;
+    // Support stacked prefixes such as "وَبِالـ" by walking left through
+    // consecutive prefix letters until the start of the word.
+    while (true) {
+        if (isWordStart(text, prefixIndex)) {
+            return true;
+        }
 
-    return isWordStart(text, prevIndex);
+        const prevIndex = getPreviousBaseLetterIndex(text, prefixIndex);
+        if (prevIndex === -1 || !isSameWord(text, prevIndex, prefixIndex)) {
+            return false;
+        }
+        if (!ALIF_LAM_PREFIXES.includes(text[prevIndex])) {
+            return false;
+        }
+
+        prefixIndex = prevIndex;
+    }
 }
 
 function isHamzatWaslAlifLam(text, index) {
@@ -424,6 +438,20 @@ function detectMadds(text, index) {
             addRule(index, 1, 'silent-letter');
             return true;
         }
+    }
+
+    // Orthographies may encode this elongation directly as hamza-on-waw + madda
+    // (e.g. وَجَٓاؤُٓ) without an explicit MED mark character.
+    if (text[index] === 'ؤ' && hasMadda(text, index)) {
+        const type = nextWordStartsWithAnyAlif(text, index)
+            ? 'tajweed-madd-munfasil'
+            : 'tajweed-med';
+        let end = index + 1;
+        while (end < text.length && isDiacritic(text[end])) {
+            end++;
+        }
+        addRule(index, end - index, type);
+        return true;
     }
 
     for (const madd of maddTypes) {
@@ -1114,7 +1142,19 @@ function detectMed(text, i) {
         addRule(i, 1, 'hidden-char');
         let prevIndex = getPreviousBaseLetterIndex(text, i);
         if (prevIndex !== -1) {
-            addRule(prevIndex, i - prevIndex, 'tajweed-med');
+            const type = isMunfasilMedOnHamzaWaw(text, i, prevIndex)
+                ? 'tajweed-madd-munfasil'
+                : 'tajweed-med';
+            addRule(prevIndex, i - prevIndex, type);
+            // NFC may place MED before later combining marks (e.g. madda),
+            // so color those trailing marks with the same rule too.
+            let trailingIndex = i + 1;
+            while (trailingIndex < text.length && isDiacritic(text[trailingIndex])) {
+                trailingIndex++;
+            }
+            if (trailingIndex > i + 1) {
+                addRule(i + 1, trailingIndex - (i + 1), type);
+            }
         }
     }
 }
@@ -1613,7 +1653,7 @@ function isPlainHamzatWaslAt(text, index) {
 
 function nextWordStartsWithPlainHamzatWasl(text, index) {
     let i = index + 1;
-    while (i < text.length && isDiacritic(text[i])) {
+    while (i < text.length && (isDiacritic(text[i]) || isHiddenTajweedMark(text[i]))) {
         i++;
     }
     while (i < text.length && isWordBreak(text[i])) {
@@ -1631,7 +1671,7 @@ function nextWordStartsWithPlainHamzatWasl(text, index) {
 
 function nextWordStartsWithAnyAlif(text, index) {
     let i = index + 1;
-    while (i < text.length && isDiacritic(text[i])) {
+    while (i < text.length && (isDiacritic(text[i]) || isHiddenTajweedMark(text[i]))) {
         i++;
     }
     while (i < text.length && isWordBreak(text[i])) {
@@ -1641,6 +1681,29 @@ function nextWordStartsWithAnyAlif(text, index) {
         return false;
     }
     return text[i] === ALIF || text[i] === '\u0671' || text[i] === 'أ' || text[i] === 'إ';
+}
+
+function isMunfasilMedOnHamzaWaw(text, medIndex, prevIndex) {
+    if (prevIndex === -1 || text[prevIndex] !== 'ؤ') {
+        return false;
+    }
+
+    let hasNearbyMadda = hasMadda(text, prevIndex);
+    if (!hasNearbyMadda) {
+        let probe = medIndex + 1;
+        while (probe < text.length && (isDiacritic(text[probe]) || isHiddenTajweedMark(text[probe]))) {
+            if (text[probe] === MADDA) {
+                hasNearbyMadda = true;
+                break;
+            }
+            probe++;
+        }
+    }
+    if (!hasNearbyMadda) {
+        return false;
+    }
+
+    return nextWordStartsWithAnyAlif(text, medIndex);
 }
 
 function isAttachedPlainHamzatWaslAfterMaddWaw(text, wawIndex) {
