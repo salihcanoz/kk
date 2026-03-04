@@ -484,7 +484,8 @@ function detectMadds(text, index) {
                     addRule(index, 1, 'silent-letter');
                     return true;
                 }
-                if (text[prevIndex + 1] !== DAMMA || text[prevIndex] === '\u0624') {
+                const hasDammaOnPrev = prevIndex !== -1 && hasMarkAfter(text, prevIndex, DAMMA);
+                if (!hasDammaOnPrev || text[prevIndex] === '\u0624') {
                     continue;
                 }
             }
