@@ -461,6 +461,9 @@ function detectMadds(text, index) {
                 if (isHamzatWaslAlifLam(text, index)) {
                     continue;
                 }
+                if (isHiddenTajweedMark(text[index - 1])) {
+                    continue;
+                }
                 let prevIndex = getPreviousBaseLetterIndex(text, index);
                 if (prevIndex !== -1 && text[prevIndex] === 'و' && !hasVowel(text, prevIndex)) {
                     continue;
@@ -1147,6 +1150,9 @@ function detectMed(text, i) {
                 ? 'tajweed-madd-munfasil'
                 : 'tajweed-med';
             addRule(prevIndex, i - prevIndex, type);
+            if (text[i + 1] === ALIF && !hasVowel(text, i + 1)) {
+                addRule(i + 1, 1, 'silent-letter');
+            }
             // NFC may place MED before later combining marks (e.g. madda),
             // so color those trailing marks with the same rule too.
             let trailingIndex = i + 1;
@@ -1775,7 +1781,7 @@ function isVowelWithoutSukun(char) {
 }
 
 function isDiacritic(char) {
-    return /[\u064B-\u0653\u0656-\u065F\u0670\u08D1\u08D9]/.test(char);
+    return /[\u064B-\u0653\u0656-\u065F\u0670\u08D1-\u08D2\u08D9]/.test(char);
 }
 
 function isExceptionToIdgham(text, noonIndex, yawawIndex) {
