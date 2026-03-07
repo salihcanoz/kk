@@ -1045,6 +1045,11 @@ function detectSilatHa(text, i) {
         return null;
     }
 
+    // A visible madda on Ha belongs to the madd handling, not Silat Ha.
+    if (hasMadda(text, i)) {
+        return null;
+    }
+
     // Qasr takes priority over Silat Ha when both target the same ه.
     if (hasMarkAfter(text, i, QASR)) {
         return null;
@@ -1216,7 +1221,7 @@ function isNunSakinahOrTanween(text, i) {
     }
 
     // Check for noon without an explicit vowel
-    if (curr === NOON && !isVowel(text[i + 1]) && text[i + 1] !== SHADDA) {
+    if (curr === NOON && !isVowel(text[i + 1]) && text[i + 1] !== SHADDA && !hasTanween(text, i)) {
         return {isTrigger: true, triggerLength: 1};
     }
 
