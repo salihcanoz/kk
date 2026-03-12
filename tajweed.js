@@ -379,36 +379,43 @@ function detectMadds(text, index) {
         }
     }
 
-    // Hamza above/below followed by alif (e.g., سَیِّــَٔاتُ)
-    if ((text[index] === HAMZA_ABOVE || text[index] === HAMZA_BELOW) &&
-        text[index + 1] === ALIF &&
-        !hasVowel(text, index + 1)
-    ) {
+    // Hamza above/below followed by alif, allowing intervening harakat on the
+    // hamza carrier (e.g., سَیِّــَٔاتُ with ...َٔا...).
+    if (text[index] === HAMZA_ABOVE || text[index] === HAMZA_BELOW) {
+        const alifIndex = getNextBaseLetterIndex(text, index + 1);
+        if (alifIndex === -1 || text[alifIndex] !== ALIF || !isSameWord(text, index, alifIndex) || hasVowel(text, alifIndex)) {
+            // Not this hamza+alif madd form.
+        }
+        else {
+        if (hasTanween(text, index)) {
+            return true;
+        }
         if (hasTanweenBefore(text, index)) {
             return true;
         }
-        if (hasMarkAfter(text, index + 1, SMALL_HIGH_NOON)) {
+        if (hasMarkAfter(text, alifIndex, SMALL_HIGH_NOON)) {
             return true;
         }
         let start = index;
-        let length = 2;
+        let length = (alifIndex + 1) - index;
         let carrier = index - 1;
         while (carrier >= 0 && isDiacritic(text[carrier])) {
             carrier--;
         }
         if (carrier >= 0 && !isWordBreak(text[carrier])) {
             start = carrier;
-            length = (index + 2) - start;
+            length = (alifIndex + 1) - start;
         }
         else {
             const prev = text[index - 1];
             if (prev && (isVowelWithoutSukun(prev) || TANWEEN.includes(prev))) {
                 start = index - 1;
-                length = 3;
+                length = (alifIndex + 1) - start;
             }
         }
         addRule(start, length, 'tajweed-madd-asli');
         return true;
+        }
     }
     // Alif followed by small high noon (tanween sign) should not be marked as madd.
     if (text[index] === ALIF && hasMarkAfter(text, index, SMALL_HIGH_NOON)) {
@@ -462,6 +469,9 @@ function detectMadds(text, index) {
                     continue;
                 }
                 if (isHiddenTajweedMark(text[index - 1])) {
+                    continue;
+                }
+                if (hasCarrierHamzaBeforeAlif(text, index)) {
                     continue;
                 }
                 let prevIndex = getPreviousBaseLetterIndex(text, index);
@@ -610,8 +620,13 @@ function detectMadds(text, index) {
             ) { // alif with sukun
                 if (causesIltiqaSakinayn(text, index)) {
                     type = 'silent-letter';
-                    prevIndex++;
-                    //length += 2;
+                    if (text[index] === ALIF || text[index] === ALIF_MAKSURA || text[index] === ALIF_MAKSURA2) {
+                        prevIndex = index;
+                        length = 1;
+                    }
+                    else {
+                        prevIndex++;
+                    }
                 }
             }
             else if (text[index] === ALIF &&
@@ -629,8 +644,8 @@ function detectMadds(text, index) {
             else if (causesIltiqaSakinayn(text, index)) {
                 if (text[index] === ALIF || text[index] === ALIF_MAKSURA || text[index] === ALIF_MAKSURA2) {
                     type = 'silent-letter';
-                    prevIndex++;
-                    //length += 2;
+                    prevIndex = index;
+                    length = 1;
                 }
             }
 
@@ -1434,6 +1449,25 @@ function hasHamzaAfter(text, index) {
     return false;
 }
 
+function hasCarrierHamzaBeforeAlif(text, index) {
+    if (!text || index <= 0 || index >= text.length || text[index] !== ALIF) {
+        return false;
+    }
+
+    for (let i = index - 1; i >= 0; i--) {
+        const char = text[i];
+        if (char === HAMZA_ABOVE || char === HAMZA_BELOW) {
+            return true;
+        }
+        if (isDiacritic(char) || char === '\u0640') {
+            continue;
+        }
+        return false;
+    }
+
+    return false;
+}
+
 function getPreviousBaseLetterIndex(text, index) {
     if (!text || index <= 0 || index > text.length) {
         return -1;
@@ -1786,7 +1820,7 @@ function isVowelWithoutSukun(char) {
 }
 
 function isDiacritic(char) {
-    return /[\u064B-\u0653\u0656-\u065F\u0670\u08D1-\u08D2\u08D9]/.test(char);
+    return /[\u064B-\u065F\u0670\u08D1-\u08D2\u08D9]/.test(char);
 }
 
 function isExceptionToIdgham(text, noonIndex, yawawIndex) {
