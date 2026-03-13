@@ -521,6 +521,13 @@ function detectMadds(text, index) {
                 // (like ...ذٖی) are handled below.
                 length = index - prevIndex + 1;
             }
+            else if (madd.char === SUPERSCRIPT_ALIF && hasMadda(text, index)) {
+                let end = index + 1;
+                while (end < text.length && isDiacritic(text[end])) {
+                    end++;
+                }
+                length = Math.max(length, end - prevIndex);
+            }
             let type = madd.type;
             let nextIndex = getNextBaseLetterIndex(text, index + madd.length);
             const immediateNextIndex = nextIndex;
@@ -602,7 +609,16 @@ function detectMadds(text, index) {
                 }
                 else {
                     type = 'tajweed-madd-muttasil';
-                    length++;
+                    // In Uthmani forms like "جَزٰٓؤُا", keep the visible madd on the
+                    // superscript-alif cluster and do not absorb the following hamza carrier.
+                    if (!(madd.char === SUPERSCRIPT_ALIF
+                        && (text[nextIndex] === 'ء'
+                            || text[nextIndex] === 'أ'
+                            || text[nextIndex] === 'إ'
+                            || text[nextIndex] === 'ؤ'
+                            || text[nextIndex] === 'ئ'))) {
+                        length++;
+                    }
                 }
             }
             else if (hasMadda(text, prevIndex) && hasHamzaAfter(text, index)) {
