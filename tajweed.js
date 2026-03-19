@@ -454,7 +454,7 @@ function detectMadds(text, index) {
             ? 'tajweed-madd-munfasil'
             : 'tajweed-med';
         let end = index + 1;
-        while (end < text.length && isDiacritic(text[end])) {
+        while (end < text.length && isDiacritic(text[end]) && !isHiddenTajweedMark(text[end])) {
             end++;
         }
         addRule(index, end - index, type);
