@@ -504,6 +504,19 @@ function detectMadds(text, index) {
         return true;
         }
     }
+    // Standalone hamza with fathatan at a stop (e.g. مَٓاءًؕ) should keep the
+    // final visible stop-madd segment, while continuation cases remain under
+    // the normal tanween/nun rules.
+    if (text[index] === 'ء' && hasFathataan(text, index)) {
+        let end = index + 1;
+        while (end < text.length && isDiacritic(text[end])) {
+            end++;
+        }
+        if (isAtStop(text, end)) {
+            addRule(index, end - index, 'tajweed-madd-asli');
+            return true;
+        }
+    }
     // Alif followed by small high noon (tanween sign) should not be marked as madd.
     if (text[index] === ALIF && hasMarkAfter(text, index, SMALL_HIGH_NOON)) {
         return true;
@@ -699,6 +712,12 @@ function detectMadds(text, index) {
                 else {
                     continue;
                 }
+            }
+            else if (madd.char === WAW
+                && isWawJamaah(text, index)
+                && isAtStop(text, checkStopIndex)
+            ) {
+                type = 'tajweed-madd-asli';
             }
             else if (!hasMadda(text, index)
                 && !hasMadda(text, prevIndex)
@@ -1090,8 +1109,22 @@ function detectMaddLeen(text, i) {
 }
 
 function detectQalqalah(text, index) {
-    if (QALQALAH.includes(text[index]) && text[index + 1] === SUKUN) {
+    if (!QALQALAH.includes(text[index])) {
+        return;
+    }
+
+    if (text[index + 1] === SUKUN) {
         addRule(index, 2, 'tajweed-qalqalah');
+        return;
+    }
+
+    let end = index + 1;
+    while (end < text.length && isDiacritic(text[end])) {
+        end++;
+    }
+
+    if (end > index + 1 && isAtStop(text, end)) {
+        addRule(index, end - index, 'tajweed-qalqalah');
     }
 }
 
@@ -1211,6 +1244,24 @@ function detectSilatHa(text, i) {
     const curr = text[i];
     if (curr !== 'ه') {
         return null;
+    }
+
+    // At a true stop, terminal هُوَ / هِيَ is read with 'arid li-s-sukun'
+    // rather than as an uncolored plain ending.
+    const nextBaseIndex = getNextBaseLetterIndex(text, i + 1);
+    if ((hasMarkAfter(text, i, DAMMA) || hasMarkAfter(text, i, KASRA))
+        && nextBaseIndex !== -1
+        && (text[nextBaseIndex] === WAW || text[nextBaseIndex] === YA || text[nextBaseIndex] === 'ي' || text[nextBaseIndex] === ALIF_MAKSURA)
+        && hasMarkAfter(text, nextBaseIndex, FATHA)
+    ) {
+        let end = nextBaseIndex + 1;
+        while (end < text.length && isDiacritic(text[end])) {
+            end++;
+        }
+        if (isAtStop(text, end)) {
+            addRule(i, end - i, 'tajweed-madd-arid');
+            return true;
+        }
     }
 
     // A visible madda on Ha belongs to the madd handling, not Silat Ha.
@@ -1805,12 +1856,8 @@ function nextWordStartsWithHamzatWasl(text, wawIndex) {
         return false;
     }
 
-    let j = i;
-    while (j < text.length && isWordBreak(text[j])) {
-        j++;
-    }
-
-    if (j >= text.length) {
+    const j = getConnectedWordStartIndex(text, i);
+    if (j === -1) {
         return false;
     }
 
@@ -1884,14 +1931,8 @@ function isPlainHamzatWaslAt(text, index) {
 }
 
 function nextWordStartsWithPlainHamzatWasl(text, index) {
-    let i = index + 1;
-    while (i < text.length && (isDiacritic(text[i]) || isHiddenTajweedMark(text[i]))) {
-        i++;
-    }
-    while (i < text.length && isWordBreak(text[i])) {
-        i++;
-    }
-    if (i >= text.length) {
+    const i = getConnectedWordStartIndex(text, index + 1);
+    if (i === -1) {
         return false;
     }
     const nextBase = getNextBaseLetterIndex(text, i + 1);
@@ -1902,17 +1943,31 @@ function nextWordStartsWithPlainHamzatWasl(text, index) {
 }
 
 function nextWordStartsWithAnyAlif(text, index) {
-    let i = index + 1;
-    while (i < text.length && (isDiacritic(text[i]) || isHiddenTajweedMark(text[i]))) {
-        i++;
-    }
-    while (i < text.length && isWordBreak(text[i])) {
-        i++;
-    }
-    if (i >= text.length) {
+    const i = getConnectedWordStartIndex(text, index + 1);
+    if (i === -1) {
         return false;
     }
     return text[i] === ALIF || text[i] === '\u0671' || text[i] === 'أ' || text[i] === 'إ';
+}
+
+function getConnectedWordStartIndex(text, index) {
+    let i = index;
+    while (i < text.length) {
+        const char = text[i];
+        if (isDiacritic(char) || isHiddenTajweedMark(char) || char === '\u0640') {
+            i++;
+            continue;
+        }
+        if (char === ' ' || /\p{P}/u.test(char) || isContinuationWaqfSign(char)) {
+            i++;
+            continue;
+        }
+        if (isStoppingWaqfSign(char)) {
+            return -1;
+        }
+        return i;
+    }
+    return -1;
 }
 
 function isMunfasilMedOnHamzaWaw(text, medIndex, prevIndex) {
