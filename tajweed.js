@@ -140,7 +140,21 @@ function buildHtmlFromRules(text) {
         }
 
         output += text.slice(currentIndex, rule.index);
-        output += `<span class="${rule.type}">${text.slice(rule.index, rule.index + rule.length)}</span>`;
+        const spanText = text.slice(rule.index, rule.index + rule.length);
+        const leadingWhitespaceMatch = spanText.match(/^\s+/);
+        const trailingWhitespaceMatch = spanText.match(/\s+$/);
+        const leadingWhitespace = leadingWhitespaceMatch ? leadingWhitespaceMatch[0] : '';
+        const trailingWhitespace = trailingWhitespaceMatch ? trailingWhitespaceMatch[0] : '';
+        const visibleText = spanText.slice(
+            leadingWhitespace.length,
+            spanText.length - trailingWhitespace.length
+        );
+
+        output += leadingWhitespace;
+        if (visibleText.length > 0) {
+            output += `<span class="${rule.type}">${visibleText}</span>`;
+        }
+        output += trailingWhitespace;
         currentIndex = rule.index + rule.length;
     }
 
@@ -181,7 +195,14 @@ function detectSilentAlifLam(text, i) {
             addRule(i + 1, 1, 'silent-letter');
         }
         else {
-            addRule(i, 2, 'silent-letter');
+            // In connected recitation before ra, keep the alif silent and let the
+            // lam render as idgham-mutakaribain.
+            if (text[nextCharIndex] === 'ر') {
+                addRule(i, 1, 'silent-letter');
+            }
+            else {
+                addRule(i, 2, 'silent-letter');
+            }
         }
         return true;
     }
@@ -335,6 +356,29 @@ function detectIdghamPair(text, index, currentChar, nextChar) {
 }
 
 function detectMadds(text, index) {
+    // Visible madda may sit directly on the base letter before hamza-on-waw
+    // (e.g. لِیَسُٓؤُ࣒ا). Color that opening segment as madd muttasil while
+    // leaving the following hamza-on-waw to its dedicated med/qasr handling.
+    if (isArabicLetter(text[index])
+        && text[index] !== ALIF
+        && text[index] !== WAW
+        && text[index] !== 'ؤ'
+        && hasMadda(text, index)
+    ) {
+        const nextIndex = getNextBaseLetterIndex(text, index + 1);
+        if (nextIndex !== -1
+            && isSameWord(text, index, nextIndex)
+            && text[nextIndex] === 'ؤ'
+        ) {
+            let end = index + 1;
+            while (end < text.length && isDiacritic(text[end])) {
+                end++;
+            }
+            addRule(index, end - index, 'tajweed-madd-muttasil');
+            return true;
+        }
+    }
+
     // Uthmani form with superscript alif on a stretched carrier + hamza
     // (e.g. اَلْــٰٔنَ): keep it as madd-asli even though the previous base
     // letter may carry sukun.
@@ -463,6 +507,11 @@ function detectMadds(text, index) {
 
     for (const madd of maddTypes) {
         if (text[index - 1] && !isWordBreak(text[index - 1]) && text[index] === madd.char && !hasVowel(text, index)) {
+            // Explicit qasr/med signs on the carrier should take precedence over the
+            // generic madd detector; dedicated handlers render those cases later.
+            if (hasMarkAfter(text, index, QASR) || hasMarkAfter(text, index, MED)) {
+                continue;
+            }
 
             if (madd.char === ALIF) {
                 if (isHamzatWaslAlifLam(text, index)) {
@@ -484,6 +533,23 @@ function detectMadds(text, index) {
             }
             else if (madd.char === WAW) {
                 let prevIndex = getPreviousBaseLetterIndex(text, index);
+                const nextBaseIndex = getNextBaseLetterIndex(text, index + 1);
+                if (text[index + 1] === SUBSCRIPT_ALIF
+                    && nextBaseIndex !== -1
+                    && isSameWord(text, index, nextBaseIndex)
+                    && (text[nextBaseIndex] === YA
+                        || text[nextBaseIndex] === ALIF_MAKSURA
+                        || text[nextBaseIndex] === ALIF_MAKSURA2)
+                ) {
+                    continue;
+                }
+                if (text[index + 1] === SUPERSCRIPT_ALIF
+                    && nextBaseIndex !== -1
+                    && isSameWord(text, index, nextBaseIndex)
+                    && (text[nextBaseIndex] === ALIF_MAKSURA || text[nextBaseIndex] === ALIF_MAKSURA2)
+                ) {
+                    continue;
+                }
                 if (isAttachedPlainHamzatWaslAfterMaddWaw(text, index)) {
                     addRule(index, 2, 'silent-letter');
                     return true;
@@ -610,13 +676,18 @@ function detectMadds(text, index) {
                 else {
                     type = 'tajweed-madd-muttasil';
                     // In Uthmani forms like "جَزٰٓؤُا", keep the visible madd on the
-                    // superscript-alif cluster and do not absorb the following hamza carrier.
+                    // superscript-alif cluster and do not absorb the following hamza carrier
+                    // or a decomposed ya/alif-maksura carrier that itself bears hamza.
                     if (!(madd.char === SUPERSCRIPT_ALIF
                         && (text[nextIndex] === 'ء'
                             || text[nextIndex] === 'أ'
                             || text[nextIndex] === 'إ'
                             || text[nextIndex] === 'ؤ'
-                            || text[nextIndex] === 'ئ'))) {
+                            || text[nextIndex] === 'ئ'
+                            || ((text[nextIndex] === YA
+                                    || text[nextIndex] === ALIF_MAKSURA
+                                    || text[nextIndex] === ALIF_MAKSURA2)
+                                && hasAttachedHamza(text, nextIndex))))) {
                         length++;
                     }
                 }
@@ -627,7 +698,11 @@ function detectMadds(text, index) {
             else if (hasMadda(text, prevIndex)) {
                 type = 'tajweed-madd-munfasil';
                 if (text[index + 1] === ALIF && !hasVowel(text, index + 1)) {
-                    length++;
+                    const explicitAlifCluster = text[index + 2] === SUPERSCRIPT_ALIF
+                        || text[index + 2] === SUBSCRIPT_ALIF;
+                    if (!explicitAlifCluster) {
+                        length++;
+                    }
                 }
             }
             else if (text[nextIndex] === ALIF
@@ -684,7 +759,7 @@ function detectMadds(text, index) {
                 if (type === 'tajweed-madd-asli' && text[index + 1] === ' ') {
                     length++;
                 }
-                else if (type === 'tajweed-madd-arid') {
+                else if (type === 'tajweed-madd-arid' && text[index + 1] === ' ') {
                     length++;
                 }
             }
@@ -723,7 +798,7 @@ function detectMadds(text, index) {
                     }
                     }
                 }
-                else {
+                else if (immediateNextIndex !== -1 && text[immediateNextIndex] === WAW) {
                     let wawIndex = immediateNextIndex;
                     while (wawIndex !== -1 && isSameWord(text, index, wawIndex)) {
                         if (text[wawIndex] !== WAW || hasVowel(text, wawIndex)) {
@@ -1025,6 +1100,12 @@ function detectNunSakinah(text, i) {
             k--;
         }
         triggerStartIndex = k;
+        for (let j = triggerStartIndex + 1; j < i; j++) {
+            if (text[j] === QASR || text[j] === MED) {
+                triggerStartIndex = i;
+                break;
+            }
+        }
         if (hasMarkAfter(text, i, QASR)) {
             triggerStartIndex = i;
         }
@@ -1437,6 +1518,14 @@ function hasMadda(text, index) {
     }
 
     return hasMarkInBasicRange(text, index, MADDA);
+}
+
+function hasAttachedHamza(text, index) {
+    if (!text || index < 0 || index >= text.length) {
+        return false;
+    }
+
+    return hasMarkInBasicRange(text, index, HAMZA_ABOVE) || hasMarkInBasicRange(text, index, HAMZA_BELOW);
 }
 
 function hasHamzaAfter(text, index) {
