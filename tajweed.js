@@ -127,11 +127,15 @@ function detectAllRules(text) {
 function buildHtmlFromRules(text) {
     // Sort by index and skip overlapping ranges.
     rules.sort((a, b) => a.index - b.index);
+    const renderRules = rules.map((rule, index) => ({
+        ...rule,
+        length: getRenderableRuleLength(text, rules, index)
+    }));
 
     let output = '';
     let currentIndex = 0;
 
-    for (const rule of rules) {
+    for (const rule of renderRules) {
         if (!isRuleEnabled(rule.type)) {
             continue;
         }
@@ -160,6 +164,37 @@ function buildHtmlFromRules(text) {
 
     output += text.slice(currentIndex);
     return output.trimEnd();
+}
+
+function getRenderableRuleLength(text, allRules, ruleIndex) {
+    const rule = allRules[ruleIndex];
+    if (!rule) {
+        return 0;
+    }
+
+    if (rule.type !== 'tajweed-ghunna' || rule.length > 0) {
+        return rule.length;
+    }
+
+    let end = rule.index + 1;
+    while (end < text.length && isDiacritic(text[end]) && !isHiddenTajweedMark(text[end])) {
+        end++;
+    }
+
+    const candidateLength = end - rule.index;
+    if (candidateLength <= 0) {
+        return 0;
+    }
+
+    const hasConflict = allRules.some((otherRule, otherIndex) => {
+        if (otherIndex === ruleIndex || !otherRule || otherRule.length <= 0 || !isRuleEnabled(otherRule.type)) {
+            return false;
+        }
+        const otherEnd = otherRule.index + otherRule.length;
+        return otherRule.index < end && otherEnd > rule.index;
+    });
+
+    return hasConflict ? 0 : candidateLength;
 }
 
 function detectSilentAlifLam(text, i) {
@@ -431,10 +466,18 @@ function detectMadds(text, index) {
             // Not this hamza+alif madd form.
         }
         else {
-        if (hasTanween(text, index)) {
-            return true;
-        }
-        if (hasTanweenBefore(text, index)) {
+        if (hasTanween(text, index) || hasTanweenBefore(text, index)) {
+            if (isAtStop(text, alifIndex + 1)) {
+                let start = index;
+                let carrier = index - 1;
+                while (carrier >= 0 && isDiacritic(text[carrier])) {
+                    carrier--;
+                }
+                if (carrier >= 0 && !isWordBreak(text[carrier])) {
+                    start = carrier;
+                }
+                addRule(start, (alifIndex + 1) - start, 'tajweed-madd-asli');
+            }
             return true;
         }
         if (hasMarkAfter(text, alifIndex, SMALL_HIGH_NOON)) {
@@ -476,6 +519,11 @@ function detectMadds(text, index) {
     }
     // Check for silent alif maksura due to iltiqaa as-sakinain first
     if ((text[index] === ALIF_MAKSURA || text[index] === ALIF_MAKSURA2) && !hasVowel(text, index)) {
+        const prevIndex = getPreviousBaseLetterIndex(text, index);
+        if (prevIndex !== -1 && hasFathataan(text, prevIndex) && isAtStop(text, index + 1)) {
+            addRule(prevIndex, (index + 1) - prevIndex, 'tajweed-madd-asli');
+            return true;
+        }
         if (causesIltiqaSakinayn(text, index)) {
             addRule(index, 1, 'silent-letter');
             return true;
@@ -720,8 +768,9 @@ function detectMadds(text, index) {
                     }
                 }
             }
-            else if (text[index] === ALIF &&
-                (hasFathataan(text, prevIndex) || (text[index -1] === SHADDA ? text[index - 2] !== FATHA : text[index -1] !== FATHA))) { // waw with sukun
+            else if (text[index] === ALIF
+                && !nextIsStopMarker
+                && (hasFathataan(text, prevIndex) || (text[index -1] === SHADDA ? text[index - 2] !== FATHA : text[index -1] !== FATHA))) { // waw with sukun
                 continue
             }
             else if (hasQasr(text, index)) {
@@ -1075,7 +1124,11 @@ function detectNunSakinah(text, i) {
         if (char === SAKTA) {
             return null; // Sakta breaks assimilation rules
         }
-        if (Object.keys(WAQF_CLASSES).includes(char) || char === AYAH_END) {
+        if (isContinuationWaqfSign(char)) {
+            nextLetterIndex++;
+            continue;
+        }
+        if (isStoppingWaqfSign(char)) {
             return null;
         }
         nextLetterIndex++;
@@ -1117,11 +1170,14 @@ function detectNunSakinah(text, i) {
         }
     }
 
-    let triggerGroupLength = searchIndex - triggerStartIndex;
-    let fullLength = (nextLetterIndex - triggerStartIndex);
+    const triggerEndIndex = trimTrailingContinuationBreaks(text, triggerStartIndex, searchIndex);
+    let triggerGroupLength = triggerEndIndex - triggerStartIndex;
+    let fullEndIndex = nextLetterIndex;
     if (qasrIndex !== -1 && qasrIndex > triggerStartIndex && qasrIndex < nextLetterIndex) {
-        fullLength = qasrIndex - triggerStartIndex;
+        fullEndIndex = qasrIndex;
     }
+    fullEndIndex = trimTrailingContinuationBreaks(text, triggerStartIndex, fullEndIndex);
+    let fullLength = fullEndIndex - triggerStartIndex;
 
     if (YANMOU_LETTERS.includes(nextLetter) && (hasVowel(text, i) || hasTanween(text, i-1))) {
         return {
@@ -1386,14 +1442,27 @@ function detectIdghamMithlain(text, i) {
 
 function isAtStop(text, i) {
     let j = i;
-    while (j < text.length && text[j] === ' ') {
+    while (j < text.length && (text[j] === ' ' || isContinuationWaqfSign(text[j]))) {
         j++;
     }
     if (j >= text.length) {
         return true; // End of text is a stop
     }
     const charAtBreak = text[j];
-    return isRedWaqfSign(charAtBreak) || charAtBreak === AYAH_END;
+    return isStoppingWaqfSign(charAtBreak);
+}
+
+function trimTrailingContinuationBreaks(text, start, end) {
+    let trimmedEnd = end;
+    while (trimmedEnd > start) {
+        const char = text[trimmedEnd - 1];
+        if (char === ' ' || isContinuationWaqfSign(char)) {
+            trimmedEnd--;
+            continue;
+        }
+        break;
+    }
+    return trimmedEnd;
 }
 
 function hasVowel(text, index) {
@@ -1600,8 +1669,12 @@ function getNextBaseLetterIndex(text, index) {
     for (let i = index; i < text.length; i++) {
         const char = text[i];
 
-        if (WAQF_CLASSES[char] || char === AYAH_END) {
-            return i; // Stop signs are considered base letters for this purpose
+        if (isContinuationWaqfSign(char)) {
+            continue;
+        }
+
+        if (isStoppingWaqfSign(char)) {
+            return i; // True stop signs still terminate forward scans
         }
 
         // Skip Arabic combining marks (harakat, shadda, madda, etc.)
@@ -1643,6 +1716,14 @@ const RED_WAQF_TYPES = new Set(['waqf-lazim', 'waqf-awla', 'waqf-jaiz', 'waqf-mu
 function isRedWaqfSign(char) {
     const cls = WAQF_CLASSES[char];
     return !!cls && RED_WAQF_TYPES.has(cls);
+}
+
+function isContinuationWaqfSign(char) {
+    return WAQF_CLASSES[char] === 'waqf-continue';
+}
+
+function isStoppingWaqfSign(char) {
+    return isRedWaqfSign(char) || char === AYAH_END;
 }
 
 function isWordBreak(char) {

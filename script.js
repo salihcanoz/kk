@@ -313,6 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
         display.style.fontFamily = settings.fontFamily;
         display.style.fontSize = `${settings.fontSize}px`;
         display.classList.toggle('show-abbreviations', settings.tajweedMode === 'colors-abbr');
+        display.classList.toggle('compact-line-height', settings.tajweedMode !== 'colors-abbr');
     }
 
     // Show/hide legend based on tajweed mode.

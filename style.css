@@ -127,6 +127,10 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
+.quran-text.compact-line-height .quran-content {
+    line-height: 1.85;
+}
+
 .verse-text {
     cursor: help;
 }

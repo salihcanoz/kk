@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ghunna Review Helper</title>
+</head>
+<body>
+<script>
+const params = new URLSearchParams(window.location.search);
+const page = Math.max(0, Number(params.get('page') || 0));
+const mode = params.get('mode') || 'colors';
+const settings = {
+  language: 'en',
+  currentPage: page,
+  fontFamily: "'Scheherazade New', serif",
+  fontSize: 56,
+  tajweedMode: mode,
+  enabledRules: {
+    'tajweed-madd-asli': true,
+    'tajweed-madd-muttasil': true,
+    'tajweed-madd-munfasil': true,
+    'tajweed-madd-arid': true,
+    'tajweed-madd-liin': true,
+    'tajweed-med': true,
+    'tajweed-silat-ha': true,
+    'tajweed-iqlab': true,
+    'tajweed-idgham-bi-ghunna': true,
+    'tajweed-idgham-bila-ghunna': true,
+    'tajweed-idgham-mutakaribain': true,
+    'tajweed-idgham-mithlain': true,
+    'tajweed-ikhfa': true,
+    'tajweed-qalqalah': true,
+    'tajweed-ghunna': true,
+    'tajweed-qasr': true
+  }
+};
+localStorage.setItem('quranReaderSettings', JSON.stringify(settings));
+window.location.replace('/i.html');
+</script>
+</body>
+</html>
