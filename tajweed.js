@@ -156,7 +156,7 @@ function buildHtmlFromRules(text) {
 
         output += leadingWhitespace;
         if (visibleText.length > 0) {
-            output += `<span class="${rule.type}">${visibleText}</span>`;
+            output += `<span class="${rule.type}">${formatRuleContent(visibleText, rule.type)}</span>`;
         }
         output += trailingWhitespace;
         currentIndex = rule.index + rule.length;
@@ -164,6 +164,14 @@ function buildHtmlFromRules(text) {
 
     output += text.slice(currentIndex);
     return output.trimEnd();
+}
+
+function formatRuleContent(text, ruleType) {
+    if (ruleType === 'hidden-char') {
+        return text;
+    }
+
+    return text.replace(/[\u08D1-\u08D2\u06DC\u06EB\u06EC]/g, (char) => `<span class="hidden-char">${char}</span>`);
 }
 
 function getRenderableRuleLength(text, allRules, ruleIndex) {
@@ -566,6 +574,27 @@ function detectMadds(text, index) {
         return true;
     }
 
+    // Plain text may omit the hidden qasr sign in the لُؤْلُؤ family.
+    // Infer the same visible coloring as the encoded Quran text.
+    if (isImplicitLuluQasr(text, index)) {
+        addRule(index, 1, 'tajweed-qasr');
+        const alifIndex = getNextBaseLetterIndex(text, index + 1);
+        if (alifIndex !== -1
+            && text[alifIndex] === ALIF
+            && isSameWord(text, index, alifIndex)
+            && !hasVowel(text, alifIndex)
+        ) {
+            const stopMaddStart = getStopMaddAfterQasrStartIndex(text, index);
+            if (stopMaddStart !== -1 && shouldAddStopMaddAfterQasr(text, index, alifIndex)) {
+                addRule(stopMaddStart, (alifIndex + 1) - stopMaddStart, 'tajweed-madd-asli');
+            }
+            else {
+                addRule(alifIndex, 1, 'silent-letter');
+            }
+        }
+        return true;
+    }
+
     for (const madd of maddTypes) {
         if (text[index - 1] && !isWordBreak(text[index - 1]) && text[index] === madd.char && !hasVowel(text, index)) {
             // Explicit qasr/med signs on the carrier should take precedence over the
@@ -582,6 +611,9 @@ function detectMadds(text, index) {
                     continue;
                 }
                 if (hasCarrierHamzaBeforeAlif(text, index)) {
+                    continue;
+                }
+                if (isImplicitLuluQasrAlif(text, index)) {
                     continue;
                 }
                 let prevIndex = getPreviousBaseLetterIndex(text, index);
@@ -1186,6 +1218,9 @@ function detectNunSakinah(text, i) {
             k--;
         }
         triggerStartIndex = k;
+        if (k >= 0 && isImplicitLuluQasr(text, k)) {
+            triggerStartIndex = i;
+        }
         for (let j = triggerStartIndex + 1; j < i; j++) {
             if (text[j] === QASR || text[j] === MED) {
                 triggerStartIndex = i;
@@ -1359,7 +1394,13 @@ function detectQasr(text, i) {
             let length = end - prevIndex;
             addRule(prevIndex, length, 'tajweed-qasr');
             if (text[i+1] === ALIF && !hasVowel(text, i+1) ) {
-                addRule(i + 1, 1, 'silent-letter');
+                const stopMaddStart = getStopMaddAfterQasrStartIndex(text, prevIndex);
+                if (stopMaddStart !== -1 && shouldAddStopMaddAfterQasr(text, prevIndex, i + 1)) {
+                    addRule(stopMaddStart, (i + 2) - stopMaddStart, 'tajweed-madd-asli');
+                }
+                else {
+                    addRule(i + 1, 1, 'silent-letter');
+                }
             }
         }
     }
@@ -1693,6 +1734,69 @@ function hasCarrierHamzaBeforeAlif(text, index) {
     return false;
 }
 
+function isImplicitLuluQasr(text, index) {
+    if (!text || index < 0 || index >= text.length || text[index] !== 'ؤ' || hasQasr(text, index)) {
+        return false;
+    }
+
+    if (!(hasTanween(text, index) || hasDammataan(text, index))) {
+        return false;
+    }
+
+    const prevLam = getPreviousBaseLetterIndex(text, index);
+    if (prevLam === -1 || text[prevLam] !== LAM || !hasMarkAfter(text, prevLam, DAMMA)) {
+        return false;
+    }
+
+    const prevHamza = getPreviousBaseLetterIndex(text, prevLam);
+    if (prevHamza === -1 || text[prevHamza] !== 'ؤ' || !hasSukun(text, prevHamza)) {
+        return false;
+    }
+
+    const firstLam = getPreviousBaseLetterIndex(text, prevHamza);
+    if (firstLam === -1 || text[firstLam] !== LAM || !hasMarkAfter(text, firstLam, DAMMA)) {
+        return false;
+    }
+
+    return true;
+}
+
+function shouldAddStopMaddAfterQasr(text, carrierIndex, alifIndex) {
+    if (!text || carrierIndex < 0 || alifIndex < 0) {
+        return false;
+    }
+
+    return text[alifIndex] === ALIF
+        && !hasVowel(text, alifIndex)
+        && hasFathataan(text, carrierIndex)
+        && isAtStop(text, alifIndex + 1);
+}
+
+function getStopMaddAfterQasrStartIndex(text, carrierIndex) {
+    if (!text || carrierIndex < 0) {
+        return -1;
+    }
+
+    let i = carrierIndex + 1;
+    while (i < text.length && isDiacritic(text[i])) {
+        if (text[i] === FATHATAAN) {
+            return i;
+        }
+        i++;
+    }
+
+    return -1;
+}
+
+function isImplicitLuluQasrAlif(text, index) {
+    if (!text || index < 0 || index >= text.length || text[index] !== ALIF) {
+        return false;
+    }
+
+    const prevBase = getPreviousBaseLetterIndex(text, index);
+    return prevBase !== -1 && isImplicitLuluQasr(text, prevBase);
+}
+
 function getPreviousBaseLetterIndex(text, index) {
     if (!text || index <= 0 || index > text.length) {
         return -1;
@@ -1856,8 +1960,23 @@ function nextWordStartsWithHamzatWasl(text, wawIndex) {
         return false;
     }
 
-    const j = getConnectedWordStartIndex(text, i);
-    if (j === -1) {
+    let j = i;
+    while (j < text.length) {
+        const char = text[j];
+        if (isDiacritic(char) || isHiddenTajweedMark(char) || char === '\u0640') {
+            j++;
+            continue;
+        }
+        if (char === ' ' || /\p{P}/u.test(char)) {
+            j++;
+            continue;
+        }
+        if (WAQF_CLASSES[char] || char === AYAH_END) {
+            return false;
+        }
+        break;
+    }
+    if (j >= text.length) {
         return false;
     }
 
