@@ -595,6 +595,24 @@ function detectMadds(text, index) {
         return true;
     }
 
+    // At a true stop, terminal ...قِیَ / ...سِیَ style endings are read with
+    // 'arid li-s-sukun' on the final ya.
+    if ((text[index] === YA || text[index] === 'ي' || text[index] === 'ی')
+        && hasMarkAfter(text, index, FATHA)
+    ) {
+        const prevIndex = getPreviousBaseLetterIndex(text, index);
+        if (prevIndex !== -1 && hasMarkAfter(text, prevIndex, KASRA)) {
+            let end = index + 1;
+            while (end < text.length && isDiacritic(text[end])) {
+                end++;
+            }
+            if (isAtStop(text, end)) {
+                addRule(prevIndex, end - prevIndex, 'tajweed-madd-arid');
+                return true;
+            }
+        }
+    }
+
     for (const madd of maddTypes) {
         if (text[index - 1] && !isWordBreak(text[index - 1]) && text[index] === madd.char && !hasVowel(text, index)) {
             // Explicit qasr/med signs on the carrier should take precedence over the
