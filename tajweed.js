@@ -826,6 +826,12 @@ function detectMadds(text, index) {
                 && text[index] !== 'و'
                 && !hasVowel(text, nextIndex)
             ) { // alif with sukun
+                // Word-ending fathatan + alif should only become a visible madd at a true
+                // stop. In continuation (e.g. قَوْمًا اٰخَرٖینَ), leave it to the tanween
+                // handling instead of coloring it as madd.
+                if (text[index] === ALIF && hasFathataan(text, prevIndex) && !nextIsStopMarker) {
+                    continue;
+                }
                 if (causesIltiqaSakinayn(text, index)) {
                     type = 'silent-letter';
                     if (text[index] === ALIF || text[index] === ALIF_MAKSURA || text[index] === ALIF_MAKSURA2) {
