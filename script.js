@@ -271,6 +271,11 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const totalMushafPages = 605;
+    const JUZ_START_PAGE_INDICES = [
+        0, 21, 41, 61, 81, 101, 121, 141, 161, 181,
+        201, 221, 241, 261, 281, 301, 321, 341, 361, 381,
+        401, 421, 441, 461, 481, 501, 521, 541, 561, 581
+    ];
     const BASMALAH = "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحٖیمِ";
 
     // Create legend element
@@ -455,10 +460,17 @@ document.addEventListener('DOMContentLoaded', () => {
         pageSelect.value = currentPage;
     }
 
-    function getJuzNumber(page) {
-        if (page <= 20) return 1;
-        if (page > 600) return 30;
-        return Math.floor((page - 1) / 20) + 1;
+    function getJuzNumber(pageIndex) {
+        for (let i = JUZ_START_PAGE_INDICES.length - 1; i >= 0; i--) {
+            if (pageIndex >= JUZ_START_PAGE_INDICES[i]) {
+                return i + 1;
+            }
+        }
+        return 1;
+    }
+
+    function findFirstPageOfJuz(juzNumber) {
+        return JUZ_START_PAGE_INDICES[juzNumber - 1] || 0;
     }
 
     function collectRuleTypesFromHtml(html, targetSet) {
@@ -554,7 +566,7 @@ document.addEventListener('DOMContentLoaded', () => {
         display.appendChild(contentDiv);
 
         settings.currentPage = pageIndex;
-        const juz = getJuzNumber(pageNum);
+        const juz = getJuzNumber(pageIndex);
         pageInfo.textContent = `${t ? t.page : 'Page'} ${pageIndex} | ${t ? t.juz : 'Juz'} ${juz}`;
         nextBtn.disabled = settings.currentPage === 0;
         prevBtn.disabled = settings.currentPage === totalMushafPages - 1;
@@ -615,7 +627,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     juzSelect.addEventListener('change', (e) => {
         const selectedJuz = parseInt(e.target.value);
-        const page = (selectedJuz === 1) ? 0 : (selectedJuz - 1) * 20 + 1;
+        const page = findFirstPageOfJuz(selectedJuz);
         goToPage(page);
     });
 
