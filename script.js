@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Constants ---
     const FONT_SIZE_MIN = 30;
     const FONT_SIZE_MAX = 150;
+    const FONT_SIZE_STEP = 4;
     const RTL_LANGS = new Set(['ar', 'fa', 'ur', 'he']);
     const LANG_OPTIONS = [
         {code: 'tr', name: '\u{1F1F9}\u{1F1F7} Türkçe'},
@@ -30,11 +31,6 @@ document.addEventListener('DOMContentLoaded', () => {
         {name: 'Lateef', value: "'Lateef', serif"},
         {name: 'Noto Naskh', value: "'Noto Naskh Arabic', serif"},
         {name: 'Scheherazade', value: "'Scheherazade New', serif"}
-    ];
-    const TAJWEED_MODES = [
-        {value: 'none', key: 'tajweedNone', default: 'No tajweed'},
-        {value: 'colors', key: 'tajweedColors', default: 'Colors'},
-        {value: 'colors-abbr', key: 'tajweedColorsAndAbbr', default: 'Colors and Abbrevations'}
     ];
     const RULE_TOGGLE_ITEMS = [        
         {className: 'tajweed-madd-asli', legendClass: 'legend-madd-asli', labelKey: 'maddAsli', defaultLabel: 'Madd Asli'},
@@ -59,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
         acc[item.className] = true;
         return acc;
     }, {});
+    const CORPUS_BASE_URL = 'https://corpus.quran.com';
 
     // --- Settings ---
     const defaultSettings = {
@@ -67,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fontFamily: "'Lateef', serif",
         fontSize: 48,
         tajweedMode: 'colors-abbr', // 'none', 'colors', 'colors-abbr'
+        showTranslations: false,
         enabledRules: {...DEFAULT_ENABLED_RULES}
     };
 
@@ -108,6 +106,251 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     let t = getTranslationsForLanguage(settings.language);
+    const corpusTranslationCache = {};
+    const corpusPageRequests = {};
+    const corpusDictionaryCache = {};
+    const corpusDictionaryRequests = {};
+
+    function escapeHtml(value) {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function stripHtml(value) {
+        const template = document.createElement('template');
+        template.innerHTML = value;
+        return template.content.textContent.replace(/\s+/g, ' ').trim();
+    }
+
+    function decodeHtmlAttribute(value) {
+        const textarea = document.createElement('textarea');
+        textarea.innerHTML = value || '';
+        return textarea.value;
+    }
+
+    function transliterateBuckwalterRoot(value) {
+        const buckwalterMap = {
+            "'": "ء", "|": "آ", ">": "أ", "&": "ؤ", "<": "إ", "}": "ئ", "A": "ا",
+            "b": "ب", "p": "ة", "t": "ت", "v": "ث", "j": "ج", "H": "ح", "x": "خ",
+            "d": "د", "*": "ذ", "r": "ر", "z": "ز", "s": "س", "$": "ش", "S": "ص",
+            "D": "ض", "T": "ط", "Z": "ظ", "E": "ع", "g": "غ", "f": "ف", "q": "ق",
+            "k": "ك", "l": "ل", "m": "م", "n": "ن", "h": "ه", "w": "و", "Y": "ى",
+            "y": "ي"
+        };
+
+        return String(value || '')
+            .replace(/[aiuoFKN~`\{\}_\^#:\.\[\];,\-+]/g, '')
+            .split('')
+            .map((char) => buckwalterMap[char] || '')
+            .filter(Boolean)
+            .join(' ');
+    }
+
+    function formatCorpusTooltip(entry) {
+        if (!entry) return '';
+        if (typeof entry === 'string') return entry;
+
+        const parts = [];
+        if (entry.lemma) parts.push(entry.lemma);
+        if (entry.translation) parts.push(entry.translation);
+        if (entry.root) {
+            var root = `${entry.root}`;
+            if (entry.bab) root += ` (${entry.bab})`;
+            parts.push(root);
+        }
+        return parts.join('\n');
+    }
+
+    function parseCorpusLocation(location) {
+        const match = String(location || '').match(/^(\d+):(\d+):(\d+)$/);
+        if (!match) return null;
+        return {
+            surah: Number(match[1]),
+            verse: Number(match[2]),
+            word: Number(match[3])
+        };
+    }
+
+    function fetchLemmaForRoot(rootCode) {
+        if (!rootCode) return Promise.resolve('');
+        if (corpusDictionaryCache[rootCode] !== undefined) return Promise.resolve(corpusDictionaryCache[rootCode]);
+        if (corpusDictionaryRequests[rootCode]) return corpusDictionaryRequests[rootCode];
+
+        const url = window.location.protocol === 'http:' || window.location.protocol === 'https:'
+            ? `corpus-dictionary?q=${encodeURIComponent(rootCode)}`
+            : `${CORPUS_BASE_URL}/qurandictionary.jsp?q=${encodeURIComponent(rootCode)}`;
+
+        corpusDictionaryRequests[rootCode] = fetch(url)
+            .then(r => r.ok ? r.text() : '')
+            .then(html => {
+                if (!html) { corpusDictionaryCache[rootCode] = ''; return ''; }
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const atEls = doc.querySelectorAll('.at');
+                // First .at is the spaced root (e.g. "ك ت ب"), second is the lemma
+                const lemma = atEls.length > 1 ? atEls[1].textContent.trim() : '';
+                corpusDictionaryCache[rootCode] = lemma;
+                return lemma;
+            })
+            .catch(() => { corpusDictionaryCache[rootCode] = ''; return ''; });
+
+        return corpusDictionaryRequests[rootCode];
+    }
+
+    function parseCorpusWordEntries(html) {
+        const parsedEntries = {};
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const locationElements = doc.querySelectorAll('.location');
+        locationElements.forEach((locationElement) => {
+            const key = locationElement.textContent.replace(/[()]/g, '').trim();
+            const cell = locationElement.closest('td');
+            if (!key || !cell) return;
+
+            const cellHtml = cell.innerHTML;
+            const translationMatch = cellHtml.match(/<span class="location">[\s\S]*?<\/span><br\s*\/?>[\s\S]*?<br\s*\/?>\s*([\s\S]*?)\s*$/i);
+            if (!translationMatch) return;
+
+            const translation = stripHtml(translationMatch[1]);
+            if (!translation) return;
+
+            const row = cell.closest('tr');
+            const morphologyCell = row ? row.querySelector('.col3') : null;
+            const morphologyText = morphologyCell ? stripHtml(morphologyCell.innerHTML) : '';
+            const isVerb = morphologyCell ? Boolean(morphologyCell.querySelector('b') && /\bV\b/.test(morphologyCell.querySelector('b').textContent)) : false;
+            const formMatch = morphologyText.match(/\(form\s+([IVX]+)\)/i);
+            const bab = isVerb ? `Form ${formMatch ? formMatch[1].toUpperCase() : 'I'}` : '';
+            const rootMatch = cellHtml.match(/qurandictionary\.jsp\?q=([^"#&]+)[^"]*#\([^"]+\)/i);
+            const rootCode = rootMatch ? decodeURIComponent(decodeHtmlAttribute(rootMatch[1])) : '';
+            const root = transliterateBuckwalterRoot(rootCode);
+            parsedEntries[key] = {
+                translation,
+                root,
+                bab
+            };
+        });
+        return parsedEntries;
+    }
+
+    function cacheCorpusEntries(entries) {
+        Object.entries(entries).forEach(([key, entry]) => {
+            const tooltip = formatCorpusTooltip(entry);
+            if (tooltip) {
+                corpusTranslationCache[key] = tooltip;
+            }
+        });
+    }
+
+    async function fetchCorpusTranslation(wordKey) {
+        if (!wordKey) return '';
+        if (corpusTranslationCache[wordKey]) {
+            return corpusTranslationCache[wordKey];
+        }
+
+        const location = parseCorpusLocation(wordKey);
+        if (!location) return '';
+
+        const pageKey = `${location.surah}:${location.verse}`;
+        if (!corpusPageRequests[pageKey]) {
+            const sameOriginUrl = `corpus-wordbyword?chapter=${location.surah}&verse=${location.verse}`;
+            const corpusUrl = `${CORPUS_BASE_URL}/wordbyword.jsp?chapter=${location.surah}&verse=${location.verse}`;
+            const url = window.location.protocol === 'http:' || window.location.protocol === 'https:'
+                ? sameOriginUrl
+                : corpusUrl;
+
+            corpusPageRequests[pageKey] = fetch(url)
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error(`Corpus request failed with ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then((html) => {
+                    cacheCorpusEntries(parseCorpusWordEntries(html));
+                    return corpusTranslationCache[wordKey] || '';
+                })
+                .catch((error) => {
+                    console.warn('Unable to read Quranic Arabic Corpus translation.', error);
+                    return '';
+                });
+        }
+
+        return corpusPageRequests[pageKey];
+    }
+
+    function createWordTooltipHtml(wordHtml, wordKey) {
+        const translation = wordKey ? (corpusTranslationCache[wordKey] || '') : '';
+        if (!translation && !wordKey) {
+            return wordHtml;
+        }
+
+        const tooltipText = translation || 'Loading translation...';
+        const escapedTranslation = escapeHtml(tooltipText);
+        const keyAttribute = wordKey ? ` data-corpus-location="${escapeHtml(wordKey)}"` : '';
+        const pendingAttribute = translation ? '' : ' data-corpus-pending="true"';
+        return `<span class="quran-word" aria-label="${escapedTranslation}" data-translation="${escapedTranslation}"${keyAttribute}${pendingAttribute}>${wordHtml}</span>`;
+    }
+
+    function renderTextWithWordTranslations(text, location = null) {
+        const sourceText = String(text || '');
+        const processedHtml = settings.tajweedMode === 'none'
+            ? sourceText
+            : applyTajweed(sourceText, {enabledRules: settings.enabledRules});
+        if (!settings.showTranslations) {
+            return processedHtml;
+        }
+
+        const template = document.createElement('template');
+        template.innerHTML = processedHtml;
+        const output = [];
+        let wordParts = [];
+        let wordText = '';
+        let wordIndex = location && location.surah && location.verse ? 0 : null;
+
+        function flushWord() {
+            if (!wordParts.length) return;
+            const wordKey = wordIndex === null ? null : `${location.surah}:${location.verse}:${++wordIndex}`;
+            output.push(createWordTooltipHtml(wordParts.join(''), wordKey));
+            wordParts = [];
+            wordText = '';
+        }
+
+        function collectNode(node) {
+            if (node.nodeType === Node.TEXT_NODE) {
+                node.textContent.split(/(\s+)/).forEach((segment) => {
+                    if (!segment) return;
+                    if (/^\s+$/.test(segment)) {
+                        flushWord();
+                        output.push(segment);
+                    }
+                    else {
+                        wordParts.push(escapeHtml(segment));
+                        wordText += segment;
+                    }
+                });
+                return;
+            }
+
+            if (node.nodeType !== Node.ELEMENT_NODE) {
+                return;
+            }
+
+            const nodeText = node.textContent || '';
+            if (/\s/.test(nodeText)) {
+                Array.from(node.childNodes).forEach(collectNode);
+                return;
+            }
+
+            wordParts.push(node.outerHTML);
+            wordText += nodeText;
+        }
+
+        Array.from(template.content.childNodes).forEach(collectNode);
+        flushWord();
+        return output.join('');
+    }
 
     // Load fonts from Google Fonts
     const fontLink = document.createElement('link');
@@ -129,15 +372,30 @@ document.addEventListener('DOMContentLoaded', () => {
         langSelect.appendChild(option);
     });
 
-    // Font Size Buttons
-    const decreaseFontBtn = document.createElement('button');
-    decreaseFontBtn.textContent = 'A-';
+    // Font Size Slider
+    const fontSizeControls = document.createElement('div');
+    fontSizeControls.className = 'font-size-controls';
 
-    const increaseFontBtn = document.createElement('button');
-    increaseFontBtn.textContent = 'A+';
+    const fontSizeLabel = document.createElement('label');
+    fontSizeLabel.className = 'font-size-label';
+    fontSizeLabel.setAttribute('for', 'fontSizeSlider');
+    fontSizeLabel.textContent = 'A';
+
+    const fontSizeSlider = document.createElement('input');
+    fontSizeSlider.type = 'range';
+    fontSizeSlider.id = 'fontSizeSlider';
+    fontSizeSlider.className = 'font-size-slider';
+    fontSizeSlider.min = FONT_SIZE_MIN;
+    fontSizeSlider.max = FONT_SIZE_MAX;
+    fontSizeSlider.step = FONT_SIZE_STEP;
+    fontSizeSlider.value = Math.round(settings.fontSize);
+
+    fontSizeControls.appendChild(fontSizeLabel);
+    fontSizeControls.appendChild(fontSizeSlider);
 
     // Font Type Dropdown
     const fontSelect = document.createElement('select');
+    fontSelect.id = 'fontSelect';
     FONT_OPTIONS.forEach(font => {
         const option = document.createElement('option');
         option.value = font.value;
@@ -146,22 +404,66 @@ document.addEventListener('DOMContentLoaded', () => {
         fontSelect.appendChild(option);
     });
 
-    // Tajweed Display Mode Dropdown
-    const tajweedSelect = document.createElement('select');
-    tajweedSelect.id = 'tajweedMode';
-    TAJWEED_MODES.forEach(mode => {
-        const option = document.createElement('option');
-        option.value = mode.value;
-        option.textContent = (t && t[mode.key]) ? t[mode.key] : mode.default;
-        if (mode.value === settings.tajweedMode) option.selected = true;
-        tajweedSelect.appendChild(option);
-    });
+    const settingsButton = document.createElement('button');
+    settingsButton.type = 'button';
+    settingsButton.className = 'reader-settings-button';
+    settingsButton.textContent = '⚙️ Settings';
+    settingsButton.setAttribute('aria-haspopup', 'dialog');
+    settingsButton.setAttribute('aria-expanded', 'false');
+
+    const settingsDialog = document.createElement('div');
+    settingsDialog.className = 'reader-settings-dialog';
+    settingsDialog.hidden = true;
+    settingsDialog.setAttribute('role', 'dialog');
+    settingsDialog.setAttribute('aria-modal', 'false');
+    settingsDialog.setAttribute('aria-labelledby', 'readerSettingsTitle');
+    function buildSettingsDialogHTML(tr) {
+        return `
+        <div class="reader-settings-panel">
+            <div class="reader-settings-header">
+                <h2 id="readerSettingsTitle">${tr.settings || '\u2699\ufe0f Settings'}</h2>
+                <button type="button" class="dialog-close-button" aria-label="Close">×</button>
+            </div>
+            <div class="reader-settings-control">
+                <label id="fontSelectLabel" for="fontSelect">${tr.settingsFontType || 'Font type'}</label>
+                <div id="fontSelectMount"></div>
+            </div>
+            <fieldset>
+                <legend id="tajweedDisplayLegend">${tr.settingsTajweedDisplay || 'Tajweed display'}</legend>
+                <label>
+                    <input type="checkbox" id="tajweedColorsToggle">
+                    ${tr.tajweedColors || 'Colors'}
+                </label>
+                <label>
+                    <input type="checkbox" id="tajweedAbbrToggle">
+                    ${tr.settingsAbbreviations || 'Abbreviations'}
+                </label>
+            </fieldset>
+            <fieldset id="wordToolsFieldset" hidden>
+                <legend id="wordToolsLegend">${tr.settingsWordTools || 'Word tools'}</legend>
+                <label>
+                    <input type="checkbox" id="translationToggle">
+                    ${tr.settingsShowTranslation || 'Show translation, root and form on hover'}
+                </label>
+            </fieldset>
+        </div>
+    `;
+    }
+
+    settingsDialog.innerHTML = buildSettingsDialogHTML(t || {});
+    document.body.appendChild(settingsDialog);
+
+    const fontSelectMount = settingsDialog.querySelector('#fontSelectMount');
+    const tajweedColorsToggle = settingsDialog.querySelector('#tajweedColorsToggle');
+    const tajweedAbbrToggle = settingsDialog.querySelector('#tajweedAbbrToggle');
+    const wordToolsFieldset = settingsDialog.querySelector('#wordToolsFieldset');
+    const translationToggle = settingsDialog.querySelector('#translationToggle');
+    const settingsDialogCloseBtn = settingsDialog.querySelector('.dialog-close-button');
+    if (fontSelectMount) fontSelectMount.appendChild(fontSelect);
 
     settingsContainer.appendChild(langSelect);
-    settingsContainer.appendChild(decreaseFontBtn);
-    settingsContainer.appendChild(fontSelect);
-    settingsContainer.appendChild(increaseFontBtn);
-    settingsContainer.appendChild(tajweedSelect);
+    settingsContainer.appendChild(fontSizeControls);
+    settingsContainer.appendChild(settingsButton);
 
     // Add to Navbar
     const navbar = document.querySelector('.navbar');
@@ -170,8 +472,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Event Listeners ---
-    decreaseFontBtn.onclick = () => adjustFontSize(0.8);
-    increaseFontBtn.onclick = () => adjustFontSize(1.2);
+    fontSizeSlider.oninput = () => setFontSize(fontSizeSlider.value);
+    fontSizeSlider.onchange = saveSettings;
 
     fontSelect.onchange = () => {
         settings.fontFamily = fontSelect.value;
@@ -179,11 +481,169 @@ document.addEventListener('DOMContentLoaded', () => {
         saveSettings();
     };
 
-    tajweedSelect.onchange = () => {
-        settings.tajweedMode = tajweedSelect.value;
+    function updateSettingsDialogText() {
+        if (!t) return;
+        const titleEl = settingsDialog.querySelector('#readerSettingsTitle');
+        if (titleEl) titleEl.textContent = t.settings || '⚙️ Settings';
+        const fontLabel = settingsDialog.querySelector('#fontSelectLabel');
+        if (fontLabel) fontLabel.textContent = t.settingsFontType || 'Font type';
+        fontSelect.title = t.settingsFontType || 'Font type';
+        const tajweedDisplayLegend = settingsDialog.querySelector('#tajweedDisplayLegend');
+        if (tajweedDisplayLegend) tajweedDisplayLegend.textContent = t.settingsTajweedDisplay || 'Tajweed display';
+        const wordToolsLegend = settingsDialog.querySelector('#wordToolsLegend');
+        if (wordToolsLegend) wordToolsLegend.textContent = t.settingsWordTools || 'Word tools';
+        const colorsLabel = tajweedColorsToggle && tajweedColorsToggle.closest('label');
+        if (colorsLabel) colorsLabel.childNodes[colorsLabel.childNodes.length - 1].textContent = '\n' + (t.tajweedColors || 'Colors') + '\n';
+        const abbrLabel = tajweedAbbrToggle && tajweedAbbrToggle.closest('label');
+        if (abbrLabel) abbrLabel.childNodes[abbrLabel.childNodes.length - 1].textContent = '\n' + (t.settingsAbbreviations || 'Abbreviations') + '\n';
+        const transLabel = translationToggle && translationToggle.closest('label');
+        if (transLabel) transLabel.childNodes[transLabel.childNodes.length - 1].textContent = '\n' + (t.settingsShowTranslation || 'Show translation, root and bab on hover') + '\n';
+    }
+
+    function syncSettingsDialogControls() {
+        fontSelect.value = settings.fontFamily;
+        if (!tajweedColorsToggle || !tajweedAbbrToggle || !translationToggle) return;
+        tajweedColorsToggle.checked = settings.tajweedMode !== 'none';
+        tajweedAbbrToggle.checked = settings.tajweedMode === 'colors-abbr';
+        tajweedAbbrToggle.disabled = !tajweedColorsToggle.checked;
+        translationToggle.checked = settings.showTranslations !== false;
+    }
+
+    function setTajweedModeFromDialog() {
+        if (!tajweedColorsToggle.checked) {
+            settings.tajweedMode = 'none';
+        }
+        else {
+            settings.tajweedMode = tajweedAbbrToggle.checked ? 'colors-abbr' : 'colors';
+        }
+
         applyDisplaySettings();
         setLegendVisibility();
         loadMushafPage(settings.currentPage);
+        syncSettingsDialogControls();
+    }
+
+    async function syncWordToolsAvailability() {
+        if (!wordToolsFieldset) return;
+        let isAvailable = false;
+
+        if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+            try {
+                const response = await fetch('health', {cache: 'no-store'});
+                isAvailable = response.ok;
+            }
+            catch (error) {
+                isAvailable = false;
+            }
+
+            if (!isAvailable) {
+                try {
+                    const response = await fetch('corpus-wordbyword', {cache: 'no-store'});
+                    isAvailable = response.status === 400;
+                }
+                catch (error) {
+                    isAvailable = false;
+                }
+            }
+        }
+
+        wordToolsFieldset.hidden = !isAvailable;
+        if (!isAvailable && settings.showTranslations) {
+            settings.showTranslations = false;
+            syncSettingsDialogControls();
+            loadMushafPage(settings.currentPage);
+            saveSettings();
+        }
+    }
+
+    function positionSettingsDialog() {
+        const buttonRect = settingsButton.getBoundingClientRect();
+        const gap = 8;
+        settingsDialog.hidden = false;
+        const dialogRect = settingsDialog.getBoundingClientRect();
+        const left = Math.min(
+            Math.max(8, buttonRect.right - dialogRect.width),
+            window.innerWidth - dialogRect.width - 8
+        );
+        const top = Math.min(
+            buttonRect.bottom + gap,
+            window.innerHeight - dialogRect.height - 8
+        );
+        settingsDialog.style.left = `${left}px`;
+        settingsDialog.style.top = `${top}px`;
+    }
+
+    function openSettingsDialog() {
+        syncSettingsDialogControls();
+        positionSettingsDialog();
+        settingsButton.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeSettingsDialog() {
+        settingsDialog.hidden = true;
+        settingsButton.setAttribute('aria-expanded', 'false');
+    }
+
+    settingsButton.onclick = () => {
+        if (settingsDialog.hidden) {
+            openSettingsDialog();
+        }
+        else {
+            closeSettingsDialog();
+        }
+    };
+
+    settingsDialogCloseBtn.onclick = closeSettingsDialog;
+
+    document.addEventListener('click', (event) => {
+        if (
+            settingsDialog.hidden ||
+            settingsDialog.contains(event.target) ||
+            settingsButton.contains(event.target)
+        ) {
+            return;
+        }
+        closeSettingsDialog();
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !settingsDialog.hidden) {
+            closeSettingsDialog();
+            settingsButton.focus();
+        }
+    });
+
+    window.addEventListener('resize', () => {
+        if (!settingsDialog.hidden) {
+            positionSettingsDialog();
+        }
+    });
+
+    window.addEventListener('scroll', () => {
+        if (!settingsDialog.hidden) {
+            positionSettingsDialog();
+        }
+    });
+
+    tajweedColorsToggle.onchange = () => {
+        if (!tajweedColorsToggle.checked) {
+            tajweedAbbrToggle.checked = false;
+        }
+        setTajweedModeFromDialog();
+    };
+
+    tajweedAbbrToggle.onchange = () => {
+        if (tajweedAbbrToggle.checked) {
+            tajweedColorsToggle.checked = true;
+        }
+        setTajweedModeFromDialog();
+    };
+
+    translationToggle.onchange = () => {
+        settings.showTranslations = translationToggle.checked;
+        loadMushafPage(settings.currentPage);
+        syncSettingsDialogControls();
+        saveSettings();
     };
 
     langSelect.onchange = () => setLanguage(langSelect.value);
@@ -214,6 +674,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         verseElement.classList.toggle('is-selected');
+    });
+
+    async function loadCorpusWordElement(wordElement) {
+        if (!wordElement || !display.contains(wordElement)) {
+            return;
+        }
+        if (wordElement.getAttribute('data-corpus-pending') !== 'true') {
+            return;
+        }
+
+        const wordKey = wordElement.getAttribute('data-corpus-location');
+        const translation = await fetchCorpusTranslation(wordKey);
+        if (!translation) {
+            const corpusUrl = `${CORPUS_BASE_URL}/wordmorphology.jsp?location=(${wordKey})`;
+            const fallbackText = corpusUrl;
+            wordElement.setAttribute('data-translation', fallbackText);
+            wordElement.setAttribute('aria-label', fallbackText);
+            wordElement.removeAttribute('data-corpus-pending');
+            return;
+        }
+
+        wordElement.setAttribute('data-translation', translation);
+        wordElement.setAttribute('aria-label', translation);
+        wordElement.removeAttribute('data-corpus-pending');
+    }
+
+    display.addEventListener('mouseover', function (event) {
+        loadCorpusWordElement(event.target.closest('.quran-word[data-corpus-pending="true"]'));
+    });
+
+    display.addEventListener('focusin', function (event) {
+        loadCorpusWordElement(event.target.closest('.quran-word[data-corpus-pending="true"]'));
+    });
+
+    display.addEventListener('touchstart', function (event) {
+        loadCorpusWordElement(event.target.closest('.quran-word[data-corpus-pending="true"]'));
+    }, {passive: true});
+
+    display.addEventListener('click', function (event) {
+        loadCorpusWordElement(event.target.closest('.quran-word[data-corpus-pending="true"]'));
     });
 
     function handleSwipe() {
@@ -286,6 +786,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof quranRawData !== 'undefined') {
         processQuranData();
         updateUIText();
+        syncWordToolsAvailability();
     }
     else {
         console.error("Error: quranRawData is not defined.");
@@ -316,26 +817,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // Keep font and tajweed display settings in sync with the UI.
     function applyDisplaySettings() {
         display.style.fontFamily = settings.fontFamily;
-        display.style.fontSize = `${settings.fontSize}px`;
+        display.style.fontSize = `${settings.fontSize / 16}rem`;
         display.classList.toggle('show-abbreviations', settings.tajweedMode === 'colors-abbr');
         display.classList.toggle('compact-line-height', settings.tajweedMode !== 'colors-abbr');
+        updateFontSizeControls();
+    }
+
+    function updateFontSizeControls() {
+        const fontSize = Math.round(settings.fontSize);
+        fontSizeSlider.value = fontSize;
+        fontSizeSlider.setAttribute('aria-label', `Font size ${fontSize}sp`);
     }
 
     // Show/hide legend based on tajweed mode.
     function setLegendVisibility() {
         if (!legend) return;
         legend.style.display = settings.tajweedMode === 'none' ? 'none' : 'block';
-    }
-
-    // Refresh tajweed dropdown labels when language changes.
-    function updateTajweedSelectLabels() {
-        if (!tajweedSelect) return;
-        TAJWEED_MODES.forEach(mode => {
-            const option = Array.from(tajweedSelect.options).find((item) => item.value === mode.value);
-            if (option) {
-                option.textContent = (t && t[mode.key]) ? t[mode.key] : mode.default;
-            }
-        });
     }
 
     // Update CSS variables used for abbreviation overlays.
@@ -364,12 +861,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Change font size while respecting min/max limits.
-    function adjustFontSize(multiplier) {
-        const nextSize = settings.fontSize * multiplier;
-        if (nextSize < FONT_SIZE_MIN || nextSize > FONT_SIZE_MAX) return;
+    function setFontSize(value) {
+        const parsedSize = Number(value);
+        if (!Number.isFinite(parsedSize)) return;
+        const nextSize = Math.min(FONT_SIZE_MAX, Math.max(FONT_SIZE_MIN, Math.round(parsedSize)));
+        if (nextSize === settings.fontSize) return;
         settings.fontSize = nextSize;
         applyDisplaySettings();
-        saveSettings();
     }
 
     // Update UI language and refresh the UI text.
@@ -405,13 +903,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.title = t.title;
                 if (appTitle) appTitle.textContent = t.title;
             }
-            decreaseFontBtn.title = t.decreaseFont;
-            increaseFontBtn.title = t.increaseFont;
+            fontSizeSlider.title = `${t.decreaseFont} / ${t.increaseFont}`;
             prevBtn.textContent = t.nextPage;
             nextBtn.textContent = t.prevPage;
+            if (t.settings) settingsButton.textContent = t.settings;
+            updateSettingsDialogText();
         }
 
-        updateTajweedSelectLabels();
+        syncSettingsDialogControls();
         populateSurahDropdown();
         populateJuzDropdown();
         populatePageDropdown();
@@ -539,17 +1038,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 let text = verse.t;
 
                 if (verse.i === 1 && verse.surah !== 1 && verse.surah !== 9) {
-                    let coloredBasmalah = BASMALAH;
-                    if (settings.tajweedMode !== 'none') {
-                        coloredBasmalah = applyTajweed(BASMALAH, {enabledRules: settings.enabledRules});
-                    }
-                    fullTextHTML += `<div class="basmalah">${coloredBasmalah}</div>`;
+                    const basmalahWithTooltips = renderTextWithWordTranslations(BASMALAH);
+                    fullTextHTML += `<div class="basmalah">${basmalahWithTooltips}</div>`;
                 }
 
-                let processedText = text;
-                if (settings.tajweedMode !== 'none') {
-                    processedText = applyTajweed(text, {enabledRules: settings.enabledRules});
-                }
+                const processedText = renderTextWithWordTranslations(text, {
+                    surah: verse.surah,
+                    verse: verse.i
+                });
 
                 const verseClasses = ['verse-block'];
                 if (text.includes('۩')) {
