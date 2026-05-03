@@ -53,7 +53,7 @@ function fetchCorpusUrl(path) {
 
 function serveStatic(requestPath, response) {
     const safePath = path.normalize(decodeURIComponent(requestPath)).replace(/^(\.\.[/\\])+/, '');
-    const filePath = path.join(ROOT, safePath === '/' ? 'i.html' : safePath);
+    const filePath = path.join(ROOT, safePath === '/' ? 'i.html' : (safePath === '/learn' || safePath === '/learn/' ? 'learn/index.html' : safePath));
 
     if (!filePath.startsWith(ROOT)) {
         send(response, 403, 'Forbidden');

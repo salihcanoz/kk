@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="appTitle">Quran Word Learner</title>
+    <link rel="icon" type="image/png" href="../favicon.png">
+    <link rel="stylesheet" href="learn.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lateef:wght@400;700&family=Noto+Naskh+Arabic:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<header class="learn-header">
+    <a class="brand-link" href="../i.html" title="Back to reader" data-i18n-title="backToReader">Quran</a>
+    <nav class="learn-nav" aria-label="Learning controls" data-i18n-aria-label="learningControls">
+        <select id="languageSelect" title="Language" data-i18n-title="language">
+            <option value="en">🇬🇧 English</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+        </select>
+        <select id="pageSelect" title="Page" data-i18n-title="page"></select>
+        <select id="statusFilter" title="Filter words" data-i18n-title="filterWords">
+            <option value="all" data-i18n="allWords">All words</option>
+            <option value="new" data-i18n="newWords">New words</option>
+            <option value="learning" data-i18n="learning">Learning</option>
+            <option value="known" data-i18n="known">Known</option>
+        </select>
+        <label class="learn-checkbox">
+            <input id="skipLearningWords" type="checkbox">
+            <span data-i18n="skipLearning">Skip learning</span>
+        </label>
+        <button id="resetAllBtn" type="button" data-i18n="resetProgress">Reset</button>
+    </nav>
+</header>
+
+<main class="learn-shell">
+    <section class="page-panel" aria-labelledby="pageTitle">
+        <div class="page-toolbar">
+            <button id="prevBtn" type="button" data-i18n="previous">Previous</button>
+            <div>
+                <h1 id="pageTitle">Page 0</h1>
+                <p id="pageSubtitle" data-i18n="selectWordToBegin">Select a word to begin.</p>
+            </div>
+            <button id="nextBtn" type="button" data-i18n="next">Next</button>
+        </div>
+
+        <div class="progress-strip" aria-label="Progress" data-i18n-aria-label="progress">
+            <div>
+                <span id="pageKnownPercent">0%</span>
+                <small data-i18n="pageKnown">page known</small>
+            </div>
+            <div>
+                <span id="overallKnownPercent">0%</span>
+                <small data-i18n="overallKnown">overall known</small>
+            </div>
+            <div>
+                <span id="learningCount">0</span>
+                <small data-i18n="learningWords">learning words</small>
+            </div>
+            <div>
+                <span id="overallWordCount">0</span>
+                <small data-i18n="knownWordsOverallWords">known words / overall words</small>
+            </div>
+            <div>
+                <span id="uniqueKnownCount">0</span>
+                <small data-i18n="knownUniqueWords">known unique words</small>
+            </div>
+        </div>
+
+        <div id="quranPage" class="quran-page" dir="rtl" aria-live="polite"></div>
+    </section>
+
+    <aside class="study-panel" aria-labelledby="studyTitle">
+        <section class="selected-word-panel">
+            <p class="panel-kicker" data-i18n="selectedWord">Selected word</p>
+            <h2 id="studyTitle" class="selected-word" data-i18n="noWordSelected">No word selected</h2>
+            <p id="selectedMeta" class="selected-meta" data-i18n="clickAnyQuranWord">Click any Quran word to mark it.</p>
+            <div class="status-actions" aria-label="Word status" data-i18n-aria-label="wordStatus">
+                <button type="button" data-status="new" data-i18n="new">New</button>
+                <button type="button" data-status="learning" data-i18n="learning">Learning</button>
+                <button type="button" data-status="known" data-i18n="known">Known</button>
+            </div>
+            <div id="wordDetails" class="word-details" data-i18n="wordDetailsAvailable">Word details will appear here when available.</div>
+            <p id="storageStatus" class="storage-status" data-i18n="progressSavesLocally">Progress saves locally in this browser.</p>
+        </section>
+
+        <section class="page-summary">
+            <div class="summary-heading">
+                <h2 data-i18n="markedOnThisPage">Marked on this page</h2>
+                <div class="summary-actions">
+                    <button id="exportLearningBtn" type="button" data-i18n="exportLearning">Export learning</button>
+                    <button id="exportBtn" type="button" data-i18n="export">Export</button>
+                </div>
+            </div>
+            <div id="markedWords" class="marked-words"></div>
+        </section>
+    </aside>
+</main>
+
+<script src="../surahs.js"></script>
+<script src="learn.js"></script>
+</body>
+</html>
