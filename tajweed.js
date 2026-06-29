@@ -705,6 +705,17 @@ function detectMadds(text, index) {
                 }
                 length = Math.max(length, end - prevIndex);
             }
+            else if (madd.char === SUPERSCRIPT_ALIF && text[prevIndex] === ALIF) {
+                const lamIndex = getPreviousBaseLetterIndex(text, prevIndex);
+                // Keep lam-alif shaped as one colored cluster across Arabic fonts.
+                if (lamIndex !== -1
+                    && text[lamIndex] === LAM
+                    && isSameWord(text, lamIndex, index)
+                ) {
+                    prevIndex = lamIndex;
+                    length = (index + 1) - prevIndex;
+                }
+            }
             let type = madd.type;
             let nextIndex = getNextBaseLetterIndex(text, index + madd.length);
             const immediateNextIndex = nextIndex;
