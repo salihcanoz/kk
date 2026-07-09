@@ -368,6 +368,49 @@ body {
     background-color: #fffde8;
 }
 
+.has-verse-translations .verse-block:focus {
+    outline: none;
+}
+
+.has-verse-translations .verse-block:focus-visible {
+    box-shadow: 0 0 0 2px rgba(43, 78, 75, 0.28);
+}
+
+.verse-translation-tooltip {
+    position: fixed;
+    z-index: 1500;
+    box-sizing: border-box;
+    width: max-content;
+    max-width: min(420px, calc(100vw - 32px));
+    padding: 0.65rem 0.75rem;
+    border: 1px solid rgba(43, 78, 75, 0.2);
+    border-radius: 6px;
+    background: #2b4e4b;
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.22);
+    color: #fff;
+    direction: ltr;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.45;
+    opacity: 0;
+    pointer-events: none;
+    text-align: left;
+    transform: translateY(6px);
+    transition: opacity 1s ease, transform 1s ease, visibility 1s ease;
+    visibility: hidden;
+    white-space: normal;
+}
+
+.verse-translation-tooltip[hidden] {
+    display: none;
+}
+
+.verse-translation-tooltip.is-visible {
+    opacity: 0.8;
+    transform: translateY(0);
+    visibility: visible;
+}
+
 .no-verses {
     text-align: center;
 }

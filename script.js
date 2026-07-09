@@ -65,6 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fontSize: 48,
         tajweedMode: 'colors-abbr', // 'none', 'colors', 'colors-abbr'
         showTranslations: false,
+        showVerseTranslations: false,
         enabledRules: {...DEFAULT_ENABLED_RULES}
     };
 
@@ -352,6 +353,104 @@ document.addEventListener('DOMContentLoaded', () => {
         return output.join('');
     }
 
+    function hasVerseTranslationData() {
+        return typeof trDiyanet !== 'undefined' && trDiyanet && typeof trDiyanet === 'object';
+    }
+
+    function getVerseTranslation(surah, verse) {
+        if (!hasVerseTranslationData()) return '';
+        const surahTranslations = trDiyanet[String(surah)];
+        if (!surahTranslations) return '';
+        return surahTranslations[String(verse)] || '';
+    }
+
+    let activeVerseTranslationElement = null;
+    let activeVerseTranslationPoint = null;
+    let pendingVerseTranslationElement = null;
+    let pendingVerseTranslationPoint = null;
+    let verseTranslationTimer = null;
+    const VERSE_TRANSLATION_DELAY_MS = 500;
+
+    function positionVerseTranslationTooltip() {
+        if (!activeVerseTranslationElement || verseTranslationTooltip.hidden) return;
+
+        const margin = 12;
+        const gap = 10;
+        const verseRect = activeVerseTranslationElement.getBoundingClientRect();
+        const tooltipRect = verseTranslationTooltip.getBoundingClientRect();
+        const maxLeft = Math.max(margin, window.innerWidth - tooltipRect.width - margin);
+        const point = activeVerseTranslationPoint || {
+            x: Math.min(window.innerWidth - margin, Math.max(margin, verseRect.right)),
+            y: verseRect.top + (verseRect.height / 2)
+        };
+
+        let left = point.x + gap;
+        if (left + tooltipRect.width + margin > window.innerWidth) {
+            left = point.x - tooltipRect.width - gap;
+        }
+        left = Math.min(Math.max(margin, left), maxLeft);
+
+        let top = point.y + gap;
+
+        if (top + tooltipRect.height + margin > window.innerHeight) {
+            top = point.y - tooltipRect.height - gap;
+        }
+
+        const maxTop = Math.max(margin, window.innerHeight - tooltipRect.height - margin);
+        top = Math.min(Math.max(margin, top), maxTop);
+
+        verseTranslationTooltip.style.left = `${left}px`;
+        verseTranslationTooltip.style.top = `${top}px`;
+    }
+
+    function showVerseTranslationTooltip(verseElement, point = null) {
+        if (!verseElement) return;
+        const translation = verseElement.getAttribute('data-verse-translation');
+        if (!translation) return;
+
+        activeVerseTranslationElement = verseElement;
+        activeVerseTranslationPoint = point;
+        verseTranslationTooltip.textContent = translation;
+        verseTranslationTooltip.hidden = false;
+        verseTranslationTooltip.classList.remove('is-visible');
+        positionVerseTranslationTooltip();
+        verseTranslationTooltip.classList.add('is-visible');
+    }
+
+    function scheduleVerseTranslationTooltip(verseElement, point = null) {
+        if (!verseElement) return;
+        if (activeVerseTranslationElement === verseElement && !verseTranslationTooltip.hidden) {
+            activeVerseTranslationPoint = point || activeVerseTranslationPoint;
+            positionVerseTranslationTooltip();
+            return;
+        }
+
+        pendingVerseTranslationElement = verseElement;
+        pendingVerseTranslationPoint = point;
+        clearTimeout(verseTranslationTimer);
+        verseTranslationTimer = setTimeout(() => {
+            showVerseTranslationTooltip(pendingVerseTranslationElement, pendingVerseTranslationPoint);
+            verseTranslationTimer = null;
+        }, VERSE_TRANSLATION_DELAY_MS);
+    }
+
+    function cancelPendingVerseTranslationTooltip(verseElement = null) {
+        if (verseElement && pendingVerseTranslationElement !== verseElement) return;
+        clearTimeout(verseTranslationTimer);
+        verseTranslationTimer = null;
+        pendingVerseTranslationElement = null;
+        pendingVerseTranslationPoint = null;
+    }
+
+    function hideVerseTranslationTooltip(verseElement = null) {
+        if (verseElement && activeVerseTranslationElement !== verseElement) return;
+        cancelPendingVerseTranslationTooltip(verseElement);
+        activeVerseTranslationElement = null;
+        activeVerseTranslationPoint = null;
+        verseTranslationTooltip.classList.remove('is-visible');
+        verseTranslationTooltip.hidden = true;
+    }
+
     // Load fonts from Google Fonts
     const fontLink = document.createElement('link');
     fontLink.rel = 'stylesheet';
@@ -446,6 +545,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${tr.settingsShowTranslation || 'Show translation, root and form on hover'}
                 </label>
             </fieldset>
+            <fieldset>
+                <legend id="verseToolsLegend">${tr.settingsVerseTools || 'Verse tools'}</legend>
+                <label>
+                    <input type="checkbox" id="verseTranslationToggle">
+                    ${tr.settingsShowVerseTranslation || 'Show verse translation tooltip'}
+                </label>
+            </fieldset>
         </div>
     `;
     }
@@ -453,11 +559,18 @@ document.addEventListener('DOMContentLoaded', () => {
     settingsDialog.innerHTML = buildSettingsDialogHTML(t || {});
     document.body.appendChild(settingsDialog);
 
+    const verseTranslationTooltip = document.createElement('div');
+    verseTranslationTooltip.className = 'verse-translation-tooltip';
+    verseTranslationTooltip.hidden = true;
+    verseTranslationTooltip.setAttribute('role', 'tooltip');
+    document.body.appendChild(verseTranslationTooltip);
+
     const fontSelectMount = settingsDialog.querySelector('#fontSelectMount');
     const tajweedColorsToggle = settingsDialog.querySelector('#tajweedColorsToggle');
     const tajweedAbbrToggle = settingsDialog.querySelector('#tajweedAbbrToggle');
     const wordToolsFieldset = settingsDialog.querySelector('#wordToolsFieldset');
     const translationToggle = settingsDialog.querySelector('#translationToggle');
+    const verseTranslationToggle = settingsDialog.querySelector('#verseTranslationToggle');
     const settingsDialogCloseBtn = settingsDialog.querySelector('.dialog-close-button');
     if (fontSelectMount) fontSelectMount.appendChild(fontSelect);
 
@@ -492,21 +605,27 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tajweedDisplayLegend) tajweedDisplayLegend.textContent = t.settingsTajweedDisplay || 'Tajweed display';
         const wordToolsLegend = settingsDialog.querySelector('#wordToolsLegend');
         if (wordToolsLegend) wordToolsLegend.textContent = t.settingsWordTools || 'Word tools';
+        const verseToolsLegend = settingsDialog.querySelector('#verseToolsLegend');
+        if (verseToolsLegend) verseToolsLegend.textContent = t.settingsVerseTools || 'Verse tools';
         const colorsLabel = tajweedColorsToggle && tajweedColorsToggle.closest('label');
         if (colorsLabel) colorsLabel.childNodes[colorsLabel.childNodes.length - 1].textContent = '\n' + (t.tajweedColors || 'Colors') + '\n';
         const abbrLabel = tajweedAbbrToggle && tajweedAbbrToggle.closest('label');
         if (abbrLabel) abbrLabel.childNodes[abbrLabel.childNodes.length - 1].textContent = '\n' + (t.settingsAbbreviations || 'Abbreviations') + '\n';
         const transLabel = translationToggle && translationToggle.closest('label');
         if (transLabel) transLabel.childNodes[transLabel.childNodes.length - 1].textContent = '\n' + (t.settingsShowTranslation || 'Show translation, root and bab on hover') + '\n';
+        const verseTransLabel = verseTranslationToggle && verseTranslationToggle.closest('label');
+        if (verseTransLabel) verseTransLabel.childNodes[verseTransLabel.childNodes.length - 1].textContent = '\n' + (t.settingsShowVerseTranslation || 'Show verse translation tooltip') + '\n';
     }
 
     function syncSettingsDialogControls() {
         fontSelect.value = settings.fontFamily;
-        if (!tajweedColorsToggle || !tajweedAbbrToggle || !translationToggle) return;
+        if (!tajweedColorsToggle || !tajweedAbbrToggle || !translationToggle || !verseTranslationToggle) return;
         tajweedColorsToggle.checked = settings.tajweedMode !== 'none';
         tajweedAbbrToggle.checked = settings.tajweedMode === 'colors-abbr';
         tajweedAbbrToggle.disabled = !tajweedColorsToggle.checked;
         translationToggle.checked = settings.showTranslations !== false;
+        verseTranslationToggle.checked = settings.showVerseTranslations === true;
+        verseTranslationToggle.disabled = !hasVerseTranslationData();
     }
 
     function setTajweedModeFromDialog() {
@@ -617,12 +736,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!settingsDialog.hidden) {
             positionSettingsDialog();
         }
+        positionVerseTranslationTooltip();
     });
 
     window.addEventListener('scroll', () => {
         if (!settingsDialog.hidden) {
             positionSettingsDialog();
         }
+        positionVerseTranslationTooltip();
     });
 
     tajweedColorsToggle.onchange = () => {
@@ -641,6 +762,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     translationToggle.onchange = () => {
         settings.showTranslations = translationToggle.checked;
+        loadMushafPage(settings.currentPage);
+        syncSettingsDialogControls();
+        saveSettings();
+    };
+
+    verseTranslationToggle.onchange = () => {
+        settings.showVerseTranslations = verseTranslationToggle.checked;
         loadMushafPage(settings.currentPage);
         syncSettingsDialogControls();
         saveSettings();
@@ -674,6 +802,73 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         verseElement.classList.toggle('is-selected');
+    });
+
+    function getVerseTranslationTarget(target) {
+        const verseElement = target && target.closest
+            ? target.closest('.verse-block[data-verse-translation]')
+            : null;
+        return verseElement && display.contains(verseElement) ? verseElement : null;
+    }
+
+    function getPointerPoint(event) {
+        if (!event || !Number.isFinite(event.clientX) || !Number.isFinite(event.clientY)) {
+            return null;
+        }
+
+        return {
+            x: event.clientX,
+            y: event.clientY
+        };
+    }
+
+    display.addEventListener('mouseover', function (event) {
+        scheduleVerseTranslationTooltip(getVerseTranslationTarget(event.target), getPointerPoint(event));
+    });
+
+    display.addEventListener('mousemove', function (event) {
+        const verseElement = getVerseTranslationTarget(event.target);
+        if (!verseElement) return;
+        const point = getPointerPoint(event);
+        if (activeVerseTranslationElement === verseElement && !verseTranslationTooltip.hidden) {
+            activeVerseTranslationPoint = point;
+            positionVerseTranslationTooltip();
+        }
+        else if (pendingVerseTranslationElement === verseElement) {
+            pendingVerseTranslationPoint = point;
+        }
+    });
+
+    display.addEventListener('mouseout', function (event) {
+        const verseElement = getVerseTranslationTarget(event.target);
+        if (!verseElement) return;
+        if (event.relatedTarget && verseElement.contains(event.relatedTarget)) return;
+        if (!verseElement.classList.contains('is-selected')) {
+            hideVerseTranslationTooltip(verseElement);
+        }
+    });
+
+    display.addEventListener('focusin', function (event) {
+        scheduleVerseTranslationTooltip(getVerseTranslationTarget(event.target));
+    });
+
+    display.addEventListener('focusout', function (event) {
+        const verseElement = getVerseTranslationTarget(event.target);
+        if (verseElement && !verseElement.classList.contains('is-selected')) {
+            hideVerseTranslationTooltip(verseElement);
+        }
+    });
+
+    display.addEventListener('click', function (event) {
+        const verseElement = getVerseTranslationTarget(event.target);
+        if (!verseElement) return;
+
+        if (verseElement.classList.contains('is-selected')) {
+            scheduleVerseTranslationTooltip(verseElement, getPointerPoint(event));
+        }
+        else {
+            hideVerseTranslationTooltip(verseElement);
+        }
     });
 
     async function loadCorpusWordElement(wordElement) {
@@ -1012,6 +1207,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Render the selected page (0-based index).
     function loadMushafPage(pageIndex) {
+        hideVerseTranslationTooltip();
         display.innerHTML = '';
         const pageNum = pageIndex + 1;
         const verses = quranByPage[pageNum] || [];
@@ -1020,7 +1216,8 @@ document.addEventListener('DOMContentLoaded', () => {
             : getRuleTypesForPage(pageNum, verses);
 
         const contentDiv = document.createElement('div');
-        contentDiv.className = 'quran-content';
+        const showVerseTranslations = settings.showVerseTranslations === true && hasVerseTranslationData();
+        contentDiv.className = showVerseTranslations ? 'quran-content has-verse-translations' : 'quran-content';
         contentDiv.setAttribute('lang', 'ur');
         let fullTextHTML = '';
 
@@ -1051,7 +1248,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (text.includes('۩')) {
                     verseClasses.push('sajdah-verse');
                 }
-                fullTextHTML += `<span class="${verseClasses.join(' ')}">${processedText} <span class="verse-number">${verse.i}</span></span> `;
+                const verseTranslation = showVerseTranslations ? getVerseTranslation(verse.surah, verse.i) : '';
+                const verseAttributes = verseTranslation
+                    ? ` tabindex="0" data-verse-translation="${escapeHtml(verseTranslation)}"`
+                    : '';
+                fullTextHTML += `<span class="${verseClasses.join(' ')}"${verseAttributes}>${processedText} <span class="verse-number">${verse.i}</span></span> `;
             });
         }
         else {
