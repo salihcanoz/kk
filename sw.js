@@ -1,7 +1,7 @@
 // Offline support: after the first visit the reader, the learn page and their
 // data files are served from cache. Corpus lookups and fonts are cached as they
 // are used, so previously viewed words keep their translations offline.
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const APP_CACHE = `app-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
 const CORPUS_CACHE = 'corpus-v1';
@@ -25,17 +25,51 @@ const APP_FILES = [
 
 const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
 
+// Every Google Fonts stylesheet the pages request (i.html, script.js, learn/index.html).
+// Fonts are only downloaded when used, so they are fetched up front to make
+// switching fonts work offline too.
+const FONT_STYLESHEETS = [
+    'https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&display=swap',
+    'https://fonts.googleapis.com/css2?family=Lateef:wght@400;700&family=Noto+Naskh+Arabic:wght@400;700&family=Scheherazade+New:wght@400;700&display=swap',
+    'https://fonts.googleapis.com/css2?family=Lateef:wght@400;700&family=Noto+Naskh+Arabic:wght@400;700&display=swap'
+];
+
 function scopeUrl(path) {
     return new URL(path, self.registration.scope).href;
 }
 
+async function precacheFonts() {
+    const cache = await caches.open(RUNTIME_CACHE);
+    const fontUrls = new Set();
+
+    await Promise.all(FONT_STYLESHEETS.map(async (stylesheetUrl) => {
+        try {
+            const response = await fetch(stylesheetUrl);
+            if (!response.ok) return;
+            await cache.put(stylesheetUrl, response.clone());
+            const css = await response.text();
+            for (const match of css.matchAll(/url\((['"]?)(https:\/\/fonts\.gstatic\.com\/[^'")]+)\1\)/g)) {
+                fontUrls.add(match[2]);
+            }
+        }
+        catch (error) {
+            console.warn(`Offline cache skipped ${stylesheetUrl}`, error);
+        }
+    }));
+
+    await Promise.all([...fontUrls].map((fontUrl) => cache.match(fontUrl)
+        .then((cached) => cached || cache.add(fontUrl))
+        .catch((error) => console.warn(`Offline cache skipped ${fontUrl}`, error))));
+}
+
 self.addEventListener('install', (event) => {
     event.waitUntil(
-        caches.open(APP_CACHE).then((cache) => Promise.all(
+        caches.open(APP_CACHE).then((cache) => Promise.all([
             // Add files one by one so a single missing file does not abort the install.
-            APP_FILES.map((file) => cache.add(new Request(scopeUrl(file), {cache: 'reload'}))
-                .catch((error) => console.warn(`Offline cache skipped ${file}`, error)))
-        )).then(() => self.skipWaiting())
+            ...APP_FILES.map((file) => cache.add(new Request(scopeUrl(file), {cache: 'reload'}))
+                .catch((error) => console.warn(`Offline cache skipped ${file}`, error))),
+            precacheFonts()
+        ])).then(() => self.skipWaiting())
     );
 });
 
@@ -52,9 +86,9 @@ function isCacheable(response) {
     return response && (response.ok || response.type === 'opaque');
 }
 
-async function cacheFirst(request, cacheName) {
+async function cacheFirst(request, cacheName, matchOptions) {
     const cache = await caches.open(cacheName);
-    const cached = await cache.match(request);
+    const cached = await cache.match(request, matchOptions);
     if (cached) return cached;
 
     const response = await fetch(request);
@@ -113,7 +147,8 @@ self.addEventListener('fetch', (event) => {
     const url = new URL(request.url);
 
     if (FONT_HOSTS.includes(url.hostname)) {
-        event.respondWith(cacheFirst(request, RUNTIME_CACHE));
+        // Precached stylesheets were fetched with different headers than the page sends.
+        event.respondWith(cacheFirst(request, RUNTIME_CACHE, {ignoreVary: true}));
         return;
     }
 
