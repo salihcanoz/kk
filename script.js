@@ -353,8 +353,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return output.join('');
     }
 
+    // Verse translations are Turkish (Diyanet), so only offer them when Turkish is selected.
     function hasVerseTranslationData() {
-        return typeof trDiyanet !== 'undefined' && trDiyanet && typeof trDiyanet === 'object';
+        return settings.language === 'tr' && typeof trDiyanet !== 'undefined' && trDiyanet && typeof trDiyanet === 'object';
     }
 
     function getVerseTranslation(surah, verse) {
