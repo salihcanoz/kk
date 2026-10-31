@@ -1,7 +1,7 @@
 // Offline support: after the first visit the reader, the learn page and their
 // data files are served from cache. Corpus lookups and fonts are cached as they
 // are used, so previously viewed words keep their translations offline.
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const APP_CACHE = `app-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
 const CORPUS_CACHE = 'corpus-v1';
@@ -17,6 +17,11 @@ const APP_FILES = [
     'tr.diyanet.js',
     'tajweed.js',
     'favicon.png',
+    'manifest.webmanifest',
+    'icons/icon-192.png',
+    'icons/icon-512.png',
+    'icons/maskable-512.png',
+    'icons/apple-touch-icon.png',
     'learn/',
     'learn/index.html',
     'learn/learn.css',
